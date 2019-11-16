@@ -1,9 +1,11 @@
 from kivy.app import App
 from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import NumericProperty, ListProperty
 from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color, Quad
 # from kivy.uix.label import CoreLabel
 from kivy.core.text import Label as CoreLabel
+from kivy.clock import Clock
 
 chrom_scale = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B']
 chrom_scale2 = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
@@ -35,7 +37,9 @@ class String(RelativeLayout):
         self.string_graphic = InstructionGroup()
         self.note_markers = InstructionGroup()
         self.octave_markers = InstructionGroup()
-        self.bind(size=self.update_canvas, pos=self.update_canvas)
+        # self.bind(size=self.update_canvas, pos=self.update_canvas)
+
+        self.update_canvas = Clock.create_trigger(self._update_canvas, timeout=0, interval=.1)
 
     def on_open_note_val(self, instance, value):
         self.note_vals = [val for val in range(self.open_note_val, self.open_note_val+self.num_frets+1)]
@@ -51,7 +55,7 @@ class String(RelativeLayout):
     def on_mode_filter(self, instance, value):
         self.update_canvas(instance, value)
 
-    def update_canvas(self, *args):
+    def _update_canvas(self, *args):
         if self.fret_positions:  # self.fret_positions is empty during instantiation.
             # self.redraw_octave_markers()
             self.redraw_string()
