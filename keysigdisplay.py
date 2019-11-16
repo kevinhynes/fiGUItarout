@@ -29,6 +29,7 @@ class KeySigDisplay(FloatLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.note_markers = InstructionGroup()
+        self.canvas.add(self.note_markers)
 
     def update_canvas(self, *args):
         self.redraw_note_markers()
@@ -43,7 +44,6 @@ class KeySigDisplay(FloatLayout):
         for i in range(12):
             self.redraw_note_marker(i, x, y, r1, r2, rdiff, mask)
             mask >>= 1
-        self.canvas.add(self.note_markers)
 
     def redraw_note_marker(self, i, x, y, r1, r2, rdiff, mask):
         if self.mode_filter & mask:
