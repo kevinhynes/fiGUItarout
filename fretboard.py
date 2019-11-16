@@ -117,8 +117,8 @@ class String(RelativeLayout):
             self.note_markers.add(Line(points=[lx1, ly1, lx2, ly2], width=1, cap="none"))
             # Add notes text.
             notes = note_text.split("/")
-            note1_label = CoreLabel(text=notes[0], font_size=a1, font_name="l_10646")
-            note2_label = CoreLabel(text=notes[1], font_size=a1, font_name="l_10646")
+            note1_label = CoreLabel(text=notes[0], font_size=a1, font_name="./fonts/Lucida Sans Unicode Regular")
+            note2_label = CoreLabel(text=notes[1], font_size=a1, font_name="./fonts/Lucida Sans Unicode Regular")
             note1_label.refresh()
             note2_label.refresh()
             # Locate coords of where to place Rectangle. Affected by font_size, text length...
@@ -142,7 +142,7 @@ class String(RelativeLayout):
             # Height is determined by font_size, width determined by font_size and text length.
             # Set size of Rectangle to match texture.size to avoid stretching text.
             note_label = CoreLabel(text=note_text,
-                                   font_name="l_10646",
+                                   font_name="./fonts/Lucida Sans Unicode Regular",
                                    font_size=self.height * 10 / 13 * 0.85)
             note_label.refresh()
             tw, th = note_label.texture.size
