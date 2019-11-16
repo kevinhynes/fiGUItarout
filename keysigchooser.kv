@@ -1,0 +1,159 @@
+#: import ksc keysigchooser
+
+<OutlinedWidget@Widget>:
+    canvas.after:
+        Color:
+            rgba: [0, 0, 0, 1]
+        Line:
+            rounded_rectangle: [*self.pos, *self.size, 2]
+            width: 1.1
+
+
+<OutlinedBoxLayout@BoxLayout+OutlinedWidget>:
+
+
+<OutlinedSpinner@Spinner+OutlinedWidget>:
+    text_size: self.size
+    halign: "center"
+    valign: "center"
+
+
+<ChooserLabel@Label>:
+    box: self.parent
+    halign: "center"
+    valign: "center"
+    font_size: (root.box.box_font_size or self.width) * 1
+    text_size: self.size
+    halign: "center"
+    valign: "center"
+
+
+<ChooserButton@Button>:
+    font_name: "Arial"
+    font_size: self.width
+    border: [2, 2, 2, 2]
+    size_hint: [None, 1]
+
+
+<RootNoteChooser>:
+    orientation: "vertical"
+    box: self.parent  # `box` doesn't exist when rule is first read.
+    note_text: note_text
+    canvas:
+        Color:
+            rgba: [0, 0, 0, 1]
+        Line:
+            rounded_rectangle: [*self.pos, *self.size, 1]
+            width: 1.2
+    ChooserLabel:
+        box: root.box
+        text: "ROOT NOTE"
+        size_hint: [1, 0.4]
+    OutlinedBoxLayout:
+        orientation: "horizontal"
+        size_hint: [1, 0.6]
+        ChooserButton:
+            text: u'\u25C4'
+            width: root.box.width * (1/32)
+            on_press: root.decrement_root_note_idx()
+        Label:
+            id: note_text
+            font_size: root.box.box_font_size or self.width
+            text: "C"
+        ChooserButton:
+            text: u'\u25BA'
+            width: root.box.width * (1/32)
+            on_press: root.increment_root_note_idx()
+
+
+<ModeChooser>:
+    box: self.parent  # `box` doesn't exist when rule is first read.
+    mode_text: mode_text
+    canvas:
+        Color:
+            rgba: [0, 0, 0, 1]
+        Line:
+            rounded_rectangle: [*self.pos, *self.size, 1]
+            width: 1.2
+    BoxLayout:
+        orientation: "vertical"
+        ChooserLabel:
+            box: root.box
+            text: "MODE"
+            size_hint: [1, 0.4]
+        OutlinedBoxLayout:
+            orientation: "horizontal"
+            size_hint: [1, 0.6]
+            ChooserButton:
+                text: u'\u25C4'
+                width: root.box.width * (1/32)
+                on_press: root.decrement_group_idx()
+            Label:
+                id: mode_text
+                text: "Chromatic"
+                font_size: root.box.box_font_size or self.width
+                text_size: self.size
+                halign: "center"
+                valign: "center"
+            ChooserButton:
+                text: u'\u25BA'
+                width: root.box.width * (1/32)
+                on_press: root.increment_group_idx()
+
+
+<ModeGroupChooser@BoxLayout>:
+    box: self.parent
+    label: label
+    orientation: "vertical"
+    canvas:
+        Color:
+            rgba: [0, 0, 0, 1]
+        Line:
+            rounded_rectangle: [*self.pos, *self.size, 1]
+            width: 1.2
+    ChooserLabel:
+        box: root.box
+        text: "MODE GROUP"
+        size_hint: [1, 0.4]
+    OutlinedSpinner:
+        id: label
+        size_hint: [1, 0.6]
+        text_autoupdate: True
+#        background_normal: ''
+        background_color: [1, 1, 1, 1]
+        values: ["All", "Modern", "Pentatonic", "Minor"]
+        font_size: root.box.box_font_size or self.width
+
+<KeySigChooser>:
+    id: keysigchooser
+    root_note_idx: rootnotechooser.root_note_idx
+    mode_filter: modechooser.mode_filter
+    BoxLayout:
+        id: box
+        box_font_size: self.width / 30
+        pos_hint: {"center": [0.5, 0.5]}
+        size_hint: [None, None]
+        orientation: "vertical"
+        canvas:
+            Color:
+                rgba: [1, 1, 1, 0.5]
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint: [1, 0.7]
+#            spacing: self.width * 0.005
+            RootNoteChooser:
+                id: rootnotechooser
+                box: box
+                size_hint: [2, 1]
+            ModeChooser:
+                id: modechooser
+                box: box
+                mode_group: modegroupchooser.label.text
+                size_hint: [4.5, 1]
+            ModeGroupChooser:
+                id: modegroupchooser
+                box: box
+                size_hint: [3, 1]

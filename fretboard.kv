@@ -1,0 +1,67 @@
+#: import fb fretboard
+
+#<Widget>:
+#    canvas.after:
+#        Line:
+#            rectangle: self.x+1,self.y+1,self.width-1,self.height-1
+#            dash_offset: 5
+#            dash_length: 3
+
+<Fretboard>:
+    id: fretboard
+    BoxLayout:
+        id: box
+        size_hint: [None, None]
+        pos_hint: {"center": [0.5, 0.5]}
+        orientation: "vertical"
+        String:
+            id: s6
+            fretboard: fretboard
+            fret_positions: fretboard.fret_positions
+            open_note_val: fretboard.tuning[5]
+            num_frets: fretboard.num_frets
+            root_note_idx: fretboard.root_note_idx
+            mode_filter: fretboard.mode_filter
+        String:
+            id: s5
+            fretboard: fretboard
+            fret_positions: fretboard.fret_positions
+            open_note_val: fretboard.tuning[4]
+            num_frets: fretboard.num_frets
+            root_note_idx: fretboard.root_note_idx
+            mode_filter: fretboard.mode_filter
+        String:
+            id: s4
+            fretboard: fretboard
+            fret_positions: fretboard.fret_positions
+            open_note_val: fretboard.tuning[3]
+            num_frets: fretboard.num_frets
+            root_note_idx: fretboard.root_note_idx
+            mode_filter: fretboard.mode_filter
+        String:
+            id: s3
+            fretboard: fretboard
+            fret_positions: fretboard.fret_positions
+            open_note_val: fretboard.tuning[2]
+            num_frets: fretboard.num_frets
+            root_note_idx: fretboard.root_note_idx
+            mode_filter: fretboard.mode_filter
+
+        String:
+            id: s2
+            fretboard: fretboard
+            fret_positions: fretboard.fret_positions
+            open_note_val: fretboard.tuning[1]
+            num_frets: fretboard.num_frets
+            root_note_idx: fretboard.root_note_idx
+            mode_filter: fretboard.mode_filter
+
+        String:
+            id: s1
+            fretboard: fretboard
+            fret_positions: fretboard.fret_positions
+            open_note_val: fretboard.tuning[0]
+            num_frets: fretboard.num_frets
+            root_note_idx: fretboard.root_note_idx
+            mode_filter: fretboard.mode_filter
+

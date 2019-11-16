@@ -1,0 +1,44 @@
+#: import nfc numfretschanger
+
+<ChangerButton@Button>:
+    size_hint: [1, 0.2]
+    font_name: "Arial"
+    font_size: self.width * 0.2
+    border: [2, 2, 2, 2]
+
+
+<NumFretsChanger>:
+#    size_hint: [None, None]
+    canvas:
+        Color:
+            rgba: [1, 0, 0, 0.5]
+        Line:
+            rectangle: [*self.pos, *self.size]
+    BoxLayout:
+        id: box
+        orientation: "vertical"
+        pos_hint: {"center": [0.5, 0.5]}
+        size_hint: [None, None]
+        padding: [20, 20]
+        spacing: 5
+        canvas:
+            Color:
+                rgba: [1, 1, 1, 0.5]
+            Rectangle:
+                pos: self.pos
+                size: self.size
+            Color:
+                rgba: [0,0,0,1]
+            Line:
+                rounded_rectangle: [*self.pos, *self.size, 15]
+                width: 2
+        ChangerButton:
+            text: u'\u25B2'
+            on_release: root.increment_num_frets()
+        Label:
+            size_hint: [1, 0.6]
+            text: str(root.num_frets)
+            font_size: self.height * 10/13 * 0.75
+        ChangerButton:
+            text: u'\u25BC'
+            on_release: root.decrement_num_frets()
