@@ -75,8 +75,10 @@ class KeySigDisplay(FloatLayout):
             self.note_markers.add(Line(points=[lx1, ly1, lx2, ly2], width=1, cap="none"))
             # Add notes text.
             notes = note_text.split("/")
-            note1_label = CoreLabel(text=notes[0], font_size=a1, font_name="l_10646")
-            note2_label = CoreLabel(text=notes[1], font_size=a1, font_name="l_10646")
+            note1_label = CoreLabel(text=notes[0], font_size=a1,
+                                    font_name="./fonts/Lucida Sans Unicode Regular")
+            note2_label = CoreLabel(text=notes[1], font_size=a1,
+                                    font_name="./fonts/Lucida Sans Unicode Regular")
             note1_label.refresh()
             note2_label.refresh()
             # Locate coords of where to place Rectangle. Affected by font_size, text length...
@@ -100,8 +102,8 @@ class KeySigDisplay(FloatLayout):
             # Height is determined by font_size, width determined by font_size and text length.
             # Set size of Rectangle to match texture.size to avoid stretching text.
             note_label = CoreLabel(text=note_text,
-                                   font_name="l_10646",
-                                   font_size=self.ids.box.height * 10 / 13 * 0.85)
+                                   font_size=self.ids.box.height * 10 / 13 * 0.85,
+                                   font_name="./fonts/Lucida Sans Unicode Regular")
             note_label.refresh()
             tw, th = note_label.texture.size
             xc_center, yc_center = c1x + r1, c1y + r1
