@@ -37,9 +37,12 @@ class String(RelativeLayout):
         self.string_graphic = InstructionGroup()
         self.note_markers = InstructionGroup()
         self.octave_markers = InstructionGroup()
-        # self.bind(size=self.update_canvas, pos=self.update_canvas)
+        self.canvas.add(self.string_graphic)
+        self.canvas.add(self.note_markers)
+        self.canvas.add(self.octave_markers)
+        self.bind(size=self.update_canvas, pos=self.update_canvas)
 
-        self.update_canvas = Clock.create_trigger(self._update_canvas, timeout=0, interval=.1)
+        # self.update_canvas = Clock.create_trigger(self._update_canvas, timeout=0, interval=.1)
 
     def on_open_note_val(self, instance, value):
         self.note_vals = [val for val in range(self.open_note_val, self.open_note_val+self.num_frets+1)]
@@ -55,14 +58,13 @@ class String(RelativeLayout):
     def on_mode_filter(self, instance, value):
         self.update_canvas(instance, value)
 
-    def _update_canvas(self, *args):
+    def update_canvas(self, *args):
         if self.fret_positions:  # self.fret_positions is empty during instantiation.
             # self.redraw_octave_markers()
             self.redraw_string()
             self.redraw_note_markers()
 
     def redraw_string(self):
-        self.canvas.remove(self.string_graphic)  # Shadow gets darker with calls to on_size. Why?
         self.string_graphic.clear()
         w, h = self.width, self.height * 0.1
         y = (self.height / 2) - h / 2
@@ -73,7 +75,6 @@ class String(RelativeLayout):
         # String.
         self.string_graphic.add(Color(rgba=[169/255, 169/255, 169/255, 1]))
         self.string_graphic.add(Rectangle(size=[w, h], pos=[0, y]))
-        self.canvas.add(self.string_graphic)
 
     def redraw_note_markers(self, *args):
         self.note_markers.clear()
@@ -83,7 +84,6 @@ class String(RelativeLayout):
         rdiff = r1 - r2
         for i, note_val in enumerate(self.note_vals):
             self.redraw_note_marker(i, note_val, r1, r2, rdiff)
-        self.canvas.add(self.note_markers)
 
     def redraw_note_marker(self, i, note_val, r1, r2, rdiff):
         octave, note_idx = divmod(note_val, 12)
@@ -161,7 +161,6 @@ class String(RelativeLayout):
         self.octave_markers.clear()
         for i, note_val in enumerate(self.note_vals):
             self.redraw_octave_marker(i, note_val)
-        self.canvas.add(self.octave_markers)
 
     def redraw_octave_marker(self, i, note_val):
         # print("String.redraw_octave_marker")
@@ -193,6 +192,9 @@ class Fretboard(RelativeLayout):
         self.fingerboard = InstructionGroup()
         self.fret_bars = InstructionGroup()
         self.inlays = InstructionGroup()
+        self.canvas.add(self.fingerboard)
+        self.canvas.add(self.fret_bars)
+        self.canvas.add(self.inlays)
         self.bind(size=self.update_canvas, pos=self.update_canvas)
 
     def calc_fret_positions(self):
@@ -286,7 +288,6 @@ class Fretboard(RelativeLayout):
         # q = Quad(points=[*bl, *tl, *tr, *br])
         # self.fingerboard.add(q)
         self.fingerboard.add(Rectangle(size=box.size, pos=box.pos))
-        self.canvas.before.add(self.fingerboard)
 
     def redraw_fret_bars(self, box):
         self.fret_bars.clear()
@@ -295,7 +296,6 @@ class Fretboard(RelativeLayout):
             x_pos = fret_pos - (self.fret_bar_width / 2)
             self.fret_bars.add(
                 Rectangle(size=[self.fret_bar_width, box.height], pos=[x_pos, box.y]))
-        self.canvas.before.add(self.fret_bars)
 
     def redraw_inlays(self, box):
         self.inlays.clear()
@@ -314,7 +314,6 @@ class Fretboard(RelativeLayout):
                 x_pos = (sum(fret_range) / 2)
                 y_pos = (box.height / 2) + box.y
                 self.inlays.add(Ellipse(size=[d, d], pos=[x_pos - d / 2, y_pos - d / 2]))
-        self.canvas.before.add(self.inlays)
 
     def on_num_frets(self, instance, value):
         self.calc_fret_positions()
