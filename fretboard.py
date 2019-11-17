@@ -89,7 +89,7 @@ class String(RelativeLayout):
         octave, note_idx = divmod(note_val, 12)
         mask = int(bin(self.mode_filter)[2:][note_idx-self.root_note_idx])
         if mask:
-            this_color = blues[note_idx-self.root_note_idx]
+            this_color = rainbow[note_idx-self.root_note_idx]
         elif i == 0:
             this_color = gray
         else:
@@ -231,6 +231,25 @@ class Fretboard(RelativeLayout):
         self.fret_pos_midpoints = fret_pos_midpoints
         return self.fret_pos_midpoints
 
+    def calc_actual_fret_positions(self, box):
+        '''Calculate locations of each fret based on fretboards current width.'''
+        self.actual_fret_positions = [fret_pos * box.width + box.x for fret_pos in self.fret_positions]
+        return self.actual_fret_positions
+
+    def calc_fret_ranges(self, box):
+        '''Calculate x positions of fretboard between frets for use in displaying octaves.'''
+        # Gibson ratio of fret bar width to scale length.
+        self.fret_bar_width = box.width * (0.1 / 24.75)
+        cur_right = box.x
+        fret_ranges = []
+        for fret_pos in self.actual_fret_positions:
+            next_left = fret_pos - (self.fret_bar_width / 2)
+            fret_ranges.append((cur_right, next_left))
+            cur_right = (next_left + self.fret_bar_width)
+        # print("Fretboard.calc_fret_ranges ", fret_ranges)
+        self.fret_ranges = fret_ranges
+        return self.fret_ranges
+
     def update_canvas(self, *args):
         '''Resize the BoxLayout that holds the fretboard so it maintains a guitar neck
         aspect ratio.'''
@@ -255,25 +274,6 @@ class Fretboard(RelativeLayout):
         self.redraw_fingerboard(box)
         self.redraw_fret_bars(box)
         self.redraw_inlays(box)
-
-    def calc_actual_fret_positions(self, box):
-        '''Calculate locations of each fret based on fretboards current width.'''
-        self.actual_fret_positions = [fret_pos * box.width + box.x for fret_pos in self.fret_positions]
-        return self.actual_fret_positions
-
-    def calc_fret_ranges(self, box):
-        '''Calculate x positions of fretboard between frets for use in displaying octaves.'''
-        # Gibson ratio of fret bar width to scale length.
-        self.fret_bar_width = box.width * (0.1 / 24.75)
-        cur_right = box.x
-        fret_ranges = []
-        for fret_pos in self.actual_fret_positions:
-            next_left = fret_pos - (self.fret_bar_width / 2)
-            fret_ranges.append((cur_right, next_left))
-            cur_right = (next_left + self.fret_bar_width)
-        # print("Fretboard.calc_fret_ranges ", fret_ranges)
-        self.fret_ranges = fret_ranges
-        return self.fret_ranges
 
     def redraw_fingerboard(self, box):
         self.fingerboard.clear()

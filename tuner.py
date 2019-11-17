@@ -34,7 +34,7 @@ class StringTuner(BoxLayout):
 
     def on_note_val(self, instance, value):
         octave, note_idx = divmod(self.note_val, 12)
-        note_text = chrom_scale2[note_idx]  # + sub[octave]
+        note_text = chrom_scale2[note_idx] + sub[octave]
         self.note_text = note_text
 
 
@@ -50,10 +50,6 @@ class SixStringTuner(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         Clock.schedule_once(self.tune_to_standard)
-
-    def on_tuning(self, instance, value):
-        # print("SixStringTuner.on_tuning ", value)
-        pass
 
     def tune_to(self, req="Standard"):
         tunings = {

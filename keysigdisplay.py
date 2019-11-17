@@ -47,7 +47,7 @@ class KeySigDisplay(FloatLayout):
 
     def redraw_note_marker(self, i, x, y, r1, r2, rdiff, mask):
         if self.mode_filter & mask:
-            this_color = blues[i]
+            this_color = rainbow[i]
         else:
             this_color = gray
 
