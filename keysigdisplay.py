@@ -2,14 +2,15 @@ from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color
 from kivy.core.text import Label as CoreLabel
+from kivy.lang import Builder
 from kivy.properties import NumericProperty, ReferenceListProperty
+
 
 flat = u'\u266D'
 sharp = u'\u266F'
 chrom_scale = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B']
 chrom_scale2 = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
 scale_degrees = ["1", "♭2", "2", "♭3", "3", "4", "♯4/♭5", "5", "♯5/♭6", "6", "♭7", "7"]
-
 
 black = Color(0, 0, 0, 1)
 white = Color(1, 1, 1, 1)
@@ -18,6 +19,127 @@ gray = Color(0.5, 0.5, 0.5, 1)
 rainbow = [Color(hsv=[i/12, 1, 0.95]) for i in range(12)]
 reds = [Color(hsv=[0, i/12, 1]) for i in range(12)][::-1]
 blues = [Color(hsv=[0.6, i/12, 1]) for i in range(12)][::-1]
+
+
+class Marker(InstructionGroup):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.background_color = Color()
+        self.background = Ellipse()
+        self.marker_color = Color()
+        self.marker = Ellipse()
+        self.split_line_color = Color()
+        self.split_line = Line(width=1, cap="none")
+        self.text1_color = Color()
+        self.text1_label = CoreLabel()
+        self.text1_instr = Rectangle()
+        self.text2_color = Color()
+        self.text2_label = CoreLabel(font_name="./fonts/Lucida Sans Unicode Regular")
+        self.text2_instr = Rectangle()
+        self.background_color.hsv = white.hsv
+        self.split_line_color.hsv = white.hsv
+        self.text1_color.hsv = black.hsv
+        self.text2_color.hsv = black.hsv
+
+        self.add(self.background_color)
+        self.add(self.background)
+        self.add(self.marker_color)
+        self.add(self.marker)
+        self.add(self.split_line_color)
+        self.add(self.split_line)
+        self.add(self.text1_color)
+        self.add(self.text1_instr)
+        self.add(self.text2_color)
+        self.add(self.text2_instr)
+
+    def update(self, i, root_note_idx, c1x, c1y, r1, c2x, c2y, r2, included):
+        self.background.size = [2*r1, 2*r1]
+        self.background.pos = [c1x, c1y]
+        self.marker.size = [2*r2, 2*r2]
+        self.marker.pos = [c2x, c2y]
+
+        if included:
+            self.background_color.a = 1
+            self.marker_color.hsv = rainbow[i].hsv
+            self.marker_color.a = 1
+            self.update_text(i, root_note_idx, c1x, c1y, r1)
+        else:
+            self.background_color.a = 0
+            self.marker_color.a = 0
+            self.split_line_color.a = 0
+            self.text1_color.a = 0
+            self.text2_color.a = 0
+
+    def update_text(self, i, root_note_idx, c1x, c1y, r1):
+        note_idx = (root_note_idx + i) % 12
+        note_text = chrom_scale[note_idx]
+        scale_degree = scale_degrees[i]
+        note_text = scale_degree
+        if "/" in note_text:
+            # Accidental notes. Add diagonal line.
+            a1 = (1 / 2) ** 0.5 * r1  # a1 is side of a 45-45-90 right triangle.
+            diff = r1 - a1
+            lx1, ly1 = c1x + diff, c1y + diff
+            lx2, ly2 = lx1 + 2 * a1, ly1 + 2 * a1
+            self.split_line_color.a = 1
+            self.split_line.points = [lx1, ly1, lx2, ly2]
+
+            # Add notes text. Need to remake CoreLabels every time.. inefficient.
+            # Size of CoreLabel is .size, .texture.size, .content_size. (Why all 3..?)
+            # CoreLabel.text_size is bounding box of text, and is (None, None).
+            # Height is determined by font_size, width determined by font_size and text length.
+            # Set size of Rectangle to match texture.size to avoid stretching text.
+            notes = note_text.split("/")
+            self.text1_label = CoreLabel(font_size=a1,
+                                         text=notes[0],
+                                         font_name="./fonts/Lucida Sans Unicode Regular")
+            self.text2_label = CoreLabel(font_size=a1,
+                                         text=notes[1],
+                                         font_name="./fonts/Lucida Sans Unicode Regular")
+            self.text1_label.refresh()
+            self.text2_label.refresh()
+
+            # Locate coords of where to place Rectangle. Affected by font_size, text length...
+            b1x, b1y = lx1, ly1 + a1  # Lower left of box 1, aiming to put text here.
+            b2x, b2y = lx1 + a1, ly1
+            b1cx, b1cy = b1x + a1 / 2, b1y + a1 / 2  # Center of box 1.
+            b2cx, b2cy = b2x + a1 / 2, b2y + a1 / 2
+            t1w, t1h = self.text1_label.texture.size
+            t2w, t2h = self.text2_label.texture.size
+            t1x, t1y = b1cx - t1w / 2, b1cy - t1h / 2  # Lower left of actual text box.  Avoids
+            t2x, t2y = b2cx - t2w / 2, b2cy - t2h / 2  # stretching and centers to correct (x, y).
+
+            # Update graphics instructions.
+            self.text1_color.a = 1
+            self.text1_instr.pos = [t1x, t1y]
+            self.text1_instr.size = [t1w, t1h]
+            self.text1_instr.texture = self.text1_label.texture
+            self.text2_color.a = 1
+            self.text2_instr.pos = [t2x, t2y]
+            self.text2_instr.size = [t2w, t2h]
+            self.text2_instr.texture = self.text2_label.texture
+        else:
+            # Natural notes. Add note text.
+            self.text1_label = CoreLabel(font_size=r1,
+                                         text=note_text,
+                                         font_name="./fonts/Lucida Sans Unicode Regular")
+            self.text1_label.refresh()
+
+            # Locate coords of the Rectangle.
+            tw, th = self.text1_label.texture.size
+            b1xc, b1yc = c1x + r1, c1y + r1
+            t1x, t1y = b1xc - tw / 2, b1yc - th / 2
+
+            self.text1_color.a = 1
+            self.text1_instr.pos = [t1x, t1y]
+            self.text1_instr.size = [tw, th]
+            self.text1_instr.texture = self.text1_label.texture
+            # Move text box 2's graphics instructions, but make it clear.
+            self.text2_color.a = 0
+            self.text2_instr.pos = [t1x, t1y]
+            self.text2_instr.size = [tw, th]
+
 
 class KeySigDisplay(FloatLayout):
     root_note_idx = NumericProperty(0)
@@ -29,88 +151,27 @@ class KeySigDisplay(FloatLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.note_markers = InstructionGroup()
+        self.add_markers()
         self.canvas.add(self.note_markers)
 
-    def update_canvas(self, *args):
-        self.redraw_note_markers()
+    def add_markers(self):
+        for i in range(12):
+            marker = Marker()
+            self.note_markers.add(marker)
 
-    def redraw_note_markers(self, *args):
-        self.note_markers.clear()
+    def update_markers(self, instance, value):
         x, y = self.ids.box.pos
-        r1 = self.ids.box.height / 2
-        r2 = r1 * 0.95
+        w, h = self.ids.box.size
+        r1 = h / 2
+        r2 = r1 * 0.9
         rdiff = r1 - r2
         mask = 2048
-        for i in range(12):
-            self.redraw_note_marker(i, x, y, r1, r2, rdiff, mask)
+        for i, marker in enumerate(self.note_markers.children):
+            c1x, c1y = x + w / 12 * i, y
+            c2x, c2y = c1x + rdiff, c1y + rdiff
+            included = mask & self.mode_filter
             mask >>= 1
-
-    def redraw_note_marker(self, i, x, y, r1, r2, rdiff, mask):
-        if self.mode_filter & mask:
-            this_color = rainbow[i]
-        else:
-            this_color = gray
-
-        # Draw 2 concentric circles, c1 and c2.
-        # Circles are defined by a square's lower left corner.
-        c1x, c1y = (2*r1)*i + x, y
-        c2x, c2y = c1x + rdiff, c1y + rdiff
-
-        self.note_markers.add(white)
-        self.note_markers.add(Ellipse(pos=[c1x, c1y], size=[2 * r1, 2 * r1]))
-        self.note_markers.add(this_color)
-        self.note_markers.add(Ellipse(pos=[c2x, c2y], size=[2 * r2, 2 * r2]))
-
-        note_idx = (self.root_note_idx + i) % 12
-        note_text = chrom_scale[note_idx]
-        # scale_degree = scale_degrees[i]
-        # note_text = scale_degree
-        if "/" in note_text:
-            # Accidental notes. Add diagonal line.
-            a1 = (1 / 2) ** 0.5 * r1  # a1 is side of a 45-45-90 right triangle.
-            diff = r1 - a1
-            lx1, ly1 = c1x + diff, c1y + diff
-            lx2, ly2 = lx1 + 2 * a1, ly1 + 2 * a1
-            self.note_markers.add(white)
-            self.note_markers.add(Line(points=[lx1, ly1, lx2, ly2], width=1, cap="none"))
-            # Add notes text.
-            notes = note_text.split("/")
-            note1_label = CoreLabel(text=notes[0], font_size=a1,
-                                    font_name="./fonts/Lucida Sans Unicode Regular")
-            note2_label = CoreLabel(text=notes[1], font_size=a1,
-                                    font_name="./fonts/Lucida Sans Unicode Regular")
-            note1_label.refresh()
-            note2_label.refresh()
-            # Locate coords of where to place Rectangle. Affected by font_size, text length...
-            bx1, by1 = lx1, ly1 + a1  # Lower left of box 1, aiming to put text here.
-            bx2, by2 = lx1 + a1, ly1
-            bcx1, bcy1 = bx1 + a1 / 2, by1 + a1 / 2  # Center of box 1.
-            bcx2, bcy2 = bx2 + a1 / 2, by2 + a1 / 2
-            tw1, th1, = note1_label.texture.size
-            tw2, th2 = note2_label.texture.size
-            tx1, ty1 = bcx1 - tw1 / 2, bcy1 - th1 / 2  # Lower left of actual text box.  Avoids
-            tx2, ty2 = bcx2 - tw2 / 2, bcy2 - th2 / 2  # stretching and centers to correct (x, y).
-            note1_instr = Rectangle(pos=[tx1, ty1], texture=note1_label.texture, size=[tw1, th1])
-            note2_instr = Rectangle(pos=[tx2, ty2], texture=note2_label.texture, size=[tw2, th2])
-            self.note_markers.add(black)
-            self.note_markers.add(note1_instr)
-            self.note_markers.add(note2_instr)
-        else:
-            # Natural notes. Add note text.
-            # Size of CoreLabel is .size, .texture.size, .content_size. (Why all 3..?)
-            # CoreLabel.text_size is bounding box of text, and is (None, None).
-            # Height is determined by font_size, width determined by font_size and text length.
-            # Set size of Rectangle to match texture.size to avoid stretching text.
-            note_label = CoreLabel(text=note_text,
-                                   font_size=self.ids.box.height * 10 / 13 * 0.85,
-                                   font_name="./fonts/Lucida Sans Unicode Regular")
-            note_label.refresh()
-            tw, th = note_label.texture.size
-            xc_center, yc_center = c1x + r1, c1y + r1
-            tx1, ty1 = xc_center - tw / 2, yc_center - th / 2
-            note_instr = Rectangle(pos=[tx1, ty1], texture=note_label.texture, size=[tw, th])
-            self.note_markers.add(black)
-            self.note_markers.add(note_instr)
+            marker.update(i, self.root_note_idx, c1x, c1y, r1, c2x, c2y, r2, included)
 
     def on_size(self, instance, value):
         width, height = self.size
@@ -123,13 +184,14 @@ class KeySigDisplay(FloatLayout):
             self.ids.box.height = width / target_ratio
 
     def on_box_pos(self, instance, value):
-        self.update_canvas(instance, value)
+        self.update_markers(instance, value)
 
     def on_root_note_idx(self, instance, value):
-        self.update_canvas(instance, value)
+        self.update_markers(instance, value)
 
-    def on_mode_filter(self,instance, value):
-        self.update_canvas(instance, value)
+    def on_mode_filter(self, instance, value):
+        self.update_markers(instance, value)
+
 
 class KeySigDisplayApp(App):
     def build(self):
