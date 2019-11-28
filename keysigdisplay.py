@@ -2,7 +2,6 @@ from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color
 from kivy.core.text import Label as CoreLabel
-from kivy.lang import Builder
 from kivy.properties import NumericProperty, ReferenceListProperty
 
 
@@ -159,7 +158,7 @@ class KeySigDisplay(FloatLayout):
             marker = Marker()
             self.note_markers.add(marker)
 
-    def update_markers(self, instance, value):
+    def update_markers(self):
         x, y = self.ids.box.pos
         w, h = self.ids.box.size
         r1 = h / 2
@@ -184,13 +183,13 @@ class KeySigDisplay(FloatLayout):
             self.ids.box.height = width / target_ratio
 
     def on_box_pos(self, instance, value):
-        self.update_markers(instance, value)
+        self.update_markers()
 
     def on_root_note_idx(self, instance, value):
-        self.update_markers(instance, value)
+        self.update_markers()
 
     def on_mode_filter(self, instance, value):
-        self.update_markers(instance, value)
+        self.update_markers()
 
 
 class KeySigDisplayApp(App):

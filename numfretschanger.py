@@ -8,10 +8,12 @@ class NumFretsChanger(FloatLayout):
     box_width = NumericProperty(0)
 
     def increment_num_frets(self):
-        self.num_frets += 1
+        if self.num_frets < 24:
+            self.num_frets += 1
 
     def decrement_num_frets(self):
-        self.num_frets -= 1
+        if self.num_frets > 5:
+            self.num_frets -= 1
 
     def on_size(self, instance, value):
         width, height = self.size
