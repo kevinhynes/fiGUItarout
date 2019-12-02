@@ -63,7 +63,7 @@ class Marker(InstructionGroup):
         self.add(self.text2_color)
         self.add(self.text2_instr)
 
-    def update(self, i, root_note_idx, c1x, c1y, r1, c2x, c2y, r2, included):
+    def update(self, i, note_text, c1x, c1y, r1, c2x, c2y, r2, included):
         self.background.size = [2*r1, 2*r1]
         self.background.pos = [c1x, c1y]
         self.marker.size = [2*r2, 2*r2]
@@ -73,7 +73,7 @@ class Marker(InstructionGroup):
             self.background_color.a = 1
             self.marker_color.hsv = rainbow[i].hsv
             self.marker_color.a = 1
-            self.update_text(i, root_note_idx, c1x, c1y, r1)
+            self.update_text(i, note_text, c1x, c1y, r1)
         else:
             self.background_color.a = 0
             self.marker_color.a = 0
@@ -81,11 +81,9 @@ class Marker(InstructionGroup):
             self.text1_color.a = 0
             self.text2_color.a = 0
 
-    def update_text(self, i, root_note_idx, c1x, c1y, r1):
-        note_idx = (root_note_idx + i) % 12
-        note_text = chrom_scale[note_idx]
-        scale_degree = scale_degrees[i]
-        note_text = scale_degree
+    def update_text(self, i, note_text, c1x, c1y, r1):
+        # scale_degree = scale_degrees[i]
+        # note_text = scale_degree
         if "/" in note_text:
             # Accidental notes. Add diagonal line.
             a1 = (1 / 2) ** 0.5 * r1  # a1 is side of a 45-45-90 right triangle.
@@ -150,6 +148,7 @@ class Marker(InstructionGroup):
             self.text2_instr.pos = [t1x, t1y]
             self.text2_instr.size = [tw, th]
 
+
 class String(RelativeLayout):
     open_note_val = NumericProperty(0)
     num_frets = NumericProperty(12)
@@ -202,6 +201,7 @@ class String(RelativeLayout):
         rdiff = r1 - r2
         for i, note_val in enumerate(self.note_vals):
             self.redraw_note_marker(i, note_val, r1, r2, rdiff)
+            # marker.update(i, self.root_note_idx, c1x, c1y, r1, c2x, c2y, r2, included)
 
     def redraw_note_marker(self, i, note_val, r1, r2, rdiff):
         octave, note_idx = divmod(note_val, 12)
