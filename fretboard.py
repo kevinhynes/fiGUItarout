@@ -1,14 +1,19 @@
 from kivy.app import App
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.floatlayout import FloatLayout
-from kivy.properties import NumericProperty, BoundedNumericProperty, ListProperty, ReferenceListProperty
+from kivy.uix.stencilview import StencilView
+from kivy.properties import NumericProperty, ListProperty, ReferenceListProperty, ObjectProperty
 from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color, Quad
 # from kivy.uix.label import CoreLabel
 from kivy.core.text import Label as CoreLabel
 from kivy.clock import Clock
 
+flat = u'\u266D'
+sharp = u'\u266F'
 chrom_scale = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B']
 chrom_scale2 = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
+scale_degrees = ["1", "♭2", "2", "♭3", "3", "4", "♯4/♭5", "5", "♯5/♭6", "6", "♭7", "7"]
+
 octave_alpha = 0.8
 octave_colors = [[255 / 255, 180 / 255, 52 / 255, octave_alpha],  # orange
                  [255 / 255, 251 / 255, 52 / 255, octave_alpha],  # yellow
@@ -25,6 +30,125 @@ rainbow = [Color(hsv=[i / 12, 1, 0.95]) for i in range(12)]
 reds = [Color(hsv=[0, i / 12, 1]) for i in range(12)][::-1]
 blues = [Color(hsv=[0.6, i / 12, 1]) for i in range(12)][::-1]
 
+
+class Marker(InstructionGroup):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.background_color = Color()
+        self.background = Ellipse()
+        self.marker_color = Color()
+        self.marker = Ellipse()
+        self.split_line_color = Color()
+        self.split_line = Line(width=1, cap="none")
+        self.text1_color = Color()
+        self.text1_label = CoreLabel()
+        self.text1_instr = Rectangle()
+        self.text2_color = Color()
+        self.text2_label = CoreLabel(font_name="./fonts/Lucida Sans Unicode Regular")
+        self.text2_instr = Rectangle()
+        self.background_color.hsv = white.hsv
+        self.split_line_color.hsv = white.hsv
+        self.text1_color.hsv = black.hsv
+        self.text2_color.hsv = black.hsv
+
+        self.add(self.background_color)
+        self.add(self.background)
+        self.add(self.marker_color)
+        self.add(self.marker)
+        self.add(self.split_line_color)
+        self.add(self.split_line)
+        self.add(self.text1_color)
+        self.add(self.text1_instr)
+        self.add(self.text2_color)
+        self.add(self.text2_instr)
+
+    def update(self, i, root_note_idx, c1x, c1y, r1, c2x, c2y, r2, included):
+        self.background.size = [2*r1, 2*r1]
+        self.background.pos = [c1x, c1y]
+        self.marker.size = [2*r2, 2*r2]
+        self.marker.pos = [c2x, c2y]
+
+        if included:
+            self.background_color.a = 1
+            self.marker_color.hsv = rainbow[i].hsv
+            self.marker_color.a = 1
+            self.update_text(i, root_note_idx, c1x, c1y, r1)
+        else:
+            self.background_color.a = 0
+            self.marker_color.a = 0
+            self.split_line_color.a = 0
+            self.text1_color.a = 0
+            self.text2_color.a = 0
+
+    def update_text(self, i, root_note_idx, c1x, c1y, r1):
+        note_idx = (root_note_idx + i) % 12
+        note_text = chrom_scale[note_idx]
+        scale_degree = scale_degrees[i]
+        note_text = scale_degree
+        if "/" in note_text:
+            # Accidental notes. Add diagonal line.
+            a1 = (1 / 2) ** 0.5 * r1  # a1 is side of a 45-45-90 right triangle.
+            diff = r1 - a1
+            lx1, ly1 = c1x + diff, c1y + diff
+            lx2, ly2 = lx1 + 2 * a1, ly1 + 2 * a1
+            self.split_line_color.a = 1
+            self.split_line.points = [lx1, ly1, lx2, ly2]
+
+            # Add notes text. Need to remake CoreLabels every time.. inefficient.
+            # Size of CoreLabel is .size, .texture.size, .content_size. (Why all 3..?)
+            # CoreLabel.text_size is bounding box of text, and is (None, None).
+            # Height is determined by font_size, width determined by font_size and text length.
+            # Set size of Rectangle to match texture.size to avoid stretching text.
+            notes = note_text.split("/")
+            self.text1_label = CoreLabel(font_size=a1,
+                                         text=notes[0],
+                                         font_name="./fonts/Lucida Sans Unicode Regular")
+            self.text2_label = CoreLabel(font_size=a1,
+                                         text=notes[1],
+                                         font_name="./fonts/Lucida Sans Unicode Regular")
+            self.text1_label.refresh()
+            self.text2_label.refresh()
+
+            # Locate coords of where to place Rectangle. Affected by font_size, text length...
+            b1x, b1y = lx1, ly1 + a1  # Lower left of box 1, aiming to put text here.
+            b2x, b2y = lx1 + a1, ly1
+            b1cx, b1cy = b1x + a1 / 2, b1y + a1 / 2  # Center of box 1.
+            b2cx, b2cy = b2x + a1 / 2, b2y + a1 / 2
+            t1w, t1h = self.text1_label.texture.size
+            t2w, t2h = self.text2_label.texture.size
+            t1x, t1y = b1cx - t1w / 2, b1cy - t1h / 2  # Lower left of actual text box.  Avoids
+            t2x, t2y = b2cx - t2w / 2, b2cy - t2h / 2  # stretching and centers to correct (x, y).
+
+            # Update graphics instructions.
+            self.text1_color.a = 1
+            self.text1_instr.pos = [t1x, t1y]
+            self.text1_instr.size = [t1w, t1h]
+            self.text1_instr.texture = self.text1_label.texture
+            self.text2_color.a = 1
+            self.text2_instr.pos = [t2x, t2y]
+            self.text2_instr.size = [t2w, t2h]
+            self.text2_instr.texture = self.text2_label.texture
+        else:
+            # Natural notes. Add note text.
+            self.text1_label = CoreLabel(font_size=r1,
+                                         text=note_text,
+                                         font_name="./fonts/Lucida Sans Unicode Regular")
+            self.text1_label.refresh()
+
+            # Locate coords of the Rectangle.
+            tw, th = self.text1_label.texture.size
+            b1xc, b1yc = c1x + r1, c1y + r1
+            t1x, t1y = b1xc - tw / 2, b1yc - th / 2
+
+            self.text1_color.a = 1
+            self.text1_instr.pos = [t1x, t1y]
+            self.text1_instr.size = [tw, th]
+            self.text1_instr.texture = self.text1_label.texture
+            # Move text box 2's graphics instructions, but make it clear.
+            self.text2_color.a = 0
+            self.text2_instr.pos = [t1x, t1y]
+            self.text2_instr.size = [tw, th]
 
 class String(RelativeLayout):
     open_note_val = NumericProperty(0)
@@ -49,21 +173,9 @@ class String(RelativeLayout):
         self.canvas.add(self.octave_markers)
         self.bind(size=self.update_canvas, pos=self.update_canvas)
 
-    def on_open_note_val(self, instance, value):
-        self.note_vals = [val for val in
-                          range(self.open_note_val, self.open_note_val + self.num_frets + 1)]
-        self.update_canvas(instance, value)
-
-    def on_num_frets(self, instance, value):
-        self.note_vals = [val for val in
-                          range(self.open_note_val, self.open_note_val + self.num_frets + 1)]
-        self.update_canvas(instance, value)
-
-    def on_root_note_idx(self, instance, value):
-        self.update_canvas(instance, value)
-
-    def on_mode_filter(self, instance, value):
-        self.update_canvas(instance, value)
+    def add_markers(self):
+        for i in range(25):
+            self.note_markers.add(Marker())
 
     def update_canvas(self, *args):
         if self.fret_positions:  # self.fret_positions is empty during instantiation.
@@ -102,7 +214,7 @@ class String(RelativeLayout):
             return
 
         # Make right edge of circle touch left edge of fret bar (where your finger should go!)
-        fret_left = self.fret_positions[i] * self.width - (self.fretboard.fret_bar_width / 2)
+        fret_left = self.fret_positions[i] - (self.fretboard.fret_bar_width / 2)
 
         # Draw 2 concentric circles, c1 and c2.
         # Circles are defined by a square's lower left corner.
@@ -178,6 +290,21 @@ class String(RelativeLayout):
             self.octave_markers.add(color)
             self.octave_markers.add(Rectangle(pos=[left, 0], size=[width, self.height]))
 
+    def on_open_note_val(self, instance, value):
+        self.note_vals = [val for val in
+                          range(self.open_note_val, self.open_note_val + self.num_frets + 1)]
+        self.update_canvas(instance, value)
+
+    def on_num_frets(self, instance, value):
+        self.note_vals = [val for val in
+                          range(self.open_note_val, self.open_note_val + self.num_frets + 1)]
+        self.update_canvas(instance, value)
+
+    def on_root_note_idx(self, instance, value):
+        self.update_canvas(instance, value)
+
+    def on_mode_filter(self, instance, value):
+        self.update_canvas(instance, value)
 
 class Fretboard(FloatLayout):
     num_frets = NumericProperty(24)
@@ -193,9 +320,8 @@ class Fretboard(FloatLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.fret_bar_width = self.width * (0.1 / 24.75)
-        self.fret_positions = self.calc_fret_positions()
-        self.fret_pos_midpoints = self.calc_fret_pos_midpoints()
-        self.actual_fret_positions = self.calc_actual_fret_positions(self)
+        self.relative_fret_positions = self.calc_relative_fret_positions()
+        self.fret_positions = self.calc_fret_positions(self)
         self.fret_ranges = self.calc_fret_ranges(self)
 
         self.fingerboard = Rectangle()
@@ -212,23 +338,29 @@ class Fretboard(FloatLayout):
         self.canvas.before.add(self.inlays)
 
     def add_fret_bars(self):
-        for fret in range(self.num_frets):
+        """Add Rectangles to display fret bars.
+        Setting maximum to 24 frets (25 with nut) - the most on any common guitar.
+        When less frets are chosen, some will be drawn off screen."""
+        for fret in range(25):
             self.fret_bars.add(Rectangle())
 
     def add_inlays(self):
-        for inlay in range(self.num_frets // 2):
+        """Add Ellipses to display inlays.
+        There will be a maximum of 12 for a 24-fret guitar (for a typical Fender style).
+        When less frets are chosen, some will be drawn off screen."""
+        for inlay in range(12):
             self.inlays.add(Ellipse())
 
-    def calc_fret_positions(self):
-        """Calculate relative position of frets on the fretboard, where full length of fretboard
-        is from [0,1]."""
+    def calc_relative_fret_positions(self):
+        """Calculate relative position of frets on a 24-fret fretboard.
+        Each fret position is in the range [0, 1], where 1 is the full length of the fretboard."""
         # Ratio of fret[i]/fret[i+1] for 12-tone equal temperament.
         temperament = 2 ** (1 / 12)
 
         # All fret_pos in fret_positions represent % of guitar string; 12th fret_pos == 0.5.
         # All fret_pos in range [0, 0.75] for 24 fret guitar.
         fret_positions = [1 - (1 / (temperament ** fret_num)) for fret_num in
-                          range(self.num_frets + 1)]
+                          range(25)]
 
         # Stretch fret_positions to represent % of fretboard instead.
         # All fret_pos now in range [0, 1].
@@ -240,26 +372,19 @@ class Fretboard(FloatLayout):
         nut_width_ratio = 0.03
         fret_positions = [((1 - nut_width_ratio) * fret_pos) + nut_width_ratio for fret_pos in
                           fret_positions]
-        self.fret_positions = fret_positions
+        return fret_positions
+
+    def calc_fret_positions(self, box):
+        """Calculate position of each fret based on fretboard's current width."""
+
+        # Normalize relative_fret_positions so that we only draw self.num_frets on the screen.
+        # Any frets with a normalized_fret_position > 1 will be drawn off screen.
+        rightmost = self.relative_fret_positions[self.num_frets]
+        normalized_fret_positions = [fret_pos / rightmost for fret_pos in self.relative_fret_positions]
+
+        # Calculate the actual x position of each fret.
+        self.fret_positions = [fret_pos * box.width + box.x for fret_pos in normalized_fret_positions]
         return self.fret_positions
-
-    def calc_fret_pos_midpoints(self):
-        """Calculate relative position of the midpoint between frets from [0,1] to use for
-        positioning inlays."""
-        fret_pos_midpoints = []
-        left_fret = 0
-        for right_fret in self.fret_positions:
-            mid = (left_fret + right_fret) / 2
-            fret_pos_midpoints.append(mid)
-            left_fret = right_fret
-        self.fret_pos_midpoints = fret_pos_midpoints
-        return self.fret_pos_midpoints
-
-    def calc_actual_fret_positions(self, box):
-        """Calculate locations of each fret based on fretboards current width."""
-        self.actual_fret_positions = [fret_pos * box.width + box.x for fret_pos in
-                                      self.fret_positions]
-        return self.actual_fret_positions
 
     def calc_fret_ranges(self, box):
         """Calculate x positions of fretboard between frets for use in displaying octaves."""
@@ -267,7 +392,7 @@ class Fretboard(FloatLayout):
         self.fret_bar_width = box.width * (0.1 / 24.75)
         cur_right = box.x
         fret_ranges = []
-        for fret_pos in self.actual_fret_positions:
+        for fret_pos in self.fret_positions:
             next_left = fret_pos - (self.fret_bar_width / 2)
             fret_ranges.append((cur_right, next_left))
             cur_right = (next_left + self.fret_bar_width)
@@ -278,7 +403,7 @@ class Fretboard(FloatLayout):
         # With box now resized, recalculate & redraw everything. Having trouble drawing things
         # in order using mixture of python and kv lang. Order is explicit here.
         box = self.ids.box
-        self.calc_actual_fret_positions(box)
+        self.calc_fret_positions(box)
         self.calc_fret_ranges(box)
         self.redraw_fingerboard(box)
         self.redraw_fret_bars(box)
@@ -290,9 +415,10 @@ class Fretboard(FloatLayout):
 
     def redraw_fret_bars(self, box):
         # When adding Rectangle to InstructionGroup, BindTextures are added first.
+        self.fret_bar_width = self.width * (0.1/24.75)
         rects = [obj for obj in self.fret_bars.children if isinstance(obj, Rectangle)]
-        for new_fret_pos, rect in zip(self.actual_fret_positions, rects):
-            x_pos = new_fret_pos - (self.fret_bar_width / 2)
+        for fret_pos, rect in zip(self.fret_positions, rects):
+            x_pos = fret_pos - (self.fret_bar_width / 2)
             rect.size = [self.fret_bar_width, box.height]
             rect.pos = [x_pos, box.y]
 
@@ -322,9 +448,8 @@ class Fretboard(FloatLayout):
                 inlay.pos = [x_pos - d / 2, y_pos - d / 2]
                 inlay_num += 1
 
-    def on_size(self, instance, value):
-        """Resize the BoxLayout that holds the fretboard so it maintains a guitar neck
-        aspect ratio."""
+    def on_size(self, *args):
+        """Resize the BoxLayout that holds the fretboard to maintain a guitar neck aspect ratio."""
         target_ratio = 10
         width, height = self.size
         # Check which size is the limiting factor.
@@ -336,20 +461,12 @@ class Fretboard(FloatLayout):
             self.ids.box.width = width
             self.ids.box.height = width / target_ratio
 
-    def on_box_pos(self, instance, value):
-        self.update_canvas(instance, value)
+    def on_box_pos(self, *args):
+        self.update_canvas()
 
-    def on_num_frets(self, instance, value):
-        # TODO: Get rid of adding Rectangles/Ellipses.
-        self.calc_fret_positions()
-        self.calc_fret_pos_midpoints()
-        while self.num_frets > len(self.fret_bars.children) // 2:
-            self.fret_bars.add(Rectangle())
-        num_inlays = len([obj for obj in self.inlays.children if isinstance(obj, Ellipse)])
-        while self.num_frets // 2 >= num_inlays:
-            self.inlays.add(Ellipse())
-            num_inlays += 1
-        self.update_canvas(instance, value)
+    def on_num_frets(self, *args):
+        self.calc_fret_positions(self)
+        self.update_canvas()
 
 
 class FretboardApp(App):

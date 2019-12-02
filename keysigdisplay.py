@@ -155,8 +155,7 @@ class KeySigDisplay(FloatLayout):
 
     def add_markers(self):
         for i in range(12):
-            marker = Marker()
-            self.note_markers.add(marker)
+            self.note_markers.add(Marker())
 
     def update_markers(self):
         x, y = self.ids.box.pos
