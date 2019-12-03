@@ -83,10 +83,10 @@ class String(RelativeLayout):
         r2 = r1 * 0.95
         rdiff = r1 - r2
 
+        print(len(self.note_vals), len(self.note_markers.children))
         for i, (note_val, marker) in enumerate(zip(self.note_vals, self.note_markers.children)):
             # Make right edge of circle touch left edge of fret bar (where your finger should go!)
             fret_left = self.fret_positions[i] - (self.fretboard.fret_bar_width / 2)
-
             # Draw 2 concentric circles, c1 and c2.
             # Circles are defined by a square's lower left corner.
             c1x, c1y = fret_left - 2 * r1, 0
@@ -115,13 +115,11 @@ class String(RelativeLayout):
             self.octave_markers.add(Rectangle(pos=[left, 0], size=[width, self.height]))
 
     def on_open_note_val(self, instance, value):
-        self.note_vals = [val for val in
-                          range(self.open_note_val, self.open_note_val + self.num_frets + 1)]
+        self.note_vals = [val for val in range(self.open_note_val, self.open_note_val + 25)]
         self.update_canvas(instance, value)
 
     def on_num_frets(self, instance, value):
-        self.note_vals = [val for val in
-                          range(self.open_note_val, self.open_note_val + self.num_frets + 1)]
+        self.note_vals = [val for val in range(self.open_note_val, self.open_note_val + 25)]
         self.update_canvas(instance, value)
 
     def on_root_note_idx(self, instance, value):
