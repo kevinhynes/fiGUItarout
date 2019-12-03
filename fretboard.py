@@ -4,7 +4,6 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.stencilview import StencilView
 from kivy.properties import NumericProperty, ListProperty, ReferenceListProperty, ObjectProperty
 from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color, Quad
-# from kivy.uix.label import CoreLabel
 from kivy.core.text import Label as CoreLabel
 from kivy.clock import Clock
 
@@ -33,7 +32,7 @@ reds = [Color(hsv=[0, i / 12, 1]) for i in range(12)][::-1]
 blues = [Color(hsv=[0.6, i / 12, 1]) for i in range(12)][::-1]
 
 
-class String(RelativeLayout):
+class String(FloatLayout):
     open_note_val = NumericProperty(0)
     num_frets = NumericProperty(12)
     fret_positions = ListProperty()
@@ -69,27 +68,29 @@ class String(RelativeLayout):
 
     def redraw_string(self):
         w, h = self.width, self.height * 0.1
-        y = (self.height / 2) - h / 2
-        # Shadow effect.
+        x, y = self.pos
+        cy = y + (self.height / 2)
+        string_y = cy - (h/2)
         shadow_height = 3 * h
+        shadow_y = string_y - shadow_height
+        # Shadow effect.
         self.string_shadow.size = [w, shadow_height]
-        self.string_shadow.pos = [0, y - shadow_height]
+        self.string_shadow.pos = [x, cy - shadow_height]
         # String.
         self.string_graphic.size = [w, h]
-        self.string_graphic.pos = [0, y]
+        self.string_graphic.pos = [x, string_y]
 
     def redraw_note_markers(self, *args):
+        x, y = self.pos
         r1 = self.height / 2
-        r2 = r1 * 0.95
+        r2 = r1 * 0.9
         rdiff = r1 - r2
-
-        print(len(self.note_vals), len(self.note_markers.children))
         for i, (note_val, marker) in enumerate(zip(self.note_vals, self.note_markers.children)):
             # Make right edge of circle touch left edge of fret bar (where your finger should go!)
             fret_left = self.fret_positions[i] - (self.fretboard.fret_bar_width / 2)
             # Draw 2 concentric circles, c1 and c2.
             # Circles are defined by a square's lower left corner.
-            c1x, c1y = fret_left - 2 * r1, 0
+            c1x, c1y = (fret_left - 2 * r1) + x, y
             c2x, c2y = c1x + rdiff, c1y + rdiff
 
             octave, note_idx = divmod(note_val, 12)
@@ -129,7 +130,7 @@ class String(RelativeLayout):
         self.update_canvas(instance, value)
 
 
-class Fretboard(FloatLayout):
+class Fretboard(StencilView, FloatLayout):
     num_frets = NumericProperty(24)
     tuning = ListProperty([28, 33, 38, 43, 47, 52])
     fret_ranges = ListProperty()
@@ -153,12 +154,12 @@ class Fretboard(FloatLayout):
         self.add_fret_bars()
         self.add_inlays()
 
-        self.canvas.before.add(brown)
-        self.canvas.before.add(self.fingerboard)
-        self.canvas.before.add(black)
-        self.canvas.before.add(self.fret_bars)
-        self.canvas.before.add(white)
-        self.canvas.before.add(self.inlays)
+        self.canvas.add(brown)
+        self.canvas.add(self.fingerboard)
+        self.canvas.add(black)
+        self.canvas.add(self.fret_bars)
+        self.canvas.add(white)
+        self.canvas.add(self.inlays)
 
     def add_fret_bars(self):
         """Add Rectangles to display fret bars.
@@ -182,8 +183,7 @@ class Fretboard(FloatLayout):
 
         # All fret_pos in fret_positions represent % of guitar string; 12th fret_pos == 0.5.
         # All fret_pos in range [0, 0.75] for 24 fret guitar.
-        fret_positions = [1 - (1 / (temperament ** fret_num)) for fret_num in
-                          range(25)]
+        fret_positions = [1 - (1 / (temperament ** fret_num)) for fret_num in range(25)]
 
         # Stretch fret_positions to represent % of fretboard instead.
         # All fret_pos now in range [0, 1].
