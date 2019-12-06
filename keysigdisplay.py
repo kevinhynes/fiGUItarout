@@ -3,6 +3,8 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color
 from kivy.core.text import Label as CoreLabel
 from kivy.properties import NumericProperty, ReferenceListProperty
+from kivy.animation import Animation
+
 
 from markers import Marker
 

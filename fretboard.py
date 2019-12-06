@@ -6,6 +6,8 @@ from kivy.properties import NumericProperty, ListProperty, ReferenceListProperty
 from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color, Quad
 from kivy.core.text import Label as CoreLabel
 from kivy.clock import Clock
+from kivy.animation import Animation
+
 
 from markers import Marker
 
@@ -39,6 +41,7 @@ class String(FloatLayout):
     note_vals = ListProperty()
     mode_filter = NumericProperty(0b111111111111)
     root_note_idx = NumericProperty(0)
+    string_blinks = ReferenceListProperty()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -58,13 +61,28 @@ class String(FloatLayout):
 
     def add_markers(self):
         for i in range(25):
-            self.note_markers.add(Marker())
+            marker = Marker()
+            self.note_markers.add(marker)
 
     def update_canvas(self, *args):
         if self.fret_positions:  # self.fret_positions is empty during instantiation.
             # self.redraw_octave_markers()
             self.redraw_string()
             self.redraw_note_markers()
+
+    def animate_marker(self, index, *args):
+        print(*args)
+        markers = self.note_markers.children
+        print(markers)
+        anim = Animation(duration=1)
+        anim.bind(on_start=markers[index].initiate_animation)
+        anim.bind(on_progress=markers[index].update_animation)
+        anim.bind(on_complete=markers[index].after_animation)
+        anim.start(self)
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            self.animate_marker(0)
 
     def redraw_string(self):
         w, h = self.width, self.height * 0.1
@@ -154,12 +172,13 @@ class Fretboard(StencilView, FloatLayout):
         self.add_fret_bars()
         self.add_inlays()
 
-        self.canvas.add(brown)
-        self.canvas.add(self.fingerboard)
-        self.canvas.add(black)
-        self.canvas.add(self.fret_bars)
-        self.canvas.add(white)
-        self.canvas.add(self.inlays)
+        # When launching Fretboard as App, need to use canvas.before..
+        self.canvas.before.add(brown)
+        self.canvas.before.add(self.fingerboard)
+        self.canvas.before.add(black)
+        self.canvas.before.add(self.fret_bars)
+        self.canvas.before.add(white)
+        self.canvas.before.add(self.inlays)
 
     def add_fret_bars(self):
         """Add Rectangles to display fret bars.

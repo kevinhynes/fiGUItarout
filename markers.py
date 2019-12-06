@@ -1,5 +1,8 @@
 from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color
 from kivy.core.text import Label as CoreLabel
+from kivy.properties import NumericProperty
+from kivy.animation import Animation
+from kivy.event import EventDispatcher
 
 flat = u'\u266D'
 sharp = u'\u266F'
@@ -25,6 +28,9 @@ blues = [Color(hsv=[0.6, i / 12, 1]) for i in range(12)][::-1]
 
 
 class Marker(InstructionGroup):
+    blink_size = NumericProperty(0)
+    blink_color = NumericProperty(0)
+    blink_opacity = NumericProperty(0)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -55,6 +61,9 @@ class Marker(InstructionGroup):
         self.add(self.text1_instr)
         self.add(self.text2_color)
         self.add(self.text2_instr)
+
+        self.parent_string = None
+        self.animation = None
 
     def update(self, i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included):
         self.background.size = [2*r1, 2*r1]
@@ -146,3 +155,27 @@ class Marker(InstructionGroup):
             self.text2_color.a = 0
             self.text2_instr.pos = [t1x, t1y]
             self.text2_instr.size = [tw, th]
+
+    def initiate_animation(self, *args):
+        if self.animation:
+            self.animation.stop(self.parent_string)
+        self.animation, self.parent_string = args[0], args[1]
+        self.background_pos = self.background.pos
+        self.background_size = self.background.size
+        self.background_color.hsv = reds[0].hsv
+
+    def update_animation(self, *args):
+        self.background_color.a *= 0.99
+        w1, h1 = self.background.size
+        x1, y1 = self.background.pos
+        w2, h2 = w1*1.01, h1*1.01
+        dx, dy = (w2-w1)/2, (h2-h1)/2
+        self.background.size = [w2, h2]
+        self.background.pos = [x1-dx, y1-dy]
+
+    def after_animation(self, *args):
+        self.background_color.hsv = white.hsv
+        self.background_color.a = 1
+        self.background.pos = self.background_pos
+        self.background.size = self.background_size
+        self.animation = None
