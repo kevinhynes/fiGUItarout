@@ -1,0 +1,49 @@
+#: import pua slideupmenu
+
+<SlidingMenu>:
+    tuning: tuner.tuning
+    num_frets: numfretschanger.num_frets
+    root_note_idx: keysigchooser.root_note_idx
+    mode_filter: keysigchooser.mode_filter
+
+    do_default_tab: False
+    TabbedPanelItem:
+        text: "Tuner"
+        BoxLayout:
+            Tuner:
+                id: tuner
+            NumFretsChanger:
+                id: numfretschanger
+                box_height: tuner.box_height
+                box_width: tuner.box_width
+            BoxLayout:
+    TabbedPanelItem:
+        text: "Key Signature"
+        BoxLayout:
+            orientation: "horizontal"
+            BoxLayout:
+                orientation: "vertical"
+                KeySigChooser:
+                    id: keysigchooser
+                KeySigDisplay:
+                    id: keysigdisplay
+                    root_note_idx: keysigchooser.root_note_idx
+                    mode_filter: keysigchooser.mode_filter
+            FloatLayout:
+
+<SlideUpMenu>:
+    tuning: sliding_menu.tuning
+    num_frets: sliding_menu.num_frets
+    root_note_idx: sliding_menu.root_note_idx
+    mode_filter: sliding_menu.mode_filter
+    SlidingMenu:
+        id: sliding_menu
+        top_hint: 0
+        size_hint: [1, 0.5]
+        pos_hint: {"top": self.top_hint}
+    Button:
+        pos_hint: {"right": 1, "bottom": 0}
+        size_hint: [None, None]
+        size: [150, 50]
+        text: "Menu"
+        on_press: sliding_menu.animate_slide()

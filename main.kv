@@ -1,12 +1,12 @@
 <MainPage>:
-    BoxLayout:
-        orientation: "vertical"
-        Fretboard:
-            tuning: menu.tuning
-            num_frets: menu.num_frets
-            root_note_idx: menu.root_note_idx
-            mode_filter: menu.mode_filter
-        PopUpMenu:
-            id: menu
+
+    Fretboard:
+        pos_hint: {'center_y': 0.75}
+        tuning: menu.tuning
+        num_frets: menu.num_frets
+        root_note_idx: menu.root_note_idx
+        mode_filter: menu.mode_filter
+    SlideUpMenu:
+        id: menu
 
 

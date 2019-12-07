@@ -5,7 +5,7 @@ from kivy.uix.floatlayout import FloatLayout
 # Config.set('graphics', 'maxfps', 0)
 
 Builder.load_file("style.kv")
-Builder.load_file("popupmenu.kv")
+Builder.load_file("slideupmenu.kv")
 Builder.load_file("keysigchooser.kv")
 Builder.load_file("keysigdisplay.kv")
 Builder.load_file("tuner.kv")
