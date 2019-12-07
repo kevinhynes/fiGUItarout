@@ -1,7 +1,7 @@
 from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color
 from kivy.core.text import Label as CoreLabel
 from kivy.properties import NumericProperty
-from kivy.animation import Animation
+from kivy.animation import AnimationTransition
 from kivy.event import EventDispatcher
 
 flat = u'\u266D'
@@ -162,20 +162,27 @@ class Marker(InstructionGroup):
         self.animation, self.parent_string = args[0], args[1]
         self.background_pos = self.background.pos
         self.background_size = self.background.size
+        self.marker_color_before = self.marker_color.hsv
         self.background_color.hsv = reds[0].hsv
+        self.marker_color.hsv = white.hsv
 
     def update_animation(self, *args):
-        self.background_color.a *= 0.99
-        w1, h1 = self.background.size
-        x1, y1 = self.background.pos
-        w2, h2 = w1*1.01, h1*1.01
+        # progress value always goes 0->1
+        animation, string, progress = args
+        anim_val = AnimationTransition.out_quart(progress)
+        self.background_color.a = (1-anim_val)
+        w1, h1 = self.background_size
+        x1, y1 = self.background_pos
+        w2, h2 = w1 + w1*anim_val*0.5, h1 + h1*anim_val*0.5
         dx, dy = (w2-w1)/2, (h2-h1)/2
         self.background.size = [w2, h2]
         self.background.pos = [x1-dx, y1-dy]
+
 
     def after_animation(self, *args):
         self.background_color.hsv = white.hsv
         self.background_color.a = 1
         self.background.pos = self.background_pos
         self.background.size = self.background_size
+        self.marker_color.hsv = self.marker_color_before
         self.animation = None

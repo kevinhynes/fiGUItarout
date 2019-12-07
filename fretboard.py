@@ -42,6 +42,7 @@ class String(FloatLayout):
     mode_filter = NumericProperty(0b111111111111)
     root_note_idx = NumericProperty(0)
     string_blinks = ReferenceListProperty()
+    animation_prop = NumericProperty(0)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -71,10 +72,8 @@ class String(FloatLayout):
             self.redraw_note_markers()
 
     def animate_marker(self, index, *args):
-        print(*args)
         markers = self.note_markers.children
-        print(markers)
-        anim = Animation(duration=1)
+        anim = Animation(animation_prop=1, duration=2, t="in_circ")
         anim.bind(on_start=markers[index].initiate_animation)
         anim.bind(on_progress=markers[index].update_animation)
         anim.bind(on_complete=markers[index].after_animation)
