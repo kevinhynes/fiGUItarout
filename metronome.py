@@ -148,11 +148,11 @@ wavfile.write('sine.wav', sps, waveform_integers)
 
 
 # simpleaudio can play NumPy arrays directly.
-import simpleaudio as sa
+# import simpleaudio as sa
 # Start playback
-play_obj = sa.play_buffer(waveform_integers, 1, 2, sps)
+# play_obj = sa.play_buffer(waveform_integers, 1, 2, sps)
 # Wait for playback to finish before exiting
-play_obj.wait_done()
+# play_obj.wait_done()
 ############################################################################################
 
 
@@ -169,7 +169,6 @@ class Metronome(FloatLayout):
         super().__init__(**kwargs)
         self.spb = 60 / self.bpm
         self.time_sig = 4
-        self.stop_event = Event()
 
         self.sine_file = "./sine.wav"  # Written from NumPy array
 
@@ -185,16 +184,6 @@ class Metronome(FloatLayout):
         self.stopped = True
         self.needle_animation = Animation()
         self.beatmarker_animation = Animation()
-
-    def play(self, *args):
-        if self.stopped:
-            self.stopped = False
-            thread = Thread(target=self._play, daemon=True)
-            thread.start()
-
-    def close(self, *args):
-        self.stream.close()
-        self.player.terminate()
 
     def on_size(self, *args):
         target_ratio = 0.75
@@ -213,6 +202,12 @@ class Metronome(FloatLayout):
     def increment_bpm(self, val):
         if 1 < self.bpm < 300:
             self.bpm += val
+
+    def play(self, *args):
+        if self.stopped:
+            self.stopped = False
+            thread = Thread(target=self._play, daemon=True)
+            thread.start()
 
     def _play(self):
         start = time.time()

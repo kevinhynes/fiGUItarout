@@ -66,22 +66,26 @@ class ModeChooser(BoxLayout):
     group_idx = NumericProperty(0)
     mode_filter = NumericProperty(0b111111111111)
 
+    def on_group_idx(self, instance, value):
+        mode = mode_groups[self.mode_group][self.group_idx]
+        self.spinner.text = mode
+        self.mode_filter = mode_filters[mode]
+        num_notes = bin(self.mode_filter).count("1")
+
     def increment_group_idx(self):
         self.group_idx = (self.group_idx + 1) % len(mode_groups[self.mode_group])
 
     def decrement_group_idx(self):
         self.group_idx = (self.group_idx - 1) % len(mode_groups[self.mode_group])
 
-    def on_group_idx(self, instance, value):
-        mode = mode_groups[self.mode_group][self.group_idx]
-        self.mode_text.text = mode
-        self.mode_filter = mode_filters[mode]
-        num_notes = bin(self.mode_filter).count("1")
-
     def on_mode_group(self, instance, value):
+        self.spinner.values = mode_groups[self.mode_group]
         if self.group_idx == 0:
             self.on_group_idx(instance, value)
         self.group_idx = 0
+
+    def on_new_mode_chosen(self, mode):
+        self.group_idx = mode_groups[self.mode_group].index(mode)
 
 
 class KeySigChooser(FloatLayout):

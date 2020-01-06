@@ -68,7 +68,7 @@
 
 <ModeChooser>:
     box: self.parent  # `box` doesn't exist when rule is first read.
-    mode_text: mode_text
+    spinner: spinner
     canvas:
         Color:
             rgba: [0, 0, 0, 1]
@@ -88,13 +88,21 @@
                 text: u'\u25C4'
                 width: root.box.width * (1/32)
                 on_press: root.decrement_group_idx()
-            Label:
-                id: mode_text
-                text: "Chromatic"
+#            Label:
+#                id: mode_text
+#                text: "Chromatic"
+#                font_size: root.box.box_font_size or self.width
+#                text_size: self.size
+#                halign: "center"
+#                valign: "center"
+            OutlinedSpinner:
+                id: spinner
+#                size_hint: [1, 0.6]
+                text_autoupdate: True
+        #        background_normal: ''
+                background_color: [1, 1, 1, 1]
                 font_size: root.box.box_font_size or self.width
-                text_size: self.size
-                halign: "center"
-                valign: "center"
+                on_text: root.on_new_mode_chosen(self.text)
             ChooserButton:
                 text: u'\u25BA'
                 width: root.box.width * (1/32)
@@ -103,7 +111,7 @@
 
 <ModeGroupChooser@BoxLayout>:
     box: self.parent
-    label: label
+    spinner: spinner
     orientation: "vertical"
     canvas:
         Color:
@@ -116,7 +124,7 @@
         text: "MODE GROUP"
         size_hint: [1, 0.4]
     OutlinedSpinner:
-        id: label
+        id: spinner
         size_hint: [1, 0.6]
         text_autoupdate: True
 #        background_normal: ''
@@ -151,7 +159,7 @@
             ModeChooser:
                 id: modechooser
                 box: box
-                mode_group: modegroupchooser.label.text
+                mode_group: modegroupchooser.spinner.text
                 size_hint: [4.5, 1]
             ModeGroupChooser:
                 id: modegroupchooser
