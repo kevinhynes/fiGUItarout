@@ -178,7 +178,6 @@ class Marker(InstructionGroup):
         self.background.size = [w2, h2]
         self.background.pos = [x1-dx, y1-dy]
 
-
     def after_animation(self, *args):
         self.background_color.hsv = white.hsv
         self.background_color.a = 1

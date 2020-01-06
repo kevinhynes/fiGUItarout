@@ -1,0 +1,104 @@
+#: import mtr metronome
+
+<BeatBar>:
+#    canvas:
+#        Color:
+#            rgba: (0, 0, 0, 0.5)
+#        Line:
+#            points:
+#                [self.x, self.y,
+#                self.x, self.y + self.height,
+#                self.x + self.width, self.y + self.height,
+#                self.x + self.width, self.y]
+#            width: 2
+#            joint: 'round'
+#            close: True
+
+<Metronome>:
+    id: metronome
+    box: box
+    beatbar: beatbar
+    buttonbar: buttonbar
+    titlebar: titlebar
+
+    BoxLayout:
+        id: box
+        pos_hint: {"center": [0.5, 0.5]}
+        size_hint: [None, None]
+        orientation: "vertical"
+        canvas:
+            Color:
+                rgba: (1, 1, 1, 0.5)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        TitleBar:
+            id: titlebar
+            metronome: metronome
+            size_hint: [1, 0.3]
+            Button:
+                size_hint: [0.25, 1]
+                text: "-"
+                font_name: "./fonts/Impact"
+                font_size: 50
+                on_press: metronome.increment_bpm(-1)
+            TextInput:
+                size_hint: [0.5, 1]
+                text: str(metronome.bpm) + " BPM"
+                font_name: "./fonts/Impact"
+                font_size: 32
+                valign: True
+                halign: "center"
+                multiline: False
+                on_text_validate: titlebar.validate_text(self.text)
+            Button:
+                size_hint: [0.25, 1]
+                text: "+"
+                font_name: "./fonts/Impact"
+                font_size: 50
+                on_press: metronome.increment_bpm(1)
+
+        FloatLayout:
+            canvas:
+                PushMatrix
+                Color:
+                    rgba: (0, 0, 0, 0.5)
+                Translate:
+                    y: -self.height
+                    x: self.width/2 - self.height
+                Ellipse:
+                    size: [self.height*2, self.height*2]
+                    pos: self.pos
+                    angle_start: -root.max_needle_angle
+                    angle_end: root.max_needle_angle
+                PopMatrix
+                PushMatrix
+                Rotate:
+                    angle: root.needle_angle
+                    axis: 0, 0, 1
+                    origin: [self.width * 0.5 + self.x, self.y]
+                Color:
+                    rgba: (0, 0, 0, 0.5)
+                Rectangle:
+                    size: [self.width * 0.02, self.height * 0.85]
+                    pos: [self.width * 0.5 - self.width * 0.01 + self.x,  self.y]
+                PopMatrix
+
+        BeatBar:
+            id: beatbar
+            size_hint: [1, 0.4]
+            num_beats: metronome.num_beats
+
+        BoxLayout:
+            id: buttonbar
+            size_hint: [1, 0.2]
+            pos_hint: {"center_x": 0.5, "bottom": 0}
+            Button:
+                text: "Play"
+                on_press: root.play()
+            Button:
+                text: "Stop"
+                on_press: root.stop()
+
+
