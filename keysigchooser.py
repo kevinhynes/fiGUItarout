@@ -58,11 +58,14 @@ class RootNoteChooser(BoxLayout):
         self.root_note_idx = (self.root_note_idx - 1) % 12
 
     def on_root_note_idx(self, instance, value):
-        self.note_text.text = chrom_scale[self.root_note_idx]
+        self.spinner.text = chrom_scale[self.root_note_idx]
+
+    def on_new_root_note_chosen(self, root_note):
+        self.root_note_idx = chrom_scale.index(root_note)
 
 
 class ModeChooser(BoxLayout):
-    mode_group = StringProperty("All")  # key to mode_groups dict.
+    mode_group = StringProperty("")  # key to mode_groups dict.
     group_idx = NumericProperty(0)
     mode_filter = NumericProperty(0b111111111111)
 

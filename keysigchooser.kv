@@ -6,7 +6,7 @@
             rgba: [0, 0, 0, 1]
         Line:
             rounded_rectangle: [*self.pos, *self.size, 2]
-            width: 1.1
+            width: 1.05
 
 
 <OutlinedBoxLayout@BoxLayout+OutlinedWidget>:
@@ -38,7 +38,7 @@
 <RootNoteChooser>:
     orientation: "vertical"
     box: self.parent  # `box` doesn't exist when rule is first read.
-    note_text: note_text
+    spinner: spinner
     canvas:
         Color:
             rgba: [0, 0, 0, 1]
@@ -56,10 +56,17 @@
             text: u'\u25C4'
             width: root.box.width * (1/32)
             on_press: root.decrement_root_note_idx()
-        Label:
-            id: note_text
+#        Label:
+#            id: note_text
+#            font_size: root.box.box_font_size or self.width
+#            text: "C"
+        OutlinedSpinner:
+            id: spinner
+            text_autoupdate: True
+            background_color: [1, 1, 1, 1]
             font_size: root.box.box_font_size or self.width
-            text: "C"
+            values: ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B']
+            on_text: root.on_new_root_note_chosen(self.text)
         ChooserButton:
             text: u'\u25BA'
             width: root.box.width * (1/32)
@@ -88,18 +95,9 @@
                 text: u'\u25C4'
                 width: root.box.width * (1/32)
                 on_press: root.decrement_group_idx()
-#            Label:
-#                id: mode_text
-#                text: "Chromatic"
-#                font_size: root.box.box_font_size or self.width
-#                text_size: self.size
-#                halign: "center"
-#                valign: "center"
             OutlinedSpinner:
                 id: spinner
-#                size_hint: [1, 0.6]
                 text_autoupdate: True
-        #        background_normal: ''
                 background_color: [1, 1, 1, 1]
                 font_size: root.box.box_font_size or self.width
                 on_text: root.on_new_mode_chosen(self.text)
