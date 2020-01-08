@@ -13,7 +13,7 @@
     BoxLayout:
         id: box
         size_hint: [None, None]
-        pos_hint: {"center": [0.5, 0.5]}
+        pos_hint: {"center": [0.5, 0.75]}
         orientation: "vertical"
         String:
             id: s6
@@ -47,7 +47,6 @@
             num_frets: fretboard.num_frets
             root_note_idx: fretboard.root_note_idx
             mode_filter: fretboard.mode_filter
-
         String:
             id: s2
             fretboard: fretboard
@@ -56,7 +55,6 @@
             num_frets: fretboard.num_frets
             root_note_idx: fretboard.root_note_idx
             mode_filter: fretboard.mode_filter
-
         String:
             id: s1
             fretboard: fretboard

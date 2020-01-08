@@ -56,10 +56,6 @@
             text: u'\u25C4'
             width: root.box.width * (1/32)
             on_press: root.decrement_root_note_idx()
-#        Label:
-#            id: note_text
-#            font_size: root.box.box_font_size or self.width
-#            text: "C"
         OutlinedSpinner:
             id: spinner
             text_autoupdate: True
@@ -134,6 +130,7 @@
     id: keysigchooser
     root_note_idx: rootnotechooser.root_note_idx
     mode_filter: modechooser.mode_filter
+    key_sig_text: rootnotechooser.spinner.text + " " + modechooser.spinner.text
     BoxLayout:
         id: box
         box_font_size: self.width / 30

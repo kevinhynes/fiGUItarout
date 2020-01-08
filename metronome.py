@@ -102,6 +102,10 @@ class BeatBar(FloatLayout):
     def on_size(self, *args):
         self.update_beatmarkers()
 
+    def on_pos(self, *args):
+        # Needed for slide up menu.
+        self.update_beatmarkers()
+
     def update_beatmarkers(self):
         target_ratio = self.num_beats / 1
         aspect_ratio = self.width / self.height

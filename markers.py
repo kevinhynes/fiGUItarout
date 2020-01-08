@@ -2,7 +2,6 @@ from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color
 from kivy.core.text import Label as CoreLabel
 from kivy.properties import NumericProperty
 from kivy.animation import AnimationTransition
-from kivy.event import EventDispatcher
 
 flat = u'\u266D'
 sharp = u'\u266F'
@@ -156,19 +155,18 @@ class Marker(InstructionGroup):
             self.text2_instr.pos = [t1x, t1y]
             self.text2_instr.size = [tw, th]
 
-    def initiate_animation(self, *args):
+    def initiate_animation(self, animation, parent_string):
         if self.animation:
             self.animation.stop(self.parent_string)
-        self.animation, self.parent_string = args[0], args[1]
+        self.animation, self.parent_string = animation, parent_string
         self.background_pos = self.background.pos
         self.background_size = self.background.size
         self.marker_color_before = self.marker_color.hsv
         self.background_color.hsv = reds[0].hsv
         self.marker_color.hsv = white.hsv
 
-    def update_animation(self, *args):
+    def update_animation(self, animation, parent_string, progress):
         # progress value always goes 0->1
-        animation, string, progress = args
         anim_val = AnimationTransition.out_quart(progress)
         self.background_color.a = (1-anim_val)
         w1, h1 = self.background_size
@@ -178,7 +176,7 @@ class Marker(InstructionGroup):
         self.background.size = [w2, h2]
         self.background.pos = [x1-dx, y1-dy]
 
-    def after_animation(self, *args):
+    def end_animation(self, animation, parent_string):
         self.background_color.hsv = white.hsv
         self.background_color.a = 1
         self.background.pos = self.background_pos

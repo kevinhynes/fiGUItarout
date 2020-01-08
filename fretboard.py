@@ -1,11 +1,9 @@
 from kivy.app import App
-from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.stencilview import StencilView
-from kivy.properties import NumericProperty, ListProperty, ReferenceListProperty, ObjectProperty
-from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color, Quad
+from kivy.properties import NumericProperty, ListProperty, ReferenceListProperty
+from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color
 from kivy.core.text import Label as CoreLabel
-from kivy.clock import Clock
 from kivy.animation import Animation
 
 
@@ -55,12 +53,12 @@ class String(FloatLayout):
         self.canvas.add(self.string_shadow)
         self.canvas.add(Color(rgba=[169 / 255, 169 / 255, 169 / 255, 1]))
         self.canvas.add(self.string_graphic)
-        self.add_markers()
+        self._add_markers()
         self.canvas.add(self.note_markers)
         self.canvas.add(self.octave_markers)
         self.bind(size=self.update_canvas, pos=self.update_canvas)
 
-    def add_markers(self):
+    def _add_markers(self):
         for i in range(25):
             marker = Marker()
             self.note_markers.add(marker)
@@ -76,7 +74,7 @@ class String(FloatLayout):
         anim = Animation(animation_prop=1, duration=2, t="in_circ")
         anim.bind(on_start=markers[index].initiate_animation)
         anim.bind(on_progress=markers[index].update_animation)
-        anim.bind(on_complete=markers[index].after_animation)
+        anim.bind(on_complete=markers[index].end_animation)
         anim.start(self)
 
     def on_touch_down(self, touch):
