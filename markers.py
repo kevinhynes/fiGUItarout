@@ -27,9 +27,6 @@ blues = [Color(hsv=[0.6, i / 12, 1]) for i in range(12)][::-1]
 
 
 class Marker(InstructionGroup):
-    blink_size = NumericProperty(0)
-    blink_color = NumericProperty(0)
-    blink_opacity = NumericProperty(0)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

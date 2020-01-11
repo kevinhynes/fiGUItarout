@@ -6,6 +6,7 @@
     root_note_idx: keysigchooser.root_note_idx
     mode_filter: keysigchooser.mode_filter
     key_sig_text: keysigchooser.key_sig_text
+    scale_text: scale_options_chooser.scale_text
 
     do_default_tab: False
     TabbedPanelItem:
@@ -26,10 +27,12 @@
                 orientation: "vertical"
                 KeySigChooser:
                     id: keysigchooser
-                KeySigDisplay:
-                    id: keysigdisplay
-                    root_note_idx: keysigchooser.root_note_idx
-                    mode_filter: keysigchooser.mode_filter
+                ScaleOptionsChooser:
+                    id: scale_options_chooser
+#                KeySigDisplay:
+#                    id: keysigdisplay
+#                    root_note_idx: keysigchooser.root_note_idx
+#                    mode_filter: keysigchooser.mode_filter
             Metronome:
 
 <SlideUpMenu>:
@@ -38,6 +41,7 @@
     root_note_idx: sliding_menu.root_note_idx
     mode_filter: sliding_menu.mode_filter
     key_sig_text: sliding_menu.key_sig_text
+    scale_text: sliding_menu.scale_text
 
     SlidingMenu:
         id: sliding_menu

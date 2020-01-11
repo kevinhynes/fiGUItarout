@@ -1,7 +1,7 @@
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.stencilview import StencilView
-from kivy.properties import NumericProperty, ListProperty, ReferenceListProperty
+from kivy.properties import NumericProperty, ListProperty, ReferenceListProperty,StringProperty
 from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color
 from kivy.core.text import Label as CoreLabel
 from kivy.animation import Animation
@@ -12,8 +12,14 @@ from markers import Marker
 flat = u'\u266D'
 sharp = u'\u266F'
 chrom_scale = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B']
-chrom_scale2 = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
+chrom_scale_no_acc = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
 scale_degrees = ["1", "♭2", "2", "♭3", "3", "4", "♯4/♭5", "5", "♯5/♭6", "6", "♭7", "7"]
+scale_texts = {
+    None: chrom_scale,
+    "": chrom_scale,
+    "Notes": chrom_scale,
+    "Notes - No Accidentals": chrom_scale_no_acc,
+    "Scale Degrees": scale_degrees}
 
 octave_alpha = 0.8
 octave_colors = [[255 / 255, 180 / 255, 52 / 255, octave_alpha],  # orange
@@ -41,6 +47,7 @@ class String(FloatLayout):
     root_note_idx = NumericProperty(0)
     string_blinks = ReferenceListProperty()
     animation_prop = NumericProperty(0)
+    scale_text = StringProperty("")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -109,9 +116,13 @@ class String(FloatLayout):
             c2x, c2y = c1x + rdiff, c1y + rdiff
 
             octave, note_idx = divmod(note_val, 12)
-            note_text = chrom_scale[note_idx]
-            color_idx = note_idx - self.root_note_idx
             included = int(bin(self.mode_filter)[2:][note_idx - self.root_note_idx])
+            color_idx = note_idx - self.root_note_idx
+
+            if self.scale_text == "Scale Degrees":
+                note_idx -= self.root_note_idx
+
+            note_text = scale_texts[self.scale_text][note_idx]
 
             marker.update(i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included)
 
@@ -144,6 +155,9 @@ class String(FloatLayout):
     def on_mode_filter(self, instance, value):
         self.update_canvas(instance, value)
 
+    def on_scale_text(self, instance, value):
+        self.redraw_note_markers()
+
 
 class Fretboard(StencilView, FloatLayout):
     num_frets = NumericProperty(24)
@@ -155,6 +169,7 @@ class Fretboard(StencilView, FloatLayout):
     box_x = NumericProperty(0)
     box_y = NumericProperty(0)
     box_pos = ReferenceListProperty(box_x, box_y)
+    scale_text = StringProperty("")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

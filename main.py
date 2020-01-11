@@ -7,6 +7,7 @@ from kivy.uix.floatlayout import FloatLayout
 Builder.load_file("style.kv")
 Builder.load_file("slideupmenu.kv")
 Builder.load_file("fretboarddisplay.kv")
+Builder.load_file("scaleoptionschooser.kv")
 Builder.load_file("keysigchooser.kv")
 Builder.load_file("keysigdisplay.kv")
 Builder.load_file("metronome.kv")

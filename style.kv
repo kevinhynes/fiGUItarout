@@ -1,2 +1,17 @@
 <Widget>:
     font_name: "./fonts/Impact"
+
+<ChooserLabel@Label>:
+    box: self.parent
+    halign: "center"
+    valign: "center"
+    font_size: (root.box.box_font_size or self.width) * 1
+    text_size: self.size
+    halign: "center"
+    valign: "center"
+    canvas:
+        Color:
+            rgba: [0, 0, 0, 1]
+        Line:
+            rounded_rectangle: [*self.pos, *self.size, 1]
+            width: 0.75

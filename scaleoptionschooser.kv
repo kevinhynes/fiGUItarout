@@ -1,0 +1,40 @@
+#: import soc scaleoptionschooser
+
+<ChooserLabel@Label>:
+    box: self.parent
+    halign: "center"
+    valign: "center"
+    font_size: 32
+    text_size: self.size
+    halign: "center"
+    valign: "center"
+    canvas:
+        Color:
+            rgba: [0, 0, 0, 1]
+        Line:
+            rounded_rectangle: [*self.pos, *self.size, 1]
+            width: 0.75
+
+<ScaleTextChooser>:
+    scale_text: spinner.text
+    orientation: "vertical"
+    ChooserLabel:
+        text: "SCALE TEXT"
+        size_hint: [1, 0.4]
+    Spinner:
+        id: spinner
+        values: ["Scale Degrees", "Notes", "Notes - No Accidentals"]
+        text_autoupdate: True
+
+<ScaleColorChooser>:
+    orientation: "horizontal"
+
+<ScaleOptionsChooser>:
+    scale_text: scale_text_chooser.scale_text
+    BoxLayout:
+        id: box
+        orientation: "horizontal"
+        size_hint: [None, None]
+        ScaleTextChooser:
+            id: scale_text_chooser
+        ScaleColorChooser:

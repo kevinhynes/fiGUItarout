@@ -8,16 +8,7 @@ from kivy.graphics import InstructionGroup, Line, Color, RoundedRectangle, Recta
 # from kivy.core.text import Label as CoreLabel
 
 chrom_scale = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B']
-chrom_scale2 = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
-
-red = Color(*[1, 0.102, 0.102, 1])
-orange = Color(*[1, 0.549, 0.102, 1])
-yellow = Color(*[1, 1, 0.102, 1])
-green = Color(*[0.102, 1, 0.102, 1])
-blue = Color(*[0.102, 0.102, 1, 1])
-indigo = Color(*[0.549, 0.102, 1, 1])
-violet = Color(*[1, 0, 0.502, 1])
-black = Color(*[0, 0, 0, 1])
+chrom_scale_no_acc = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
 
 mode_filters = {
     "Chromatic": 0b111111111111,
@@ -99,7 +90,7 @@ class KeySigChooser(FloatLayout):
     def on_size(self, instance, value):
         width, height = self.size
         if height > 0:  # Avoid ZeroDivisionError when TabbedPanel.do_default_tab == False.
-            target_ratio = 100/20
+            target_ratio = 100/15
             # check which size is the limiting factor
             if width / height > target_ratio:
                 # window is "wider" than targeted, so the limitation is the height.
