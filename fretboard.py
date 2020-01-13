@@ -15,12 +15,22 @@ sharp = u'\u266F'
 chrom_scale = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B']
 chrom_scale_no_acc = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
 scale_degrees = ["1", "♭2", "2", "♭3", "3", "4", "♯4/♭5", "5", "♯5/♭6", "6", "♭7", "7"]
+
 scale_texts = {
     None: chrom_scale,
     "": chrom_scale,
     "Notes": chrom_scale,
     "Notes - No Accidentals": chrom_scale_no_acc,
     "Scale Degrees": scale_degrees}
+
+scale_highlights = {
+    "": 0b111111111111,
+    "All": 0b111111111111,
+    "R": 0b100000000000,
+    "R, 3": 0b100110000000,
+    "R, 5": 0b100000111000,
+    "R, 3, 5": 0b100110111000,
+    }
 
 octave_alpha = 0.8
 octave_colors = [[255 / 255, 180 / 255, 52 / 255, octave_alpha],  # orange
@@ -49,6 +59,8 @@ class String(FloatLayout):
     string_blinks = ReferenceListProperty()
     animation_prop = NumericProperty(0)
     scale_text = StringProperty("")
+    notes_to_highlight = StringProperty("")
+
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -118,6 +130,7 @@ class String(FloatLayout):
 
             octave, note_idx = divmod(note_val, 12)
             included = int(bin(self.mode_filter)[2:][note_idx - self.root_note_idx])
+            highlighted = int(bin(scale_highlights[self.notes_to_highlight])[2:][note_idx - self.root_note_idx])
             color_idx = note_idx - self.root_note_idx
 
             if self.scale_text == "Scale Degrees":
@@ -125,7 +138,7 @@ class String(FloatLayout):
 
             note_text = scale_texts[self.scale_text][note_idx]
 
-            marker.update(i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included)
+            marker.update(i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included, highlighted)
 
     def redraw_octave_markers(self):
         self.octave_markers.clear()
@@ -159,6 +172,9 @@ class String(FloatLayout):
     def on_scale_text(self, instance, value):
         self.redraw_note_markers()
 
+    def on_notes_to_highlight(self, instance, value):
+        self.redraw_note_markers()
+
 
 class Fretboard(StencilView, FloatLayout):
     num_frets = NumericProperty(24)
@@ -171,6 +187,8 @@ class Fretboard(StencilView, FloatLayout):
     box_y = NumericProperty(0)
     box_pos = ReferenceListProperty(box_x, box_y)
     scale_text = StringProperty("")
+    notes_to_highlight = StringProperty("")
+
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
