@@ -61,14 +61,17 @@ class Marker(InstructionGroup):
         self.parent_string = None
         self.animation = None
 
-    def update(self, i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included):
+    def update(self, i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included, highlighted=None):
         self.background.size = [2*r1, 2*r1]
         self.background.pos = [c1x, c1y]
         self.marker.size = [2*r2, 2*r2]
         self.marker.pos = [c2x, c2y]
         if included:
             self.background_color.a = 1
-            self.marker_color.hsv = rainbow[color_idx].hsv
+            if highlighted:
+                self.marker_color.hsv = rainbow[color_idx].hsv
+            else:
+                self.marker_color.hsv = white.hsv
             self.marker_color.a = 1
             self.update_text(i, note_text, c1x, c1y, r1)
         # This part is only needed for fretboard note_markers.

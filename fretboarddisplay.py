@@ -10,6 +10,7 @@ class FretboardDisplay(BoxLayout):
     mode_filter = NumericProperty(0b111111111111)
     key_sig_text = StringProperty("")
     scale_text = StringProperty("")
+    notes_to_highlight = StringProperty("")
 
 
 class FretboardDisplayApp(App):

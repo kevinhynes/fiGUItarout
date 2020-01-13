@@ -1,45 +1,19 @@
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.checkbox import CheckBox
-from kivy.properties import StringProperty, ListProperty
+from kivy.properties import StringProperty
 
 
 class ScaleTextChooser(BoxLayout):
     scale_text = StringProperty("")
 
 
-class IndexedCheckBox(CheckBox):
+class NoteHighlighter(BoxLayout):
+    notes_to_highlight = StringProperty("")
 
-    def __init__(self, idx=0, **kwargs):
-        super().__init__(**kwargs)
-        self.idx = idx
-        self.active = True
-
-    def on_active(self, checkbox, is_active):
-        if self.parent:
-            self.parent.highlight(self.idx, is_active)
-
-
-class NoteSelector(BoxLayout):
-    highlights = ListProperty([True]*12)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        for i in range(12):
-            checkbox = IndexedCheckBox(i)
-            self.add_widget(checkbox)
-
-    def highlight(self, checkbox_idx, is_active):
-        self.highlights[checkbox_idx] = is_active
-
-
-class ScaleColorChooser(BoxLayout):
-    highlights = ListProperty([True]*12)
-    scale_text = StringProperty("")
-
-    def on_highlights(self, *args):
-        print(self.highlights)
+    def update_notes_to_highlight(self, state, value):
+        if state == "down":
+            self.notes_to_highlight = value
 
 
 class ScaleOptionsChooser(FloatLayout):

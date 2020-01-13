@@ -20,6 +20,15 @@ scale_texts = {
     "Notes - No Accidentals": chrom_scale_no_acc,
     "Scale Degrees": scale_degrees}
 
+scale_highlights = {
+    "": 0b111111111111,
+    "All": 0b111111111111,
+    "R": 0b100000000000,
+    "R, 3": 0b100110000000,
+    "R, 5": 0b100000111000,
+    "R, 3, 5": 0b100110111000,
+    }
+
 black = Color(0, 0, 0, 1)
 white = Color(1, 1, 1, 1)
 gray = Color(0.5, 0.5, 0.5, 1)
@@ -36,6 +45,7 @@ class KeySigDisplay(FloatLayout):
     box_y = NumericProperty(0)
     box_pos = ReferenceListProperty(box_x, box_y)
     scale_text = StringProperty("")
+    notes_to_highlight = StringProperty("")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -58,6 +68,7 @@ class KeySigDisplay(FloatLayout):
             c1x, c1y = x + w / 12 * i, y
             c2x, c2y = c1x + rdiff, c1y + rdiff
             included = mask & self.mode_filter
+            highlighted = mask & scale_highlights[self.notes_to_highlight]
             mask >>= 1
             if self.scale_text == "Scale Degrees":
                 note_idx = i
@@ -67,7 +78,7 @@ class KeySigDisplay(FloatLayout):
             note_text = scale_texts[self.scale_text][note_idx]
 
             color_idx = i
-            marker.update(i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included)
+            marker.update(i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included, highlighted)
 
     def on_size(self, instance, value):
         width, height = self.size
@@ -89,6 +100,9 @@ class KeySigDisplay(FloatLayout):
         self.update_markers()
 
     def on_scale_text(self, *args):
+        self.update_markers()
+
+    def on_notes_to_highlight(self, *args):
         self.update_markers()
 
 
