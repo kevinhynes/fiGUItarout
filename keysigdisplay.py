@@ -15,6 +15,7 @@ chrom_scale_no_acc = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 
 scale_degrees = ["1", "♭2", "2", "♭3", "3", "4", "♯4/♭5", "5", "♯5/♭6", "6", "♭7", "7"]
 
 scale_texts = {
+    "": chrom_scale,
     "Notes": chrom_scale,
     "Notes - No Accidentals": chrom_scale_no_acc,
     "Scale Degrees": scale_degrees}
@@ -39,10 +40,10 @@ class KeySigDisplay(FloatLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.note_markers = InstructionGroup()
-        self.add_markers()
+        self._add_markers()
         self.canvas.add(self.note_markers)
 
-    def add_markers(self):
+    def _add_markers(self):
         for i in range(12):
             self.note_markers.add(Marker())
 

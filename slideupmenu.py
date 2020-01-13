@@ -5,6 +5,11 @@ from kivy.uix.floatlayout import FloatLayout
 
 
 class SlidingMenu(TabbedPanel):
+    menu_font_size = NumericProperty(32)
+
+    def on_size(self, instance, value):
+        self.menu_font_size = self.width * 0.01
+
     def animate_slide(self):
         if self.top_hint == 0:
             anim = Animation(top_hint=0.5, duration=0.3)

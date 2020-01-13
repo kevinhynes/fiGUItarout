@@ -18,11 +18,11 @@ class IndexedCheckBox(CheckBox):
 
     def on_active(self, checkbox, is_active):
         if self.parent:
-            self.parent.include(self.idx, is_active)
+            self.parent.highlight(self.idx, is_active)
 
 
-class ScaleColorChooser(BoxLayout):
-    included = ListProperty([True]*12)
+class NoteSelector(BoxLayout):
+    highlights = ListProperty([True]*12)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -30,11 +30,16 @@ class ScaleColorChooser(BoxLayout):
             checkbox = IndexedCheckBox(i)
             self.add_widget(checkbox)
 
-    def include(self, checkbox_idx, is_active):
-        self.included[checkbox_idx] = is_active
+    def highlight(self, checkbox_idx, is_active):
+        self.highlights[checkbox_idx] = is_active
 
-    def on_included(self, *args):
-        print(self.included)
+
+class ScaleColorChooser(BoxLayout):
+    highlights = ListProperty([True]*12)
+    scale_text = StringProperty("")
+
+    def on_highlights(self, *args):
+        print(self.highlights)
 
 
 class ScaleOptionsChooser(FloatLayout):
