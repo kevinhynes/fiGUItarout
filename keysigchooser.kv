@@ -15,10 +15,8 @@
     ChooserLabel:
         box: root.box
         text: "ROOT NOTE"
-#        size_hint: [1, 0.4]
     BoxLayout:
         orientation: "horizontal"
-        size_hint: [1, 0.6]
         ChooserButton:
             text: u'\u25C4'
             width: root.box.width * (1/32)
@@ -45,10 +43,8 @@
         ChooserLabel:
             box: root.box
             text: "MODE"
-#            size_hint: [1, 0.4]
         BoxLayout:
             orientation: "horizontal"
-            size_hint: [1, 0.6]
             ChooserButton:
                 text: u'\u25C4'
                 width: root.box.width * (1/32)
@@ -72,10 +68,8 @@
     ChooserLabel:
         box: root.box
         text: "MODE GROUP"
-#        size_hint: [1, 0.4]
     Spinner:
         id: spinner
-        size_hint: [1, 0.6]
         text_autoupdate: True
 #        background_normal: ''
         background_color: [1, 1, 1, 1]
@@ -102,7 +96,6 @@
         BoxLayout:
             orientation: "horizontal"
             size_hint: [1, 0.7]
-#            spacing: self.width * 0.005
             RootNoteChooser:
                 id: rootnotechooser
                 box: box

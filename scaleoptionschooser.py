@@ -16,6 +16,14 @@ class NoteHighlighter(BoxLayout):
             self.notes_to_highlight = value
 
 
+class GroupHighlighter(BoxLayout):
+    notes_or_octaves = StringProperty("Notes")
+
+    def update_group_to_highlight(self, state, value):
+        if state == "down":
+            self.notes_or_octaves = value
+
+
 class ScaleOptionsChooser(FloatLayout):
 
     def on_size(self, instance, value):

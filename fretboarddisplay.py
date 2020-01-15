@@ -11,6 +11,7 @@ class FretboardDisplay(BoxLayout):
     key_sig_text = StringProperty("")
     scale_text = StringProperty("")
     notes_to_highlight = StringProperty("")
+    notes_or_octaves = StringProperty("")
 
 
 class FretboardDisplayApp(App):

@@ -21,7 +21,7 @@
     ChooserLabel:
         id: label
         font_size: root.box_font_size or 18
-        text: "HIGHLIGHTS"
+        text: "SCALE HIGHLIGHTS"
     BoxLayout:
         orientation: "horizontal"
         NoteHighlightToggle:
@@ -47,14 +47,37 @@
             on_state: root.update_notes_to_highlight(self.state, self.text)
 
 
+<GroupHighlighter>:
+    orientation: "vertical"
+    ChooserLabel:
+        id: label
+        font_size: root.box_font_size or 18
+        text: "GROUP HIGHLIGHTS"
+    BoxLayout:
+        orientation: "horizontal"
+        ToggleButton:
+            text: "Notes"
+            state: "down"
+            font_size: root.box_font_size or 18
+            group: "group_highlight_toggle"
+            on_state: root.update_group_to_highlight(self.state, self.text)
+        ToggleButton:
+            text: "Octaves"
+            font_size: root.box_font_size or 18
+            group: "group_highlight_toggle"
+            on_state: root.update_group_to_highlight(self.state, self.text)
+
+
 <ScaleOptionsChooser>:
     scale_text: scale_text_chooser.scale_text
     notes_to_highlight: note_highlighter.notes_to_highlight
+    notes_or_octaves: group_highlighter.notes_or_octaves
     BoxLayout:
         id: box
         box_font_size: self.width / 30
         orientation: "horizontal"
         size_hint: [None, None]
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
         canvas:
             Color:
                 rgba: [1, 1, 1, 0.5]
@@ -63,6 +86,9 @@
                 pos: self.pos
         ScaleTextChooser:
             id: scale_text_chooser
+            box_font_size: box.box_font_size
+        GroupHighlighter:
+            id: group_highlighter
             box_font_size: box.box_font_size
         NoteHighlighter:
             id: note_highlighter

@@ -25,8 +25,8 @@ scale_highlights = {
     "All": 0b111111111111,
     "R": 0b100000000000,
     "R, 3": 0b100110000000,
-    "R, 5": 0b100000111000,
-    "R, 3, 5": 0b100110111000,
+    "R, 5": 0b100000110000,
+    "R, 3, 5": 0b100110110000,
     }
 
 black = Color(0, 0, 0, 1)
@@ -46,6 +46,7 @@ class KeySigDisplay(FloatLayout):
     box_pos = ReferenceListProperty(box_x, box_y)
     scale_text = StringProperty("")
     notes_to_highlight = StringProperty("")
+    notes_or_octaves = StringProperty("")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -77,8 +78,12 @@ class KeySigDisplay(FloatLayout):
 
             note_text = scale_texts[self.scale_text][note_idx]
 
+            if self.notes_or_octaves == "Notes":
+                color = rainbow[i]
+            else:
+                color = rainbow[0]
             color_idx = i
-            marker.update(i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included, highlighted)
+            marker.update(i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included, highlighted, color)
 
     def on_size(self, instance, value):
         width, height = self.size
@@ -105,6 +110,8 @@ class KeySigDisplay(FloatLayout):
     def on_notes_to_highlight(self, *args):
         self.update_markers()
 
+    def on_notes_or_octaves(self, *args):
+        self.update_markers()
 
 class KeySigDisplayApp(App):
     def build(self):

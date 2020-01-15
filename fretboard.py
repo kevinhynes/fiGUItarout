@@ -28,16 +28,10 @@ scale_highlights = {
     "All": 0b111111111111,
     "R": 0b100000000000,
     "R, 3": 0b100110000000,
-    "R, 5": 0b100000111000,
-    "R, 3, 5": 0b100110111000,
+    "R, 5": 0b100000110000,
+    "R, 3, 5": 0b100110110000,
     }
 
-octave_alpha = 0.8
-octave_colors = [[255 / 255, 180 / 255, 52 / 255, octave_alpha],  # orange
-                 [255 / 255, 251 / 255, 52 / 255, octave_alpha],  # yellow
-                 [83 / 255, 180 / 255, 52 / 255, octave_alpha],  # green
-                 [52 / 255, 255 / 255, 249 / 255, octave_alpha],  # blue
-                 [255 / 255, 52 / 255, 243 / 255, octave_alpha]]  # purple
 
 black = Color(0, 0, 0, 1)
 white = Color(1, 1, 1, 1)
@@ -48,6 +42,13 @@ rainbow = [Color(hsv=[i / 12, 1, 0.95]) for i in range(12)]
 reds = [Color(hsv=[0, i / 12, 1]) for i in range(12)][::-1]
 blues = [Color(hsv=[0.6, i / 12, 1]) for i in range(12)][::-1]
 
+octave_colors = [
+    rainbow[0],
+    rainbow[2],
+    rainbow[4],
+    rainbow[6],
+    rainbow[8],
+    rainbow[10]]
 
 class String(FloatLayout):
     open_note_val = NumericProperty(0)
@@ -60,7 +61,7 @@ class String(FloatLayout):
     animation_prop = NumericProperty(0)
     scale_text = StringProperty("")
     notes_to_highlight = StringProperty("")
-
+    notes_or_octaves = StringProperty("")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -131,14 +132,19 @@ class String(FloatLayout):
             octave, note_idx = divmod(note_val, 12)
             included = int(bin(self.mode_filter)[2:][note_idx - self.root_note_idx])
             highlighted = int(bin(scale_highlights[self.notes_to_highlight])[2:][note_idx - self.root_note_idx])
-            color_idx = note_idx - self.root_note_idx
+            if self.notes_or_octaves == "Notes":
+                color_idx = note_idx - self.root_note_idx
+                color = rainbow[color_idx]
+            else:
+                color_idx = octave - 2
+                color = octave_colors[color_idx]
 
             if self.scale_text == "Scale Degrees":
                 note_idx -= self.root_note_idx
 
             note_text = scale_texts[self.scale_text][note_idx]
 
-            marker.update(i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included, highlighted)
+            marker.update(i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included, highlighted, color)
 
     def redraw_octave_markers(self):
         self.octave_markers.clear()
@@ -175,6 +181,8 @@ class String(FloatLayout):
     def on_notes_to_highlight(self, instance, value):
         self.redraw_note_markers()
 
+    def on_notes_or_octaves(self, *args):
+        self.redraw_note_markers()
 
 class Fretboard(StencilView, FloatLayout):
     num_frets = NumericProperty(24)
@@ -188,6 +196,7 @@ class Fretboard(StencilView, FloatLayout):
     box_pos = ReferenceListProperty(box_x, box_y)
     scale_text = StringProperty("")
     notes_to_highlight = StringProperty("")
+    notes_or_octaves = StringProperty("")
 
 
     def __init__(self, **kwargs):

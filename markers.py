@@ -9,15 +9,9 @@ chrom_scale = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A',
 chrom_scale2 = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
 scale_degrees = ["1", "♭2", "2", "♭3", "3", "4", "♯4/♭5", "5", "♯5/♭6", "6", "♭7", "7"]
 
-octave_alpha = 0.8
-octave_colors = [[255 / 255, 180 / 255, 52 / 255, octave_alpha],  # orange
-                 [255 / 255, 251 / 255, 52 / 255, octave_alpha],  # yellow
-                 [83 / 255, 180 / 255, 52 / 255, octave_alpha],  # green
-                 [52 / 255, 255 / 255, 249 / 255, octave_alpha],  # blue
-                 [255 / 255, 52 / 255, 243 / 255, octave_alpha]]  # purple
-
 black = Color(0, 0, 0, 1)
 white = Color(1, 1, 1, 1)
+off_white = Color(0.8, 0.8, 0.8, 1)
 gray = Color(0.5, 0.5, 0.5, 1)
 brown = Color(rgba=[114 / 255, 69 / 255, 16 / 255, 1])
 
@@ -25,6 +19,13 @@ rainbow = [Color(hsv=[i / 12, 1, 0.95]) for i in range(12)]
 reds = [Color(hsv=[0, i / 12, 1]) for i in range(12)][::-1]
 blues = [Color(hsv=[0.6, i / 12, 1]) for i in range(12)][::-1]
 
+octave_colors = [
+    rainbow[0], #red
+    rainbow[3],
+    rainbow[5],
+    rainbow[7],
+    rainbow[9],
+    rainbow[11]]
 
 class Marker(InstructionGroup):
 
@@ -61,7 +62,8 @@ class Marker(InstructionGroup):
         self.parent_string = None
         self.animation = None
 
-    def update(self, i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included, highlighted=None):
+    def update(self, i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2,
+               included, highlighted, color):
         self.background.size = [2*r1, 2*r1]
         self.background.pos = [c1x, c1y]
         self.marker.size = [2*r2, 2*r2]
@@ -69,9 +71,9 @@ class Marker(InstructionGroup):
         if included:
             self.background_color.a = 1
             if highlighted:
-                self.marker_color.hsv = rainbow[color_idx].hsv
+                self.marker_color.hsv = color.hsv
             else:
-                self.marker_color.hsv = white.hsv
+                self.marker_color.hsv = off_white.hsv
             self.marker_color.a = 1
             self.update_text(i, note_text, c1x, c1y, r1)
         # This part is only needed for fretboard note_markers.
