@@ -1,16 +1,6 @@
 <BackGroundColorWidget>:
     background: (1, 0, 0, 0.5)
-    canvas.after:
-        Color:
-            rgba: self.background
-        Rectangle:
-            size: self.size
-            pos: self.pos
-
-
-<BackGroundColorBoxLayout>:
-    background: (1, 0, 0, 0.5)
-    canvas.after:
+    canvas.before:
         Color:
             rgba: self.background
         Rectangle:
@@ -21,6 +11,7 @@
 <ChordDisplay>:
     id: display
     BoxLayout:
+        id: display_box
         orientation: 'vertical'
         MajorChordGroup:
             id: major
@@ -38,51 +29,18 @@
             top: minor.y
             display: display
             background: (0, 1, 0, 0.5)
-#        ChordGroup:
-#            id: diminished
-#        ChordGroup:
-#            id: augmented
 
 
 <ChordGroup>:
     size_hint: [1, None]
-    top: 1
     height: dp(90)
-    pos_hint: {'center': [0.5, 0.5]}
-    mode_texts: ['Mode 1', 'Mode 2', 'Mode 3']
-    BoxLayout:
-
-        orientation: 'vertical'
-        height: dp(270)
-        width: root.width
-        top: root.top
-        ChordRow:
-            id: row1
-            mode_text: root.mode_texts[0]
-        ChordRow:
-            id: row2
-            mode_text: root.mode_texts[1]
-        ChordRow:
-            id: row3
-            mode_text: root.mode_texts[2]
 
 
-<MajorChordGroup@ChordGroup>:
-    mode_texts: ['Major', 'Major 6', 'Major 7']
-
-<MinorChordGroup@ChordGroup>:
-    mode_texts: ['Minor', 'Minor 6', 'Minor 7']
-
-<DominantChordGroup@ChordGroup>:
-    mode_texts: ['Dominant', 'Dominant 7', 'Dominant 9']
-
-
-<ChordRow@BoxLayout>:
+<ChordRow>:
     orientation: 'horizontal'
-    mode_text: "Mode Text"
+    label: label
     Label:
         id: label
-        text: root.mode_text
     ChordGraphic:
         text: "1"
     ChordGraphic:

@@ -7,14 +7,9 @@ from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color
 from kivy.core.text import Label as CoreLabel
 from kivy.animation import Animation
 
-
+from music_constants import chrom_scale, chrom_scale_no_acc, scale_degrees
 from markers import Marker
 
-flat = u'\u266D'
-sharp = u'\u266F'
-chrom_scale = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B']
-chrom_scale_no_acc = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
-scale_degrees = ["1", "♭2", "2", "♭3", "3", "4", "♯4/♭5", "5", "♯5/♭6", "6", "♭7", "7"]
 
 scale_texts = {
     None: chrom_scale,
