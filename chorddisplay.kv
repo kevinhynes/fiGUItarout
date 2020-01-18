@@ -1,0 +1,86 @@
+<BackGroundColorWidget>:
+    background: (1, 0, 0, 0.5)
+    canvas.after:
+        Color:
+            rgba: self.background
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+
+<BackGroundColorBoxLayout>:
+    background: (1, 0, 0, 0.5)
+    canvas.after:
+        Color:
+            rgba: self.background
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+
+<ChordDisplay>:
+    id: display
+    BoxLayout:
+        orientation: 'vertical'
+        ChordGroup:
+            id: major
+            display: display
+            background: (0, 0, 1, 0.5)
+            y: minor.top
+        ChordGroup:
+            id: minor
+            top: major.y
+            y: suspended.top
+            display: display
+            background: (1, 0, 0, 0.5)
+        ChordGroup:
+            id: suspended
+            top: minor.y
+            display: display
+            background: (0, 1, 0, 0.5)
+
+#        ChordGroup:
+#            id: diminished
+#        ChordGroup:
+#            id: augmented
+
+
+<ChordGroup>:
+    size_hint: [1, None]
+    height: dp(90)
+    pos_hint: {'center': [0.5, 0.5]}
+    BoxLayout:
+        orientation: 'vertical'
+        height: dp(270)
+        width: root.width
+        pos: root.pos
+        ChordRow:
+            id: row1
+        ChordRow:
+            id: row2
+        ChordRow:
+            id: row3
+
+
+<ChordRow@BoxLayout>:
+    orientation: 'horizontal'
+    Label:
+        id: label
+        text: 'Mode Text'
+    ChordGraphic:
+        text: "1"
+    ChordGraphic:
+        text: "2"
+    ChordGraphic:
+        text: "3"
+    ChordGraphic:
+        text: "4"
+    ChordGraphic:
+        text: "5"
+    ChordGraphic:
+        text: "6"
+    ChordGraphic:
+        text: "7"
+
+
+<ChordGraphic@Label>:

@@ -62,7 +62,7 @@ class Marker(InstructionGroup):
         self.parent_string = None
         self.animation = None
 
-    def update(self, i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2,
+    def update(self, i, note_text, c1x, c1y, r1, c2x, c2y, r2,
                included, highlighted, color):
         self.background.size = [2*r1, 2*r1]
         self.background.pos = [c1x, c1y]

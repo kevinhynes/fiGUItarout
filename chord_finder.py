@@ -52,7 +52,7 @@ chord_shapes = {
 
 
 
-def circular_rotate(note_idx, dummy_mode):
+def do_circular_bit_rotation(note_idx, dummy_mode):
     rotate_bit = 0b100000000000 & dummy_mode
     if rotate_bit:
         rotate_bit = 1
@@ -84,4 +84,4 @@ for _ in range(7):
     print(chrom_scale[note_idx], " ", bin(scale))
     chords_this_root = build_chord_list(note_idx, scale)
     print(*chords_this_root, sep="\n")
-    note_idx, scale = circular_rotate(note_idx, scale)
+    note_idx, scale = do_circular_bit_rotation(note_idx, scale)

@@ -83,7 +83,7 @@ class KeySigDisplay(FloatLayout):
             else:
                 color = rainbow[0]
             color_idx = i
-            marker.update(i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included, highlighted, color)
+            marker.update(i, note_text, c1x, c1y, r1, c2x, c2y, r2, included, highlighted, color)
 
     def on_size(self, instance, value):
         width, height = self.size

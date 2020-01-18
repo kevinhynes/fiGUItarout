@@ -144,7 +144,7 @@ class String(FloatLayout):
 
             note_text = scale_texts[self.scale_text][note_idx]
 
-            marker.update(i, note_text, color_idx, c1x, c1y, r1, c2x, c2y, r2, included, highlighted, color)
+            marker.update(i, note_text, c1x, c1y, r1, c2x, c2y, r2, included, highlighted, color)
 
     def redraw_octave_markers(self):
         self.octave_markers.clear()
