@@ -2,13 +2,23 @@ from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.stencilview import StencilView
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.label import Label
+from kivy.uix.button import  Button
 from kivy.uix.widget import Widget
-from kivy.properties import NumericProperty
-from kivy.clock import  Clock
+from kivy.properties import NumericProperty, StringProperty
+from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.lang import Builder
 
-from music_constants import major_chord_shapes, minor_chord_shapes, dom_chord_shapes
+from music_constants import major_chord_shapes, minor_chord_shapes, \
+    dom_chord_shapes, sus_chord_shapes, dim_chord_shapes, aug_chord_shapes
+
+chord_groups = {
+    'Major': major_chord_shapes, 'Minor': minor_chord_shapes,
+    'Dominant': dom_chord_shapes, 'Suspended': sus_chord_shapes,
+    'Diminished': dim_chord_shapes, 'Augmented': aug_chord_shapes
+    }
 
 
 class BackGroundColorWidget(Widget):
@@ -21,65 +31,49 @@ class ChordRow(BoxLayout):
 
 class ChordGroup(StencilView, BackGroundColorWidget):
     group_height = NumericProperty(0)
+    chord_group = StringProperty('')
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.box = BoxLayout(orientation='vertical', pos_hint={'center': [0.5, 0.5]})
+        self.box = BoxLayout(orientation='vertical')
+        self.fold_button = Button(background_normal='',
+                                  background_down='',
+                                  background_color=(0, 0, 0, 0))
+        self.fold_button.bind(on_press=self.fold)
+        self.add_widget(self.fold_button)
         self.add_widget(self.box)
-        Clock.schedule_once(self.on_pos, 0.1)
+        self.bind(pos=self.top_justify, size=self.top_justify)
+        Clock.schedule_once(self.top_justify, 0.1)  # no text in some groups initially without this
 
-    def on_touch_down(self, touch):
-        if self.collide_point(touch.x, touch.y):
-            self.height = dp(90) if self.height > dp(90) else dp(self.group_height)
-        self.box.top = self.top
+    def on_chord_group(self, *args):
+        # Using this as a sort of __init__ method to avoid repetitive classes.
+        # self.chord_group is just some text in kv.
+        chord_list = chord_groups[self.chord_group]
+        for chord in chord_list:
+            chord_row = ChordRow()
+            chord_row.label.text = chord
+            self.box.add_widget(chord_row)
+        self.group_height = 90 * len(chord_list)
+        self.box.height = self.group_height
+        self.fold_button.height = self.group_height
+        self.fold_button.width = self.box.children[0].ids.label.width
+        self.fold_button.x = self.box.children[0].ids.label.x
+        self.top_justify()
 
-    def on_size(self, *args):
+    def fold(self, *args):
+        self.height = dp(90) if self.height > dp(90) else dp(self.group_height)
+        self.display.top_justify_all()
+
+    def top_justify(self, *args):
         self.box.width = self.width
-
-    def on_pos(self, *args):
         self.box.top = self.top
+        self.fold_button.top = self.top
 
 
-class MajorChordGroup(ChordGroup):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        for chord in major_chord_shapes:
-            chord_row = ChordRow()
-            chord_row.label.text = chord
-            self.box.add_widget(chord_row)
-        self.box.height = 90 * len(major_chord_shapes)
-        self.group_height = dp(90 * len(major_chord_shapes))
-        self.box.top = self.top
-
-
-class MinorChordGroup(ChordGroup):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        for chord in minor_chord_shapes:
-            chord_row = ChordRow()
-            chord_row.label.text = chord
-            self.box.add_widget(chord_row)
-        self.box.height = 90 * len(minor_chord_shapes)
-        self.group_height = dp(90 * len(minor_chord_shapes))
-        self.box.top = self.top
-
-
-class DominantChordGroup(ChordGroup):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        for chord in dom_chord_shapes:
-            chord_row = ChordRow()
-            chord_row.label.text = chord
-            self.box.add_widget(chord_row)
-        self.box.height = 90 * len(dom_chord_shapes)
-        self.group_height = dp(90 * len(dom_chord_shapes))
-        self.box.top = self.top
-
-class ChordDisplay(FloatLayout):
-    pass
+class ChordDisplay(ScrollView):
+    def top_justify_all(self):
+        for chord_group in self.ids.display_box.children:
+            chord_group.top_justify()
 
 
 class ChordDisplayApp(App):

@@ -13,22 +13,50 @@
     BoxLayout:
         id: display_box
         orientation: 'vertical'
-        MajorChordGroup:
+        size_hint: [None, None]
+        height: root.height * 3
+        width: root.width
+        y: 0
+        ChordGroup:
             id: major
+            chord_group: 'Major'
             display: display
             background: (0, 0, 1, 0.5)
             y: minor.top
-        MinorChordGroup:
+        ChordGroup:
             id: minor
+            chord_group: 'Minor'
             top: major.y
             y: dominant.top
             display: display
             background: (1, 0, 0, 0.5)
-        DominantChordGroup:
+        ChordGroup:
             id: dominant
+            chord_group: 'Dominant'
             top: minor.y
+            y: suspended.top
             display: display
             background: (0, 1, 0, 0.5)
+        ChordGroup:
+            id: suspended
+            chord_group: 'Suspended'
+            top: dominant.y
+            y: diminished.top
+            display: display
+            background: (1, 1, 0, 0.5)
+        ChordGroup:
+            id: diminished
+            chord_group: 'Diminished'
+            top: suspended.y
+            y: augmented.top
+            display: display
+            background: (0, 1, 1, 0.5)
+        ChordGroup:
+            id: augmented
+            chord_group: 'Augmented'
+            top: diminished.y
+            display: display
+            background: (1, 0, 1, 0.5)
 
 
 <ChordGroup>:
@@ -41,20 +69,20 @@
     label: label
     Label:
         id: label
-    ChordGraphic:
+    ChordDiagram:
         text: "1"
-    ChordGraphic:
+    ChordDiagram:
         text: "2"
-    ChordGraphic:
+    ChordDiagram:
         text: "3"
-    ChordGraphic:
+    ChordDiagram:
         text: "4"
-    ChordGraphic:
+    ChordDiagram:
         text: "5"
-    ChordGraphic:
+    ChordDiagram:
         text: "6"
-    ChordGraphic:
+    ChordDiagram:
         text: "7"
 
 
-<ChordGraphic@Label>:
+<ChordDiagram@Label>:
