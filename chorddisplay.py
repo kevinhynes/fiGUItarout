@@ -56,8 +56,8 @@ class ChordGroup(StencilView, BackGroundColorWidget):
         self.group_height = 90 * len(chord_list)
         self.box.height = self.group_height
         self.fold_button.height = self.group_height
-        self.fold_button.width = self.box.children[0].ids.label.width
-        self.fold_button.x = self.box.children[0].ids.label.x
+        self.fold_button.width = self.box.children[0].ids.label.width if self.box.children else 1
+        self.fold_button.x = self.box.children[0].ids.label.x if self.box.children else 0
         self.top_justify()
 
     def fold(self, *args):
