@@ -5,7 +5,7 @@ scale_degrees = ["1", "♭2", "2", "♭3", "3", "4", "♯4/♭5", "5", "♯5/♭
 flat = u'\u266D'
 sharp = u'\u266F'
 
-
+standard_tuning = (28, 33, 38, 43, 47, 52)
 
 chord_shapes = {
     'Major': 0b100010010000,
@@ -15,7 +15,6 @@ chord_shapes = {
     'Major 11': 0b101011010001,
     'Major 13': 0b101011010101,
 
-    'Minor': 0b100100010000,
     'Minor 6': 0b100100010100,
     'Minor 7': 0b100100010010,
     'Minor 9': 0b101100010010,

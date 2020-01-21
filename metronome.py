@@ -19,7 +19,7 @@ class TitleBar(BoxLayout):
         while i < len(text) and text[i].isdigit():
             bpm += text[i]
             i += 1
-        if bpm and 1 <= int(bpm) <= 300:
+        if bpm and 40 <= int(bpm) <= 300:
             bpm = int(bpm)
             self.metronome.bpm = bpm
         # In case bpm was invalid, out of range, or same value as before, make sure text is updated.
@@ -204,7 +204,7 @@ class Metronome(FloatLayout):
         self.stop()
 
     def increment_bpm(self, val):
-        if 1 < self.bpm < 300:
+        if 40 <= self.bpm + val <= 300:
             self.bpm += val
 
     def play(self, *args):
