@@ -114,6 +114,10 @@ def list_chords_in_key_at_this_root(note_idx, dummy_mode):
 
 
 def chord_voicing_dfs(string_idx, chord_shape, is_triad, voicing, min_fret, max_fret):
+    '''
+    Explore the fretboard from the original string_idx,  creating ALL possible chords
+    and saving them to a dictionary based on chord quality (major, minor, etc).
+    '''
     # There are no more strings.
     if string_idx < 0:
         return
@@ -146,7 +150,25 @@ def chord_voicing_dfs(string_idx, chord_shape, is_triad, voicing, min_fret, max_
         chord_voicing_dfs(string_idx-1, chord_shape | note_in_bin, is_triad,
                           voicing, min(min_fret, fret_num), max(max_fret, fret_num))
 
+import itertools
+def chord_voicing_sort(voicing):
+    '''
+    The chord voicings picked up by the DFS are sporadic. Sort so that:
+      1) voicings with a lot of intermittent string skipping come last
+      2) 'fuller' chords come first: 6 strings - 5 strings - 4 strings...
 
+    `voicing` is a list of length 6 where voicing[string_idx] = fret_num.
+
+    If a string isn't played, fret_num is None.  Otherwise it is an integer.
+    '''
+    groups = list(itertools.groupby(voicing, key=type))
+    if groups[-1][0].__name__ == 'NoneType':
+        # 'full' chords rooted at 6th, 5th, 4th and 3rd string are all equal.
+        print(groups[-1])
+        groups.pop()
+    skips = len(groups)
+    num_strings = sum([1 for fret_num in voicing if fret_num is not None])
+    return skips, -num_strings
 
 chord_voicings_by_tuning = JsonStore("chord_voicings_by_tuning.json")
 tuning = standard_tuning
@@ -159,9 +181,18 @@ else:
                  for string_val in standard_tuning][::-1]
     chord_to_voicings = collections.defaultdict(list)
     chord_voicing_dfs(5, 0b000000000000, False, [None, None, None, None, None, None], 0, 12)
+    chord_voicing_dfs(4, 0b000000000000, False, [None, None, None, None, None, None], 0, 12)
+    chord_voicing_dfs(3, 0b000000000000, False, [None, None, None, None, None, None], 0, 12)
+    chord_voicing_dfs(2, 0b000000000000, False, [None, None, None, None, None, None], 0, 12)
+
+    for chord_name, chord_voicings in chord_to_voicings.items():
+        chord_voicings.sort(key=chord_voicing_sort)
+        chord_to_voicings[chord_name] = chord_voicings
+
     chord_voicings_by_tuning.put(str(tuning), chord_to_voicings=chord_to_voicings)
     print("saved")
 
 for chord_name, chord_shape in chord_shapes.items():
     if chord_to_voicings.get(str(chord_shape), None):
-        print(chord_name, *chord_to_voicings[str(chord_shape)], sep='\n')
+        if 'Major' in chord_name:
+            print(chord_name, *chord_to_voicings[str(chord_shape)], sep='\n')
