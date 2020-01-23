@@ -43,6 +43,13 @@ class ChordDiagram(Widget):
     s2_red = NumericProperty(1)
     s1_red = NumericProperty(1)
 
+    s6_fret_y = NumericProperty(0)
+    s5_fret_y = NumericProperty(0)
+    s4_fret_y = NumericProperty(0)
+    s3_fret_y = NumericProperty(0)
+    s2_fret_y = NumericProperty(0)
+    s1_fret_y = NumericProperty(0)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
