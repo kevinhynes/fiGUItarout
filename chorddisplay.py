@@ -14,6 +14,9 @@ from kivy.lang import Builder
 from music_constants import major_chord_shapes, minor_chord_shapes, \
     dom_chord_shapes, sus_chord_shapes, dim_chord_shapes, aug_chord_shapes
 
+Builder.load_file('chorddiagram.kv')
+
+
 chord_groups = {
     'Major': major_chord_shapes, 'Minor': minor_chord_shapes,
     'Dominant': dom_chord_shapes, 'Suspended': sus_chord_shapes,

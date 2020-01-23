@@ -1,3 +1,5 @@
+#: import cd chorddiagram
+
 <ChordDiagram>:
     step_x: self.width / 7
     step_y: self.height / 7
@@ -6,11 +8,6 @@
     draw_y: self.y + self.step_y * 0.5
     line_weight: self.width * 0.005
     marker_radius: (self.step_x / 2) * 0.9
-
-    s2_fret_y: self.step_y
-    s3_fret_y: self.step_y * 2
-    s4_fret_y: self.step_y * 3
-    s5_fret_y: self.step_y * 3
 
     size_hint: [None, None]
     pos_hint: {'center': [0.5, 0.5]}
@@ -216,7 +213,7 @@
             rgba: (root.s6_red, 0, 0, root.s6_marker_opac)
         Ellipse:
             size: root.marker_radius * 2, root.marker_radius * 2
-            pos: root.draw_x - root.marker_radius, root.draw_y + root.step_y / 2 - root.marker_radius + root.s6_fret_y
+            pos: root.draw_x - root.marker_radius, root.draw_y - root.marker_radius + root.step_y / 2  + root.s6_fret_y
         Color:
             rgba: (root.s5_red, 0, 0, root.s5_marker_opac)
         Ellipse:
@@ -258,6 +255,7 @@
                 size: self.size
                 pos: self.pos
     Label:
+        id: fret_label
         size_hint: [None, None]
         size: root.step_x, root.step_y
         pos: root.x, root.y + root.step_y * 4
