@@ -84,32 +84,32 @@
         Color:
             rgba: (0, 0, 0, root.s6_open_mark_opac)
         Line:
-            circle: (root.draw_x, root.draw_y + root.step_y * 4 + root.nut_height * 2.5, root.step_x * (1/4))
+            circle: (root.draw_x, root.draw_y + root.step_y * 4 + root.nut_height * 2, root.step_x * (1/4))
             width: root.line_weight
         Color:
             rgba: (0, 0, 0, root.s5_open_mark_opac)
         Line:
-            circle: (root.draw_x + root.step_x, root.draw_y + root.step_y * 4 + root.nut_height * 2.5, root.step_x * (1/4))
+            circle: (root.draw_x + root.step_x, root.draw_y + root.step_y * 4 + root.nut_height * 2, root.step_x * (1/4))
             width: root.line_weight
         Color:
             rgba: (0, 0, 0, root.s4_open_mark_opac)
         Line:
-            circle: (root.draw_x + root.step_x*2, root.draw_y + root.step_y * 4 + root.nut_height * 2.5, root.step_x * (1/4))
+            circle: (root.draw_x + root.step_x*2, root.draw_y + root.step_y * 4 + root.nut_height * 2, root.step_x * (1/4))
             width: root.line_weight
         Color:
             rgba: (0, 0, 0, root.s3_open_mark_opac)
         Line:
-            circle: (root.draw_x + root.step_x*3, root.draw_y + root.step_y * 4 + root.nut_height * 2.5, root.step_x * (1/4))
+            circle: (root.draw_x + root.step_x*3, root.draw_y + root.step_y * 4 + root.nut_height * 2, root.step_x * (1/4))
             width: root.line_weight
         Color:
             rgba: (0, 0, 0, root.s2_open_mark_opac)
         Line:
-            circle: (root.draw_x + root.step_x*4, root.draw_y + root.step_y * 4 + root.nut_height * 2.5, root.step_x * (1/4))
+            circle: (root.draw_x + root.step_x*4, root.draw_y + root.step_y * 4 + root.nut_height * 2, root.step_x * (1/4))
             width: root.line_weight
         Color:
             rgba: (0, 0, 0, root.s1_open_mark_opac)
         Line:
-            circle: (root.draw_x + root.step_x*5, root.draw_y + root.step_y * 4 + root.nut_height * 2.5, root.step_x * (1/4))
+            circle: (root.draw_x + root.step_x*5, root.draw_y + root.step_y * 4 + root.nut_height * 2, root.step_x * (1/4))
             width: root.line_weight
 
         # Open note X's.
@@ -118,16 +118,16 @@
         Line:
             points:
                 (root.draw_x - root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.25,
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 - root.step_x * (1/4),
                 root.draw_x + root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.6)
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
         Line:
             points:
                 (root.draw_x + root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.25,
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 - root.step_x * (1/4),
                 root.draw_x - root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.6)
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
 
         Color:
@@ -135,80 +135,80 @@
         Line:
             points:
                 (root.draw_x + root.step_x * 1 + root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.25,
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 - root.step_x * (1/4),
                 root.draw_x + root.step_x * 1 - root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.6)
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
         Line:
             points:
                 (root.draw_x + root.step_x * 1 - root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.25,
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 - root.step_x * (1/4),
                 root.draw_x + root.step_x * 1 + root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.6)
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
         Color:
             rgba: (0, 0, 0, root.s4_x_mark_opac)
         Line:
             points:
                 (root.draw_x + root.step_x * 2 + root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.25,
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 - root.step_x * (1/4),
                 root.draw_x + root.step_x * 2 - root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.6)
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
         Line:
             points:
                 (root.draw_x + root.step_x * 2 - root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.25,
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 - root.step_x * (1/4),
                 root.draw_x + root.step_x * 2 + root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.6)
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
         Color:
             rgba: (0, 0, 0, root.s3_x_mark_opac)
         Line:
             points:
                 (root.draw_x + root.step_x * 3 + root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.25,
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 - root.step_x * (1/4),
                 root.draw_x + root.step_x * 3 - root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.6)
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
         Line:
             points:
                 (root.draw_x + root.step_x * 3 - root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.25,
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 - root.step_x * (1/4),
                 root.draw_x + root.step_x * 3 + root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.6)
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
         Color:
             rgba: (0, 0, 0, root.s2_x_mark_opac)
         Line:
             points:
                 (root.draw_x + root.step_x * 4 + root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.25,
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 - root.step_x * (1/4),
                 root.draw_x + root.step_x * 4 - root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.6)
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
         Line:
             points:
                 (root.draw_x + root.step_x * 4 - root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.25,
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 - root.step_x * (1/4),
                 root.draw_x + root.step_x * 4 + root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.6)
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
         Color:
             rgba: (0, 0, 0, root.s1_x_mark_opac)
         Line:
             points:
                 (root.draw_x + root.step_x * 5 + root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.25,
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 - root.step_x * (1/4),
                 root.draw_x + root.step_x * 5 - root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.6)
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
         Line:
             points:
                 (root.draw_x + root.step_x * 5 - root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.25,
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 - root.step_x * (1/4),
                 root.draw_x + root.step_x * 5 + root.step_x * 0.25,
-                root.draw_y + root.step_y * 4 + root.nut_height + root.step_y * 0.6)
+                root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
 
         # Fret Markers.
@@ -257,3 +257,10 @@
             Rectangle:
                 size: self.size
                 pos: self.pos
+    Label:
+        size_hint: [None, None]
+        size: root.step_x, root.step_y
+        pos: root.x, root.y + root.step_y * 4
+        text: "1"
+        color: (1, 0, 0, 1)
+        font_size: self.height * 0.75
