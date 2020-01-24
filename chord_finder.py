@@ -1,8 +1,6 @@
-from kivy.storage.jsonstore import JsonStore
-
 from music_constants import chrom_scale, chrom_scale_no_acc, chord_shapes, standard_tuning
 
-import collections
+import collections, itertools
 
 
 # All chords are defined by the distance between their notes (ignoring inversions for now).
@@ -113,7 +111,7 @@ def list_chords_in_key_at_this_root(note_idx, dummy_mode):
 
 
 
-def chord_voicing_dfs(string_idx, chord_shape, is_triad, voicing, min_fret, max_fret):
+def chord_voicing_dfs(string_idx, bin_chord_shape, is_triad, voicing, min_fret, max_fret):
     '''
     Explore the fretboard from the original string_idx,  creating ALL possible chords
     and saving them to a dictionary based on chord quality (major, minor, etc).
@@ -134,23 +132,22 @@ def chord_voicing_dfs(string_idx, chord_shape, is_triad, voicing, min_fret, max_
         return
 
     # Skip this string (the string at original string_idx will never be skipped).
-    chord_voicing_dfs(string_idx - 1, chord_shape, is_triad, voicing, min_fret, max_fret)
+    chord_voicing_dfs(string_idx - 1, bin_chord_shape, is_triad, voicing, min_fret, max_fret)
 
     # I'm restricting a guitar chord to a span of 4 frets (inclusive).
     # This range will target between 4 to 8 frets - 8 at first, 4 later in recursion.
     for fret_num in range(max(max_fret-3, 0), min(min_fret+4, 12)):
         octave, note_idx = divmod(string[fret_num], 12)
-        note_in_bin = 2**(11 - note_idx)
+        bin_note = 2**(11 - note_idx)
         voicing = voicing[:string_idx] + [fret_num] + voicing[string_idx+1:]
         if not is_triad:
-            is_triad = bin(chord_shape | note_in_bin).count('1') >= 3
+            is_triad = bin(bin_chord_shape | bin_note).count('1') >= 3
         if is_triad:
-            chord_to_voicings[chord_shape | note_in_bin].append(voicing)
+            chord_to_voicings[bin(bin_chord_shape | bin_note)].append(voicing[::-1])
 
-        chord_voicing_dfs(string_idx-1, chord_shape | note_in_bin, is_triad,
+        chord_voicing_dfs(string_idx - 1, bin_chord_shape | bin_note, is_triad,
                           voicing, min(min_fret, fret_num), max(max_fret, fret_num))
 
-import itertools
 def chord_voicing_sort(voicing):
     '''
     The chord voicings picked up by the DFS are sporadic. Sort so that:
@@ -162,18 +159,20 @@ def chord_voicing_sort(voicing):
     If a string isn't played, fret_num is None.  Otherwise it is an integer.
     '''
     groups = list(itertools.groupby(voicing, key=type))
-    if groups[-1][0].__name__ == 'NoneType':
+    if groups[0][0].__name__ == 'NoneType':
         # 'full' chords rooted at 6th, 5th, 4th and 3rd string are all equal.
-        print(groups[-1])
-        groups.pop()
+        groups.pop(0)
     skips = len(groups)
     num_strings = sum([1 for fret_num in voicing if fret_num is not None])
     return skips, -num_strings
 
-chord_voicings_by_tuning = JsonStore("chord_voicings_by_tuning.json")
+import json
+with open('chord_voicings_by_tuning.json') as read_file:
+    chord_voicings_by_tuning = json.load(read_file)
+
 tuning = standard_tuning
-if chord_voicings_by_tuning.exists(str(tuning)):
-    chord_to_voicings = chord_voicings_by_tuning.get(str(tuning))["chord_to_voicings"]
+if chord_voicings_by_tuning.get(str(tuning), None):
+    chord_to_voicings = chord_voicings_by_tuning.get(str(tuning))
     print("retreived")
 else:
     print("calculating")
@@ -185,14 +184,17 @@ else:
     chord_voicing_dfs(3, 0b000000000000, False, [None, None, None, None, None, None], 0, 12)
     chord_voicing_dfs(2, 0b000000000000, False, [None, None, None, None, None, None], 0, 12)
 
-    for chord_name, chord_voicings in chord_to_voicings.items():
+    for bin_chord_shape, chord_voicings in chord_to_voicings.items():
         chord_voicings.sort(key=chord_voicing_sort)
-        chord_to_voicings[chord_name] = chord_voicings
+        chord_to_voicings[bin_chord_shape] = chord_voicings
 
-    chord_voicings_by_tuning.put(str(tuning), chord_to_voicings=chord_to_voicings)
+    tuning_to_chord_voicings = {}
+    tuning_to_chord_voicings[str(tuning)] = chord_to_voicings
+    with open('chord_voicings_by_tuning.json', 'w') as write_file:
+        json.dump(tuning_to_chord_voicings, write_file)
     print("saved")
 
-for chord_name, chord_shape in chord_shapes.items():
-    if chord_to_voicings.get(str(chord_shape), None):
+for chord_name, bin_chord_shape in chord_shapes.items():
+    if chord_to_voicings.get(str(bin_chord_shape), None):
         if 'Major' in chord_name:
-            print(chord_name, *chord_to_voicings[str(chord_shape)], sep='\n')
+            print(chord_name, *chord_to_voicings[str(bin_chord_shape)], sep='\n')

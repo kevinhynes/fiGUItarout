@@ -3,19 +3,20 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.stencilview import StencilView
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.label import Label
-from kivy.uix.button import  Button
+from kivy.uix.button import Button
 from kivy.uix.widget import Widget
-from kivy.properties import NumericProperty, StringProperty
+from kivy.properties import NumericProperty, StringProperty, ListProperty, ObjectProperty
 from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.lang import Builder
 
+import json
+
 from music_constants import major_chord_shapes, minor_chord_shapes, \
-    dom_chord_shapes, sus_chord_shapes, dim_chord_shapes, aug_chord_shapes
+    dom_chord_shapes, sus_chord_shapes, dim_chord_shapes, aug_chord_shapes, \
+    chrom_scale, standard_tuning
 
 Builder.load_file('chorddiagram.kv')
-
 
 chord_groups = {
     'Major': major_chord_shapes, 'Minor': minor_chord_shapes,
@@ -29,12 +30,33 @@ class BackGroundColorWidget(Widget):
 
 
 class ChordRow(BoxLayout):
-    pass
+    bin_chord_shape = NumericProperty(0b000000000000)
+    note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
+    display = ObjectProperty(None)
+
+
+class ChordTitleBar(BoxLayout):
+    note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.chrom_scale = chrom_scale
+
+    def top_justify(self, *args):
+        pass
+
+    def update_note_idxs(self, *args):
+        for i, note_idx in enumerate(self.note_idxs):
+            if note_idx is not None:
+                self.note_idxs[i] = (note_idx + 1) % 12
+                self.display.note_idxs[i] = self.note_idxs[i]
 
 
 class ChordGroup(StencilView, BackGroundColorWidget):
     group_height = NumericProperty(0)
     chord_group = StringProperty('')
+    note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
+    display = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -52,31 +74,55 @@ class ChordGroup(StencilView, BackGroundColorWidget):
         # Using this as a sort of __init__ method to avoid repetitive classes.
         # self.chord_group is just some text in kv.
         chord_list = chord_groups[self.chord_group]
-        for chord in chord_list:
+        for chord_name, bin_chord_shape in chord_list.items():
             chord_row = ChordRow()
-            chord_row.label.text = chord
+            chord_row.label.text = chord_name
+            chord_row.bin_chord_shape = bin_chord_shape
+            self.bind(note_idxs=chord_row.setter('note_idxs'))
+            self.bind(display=chord_row.setter('display'))
             self.box.add_widget(chord_row)
-        self.group_height = 90 * len(chord_list)
+        self.group_height = 95 * len(chord_list)
         self.box.height = self.group_height
         self.fold_button.height = self.group_height
-        self.fold_button.width = self.box.children[0].ids.label.width if self.box.children else 1
+        self.fold_button.width = self.box.children[0].ids.label.width if self.box.children else 100
         self.fold_button.x = self.box.children[0].ids.label.x if self.box.children else 0
         self.top_justify()
 
     def fold(self, *args):
-        self.height = dp(90) if self.height > dp(90) else dp(self.group_height)
+        self.height = dp(95) if self.height > dp(95) else dp(self.group_height)
         self.display.top_justify_all()
 
     def top_justify(self, *args):
         self.box.width = self.width
         self.box.top = self.top
+        self.fold_button.width = self.box.children[0].ids.label.width if self.box.children else 100
         self.fold_button.top = self.top
 
 
 class ChordDisplay(ScrollView):
+    root_note_idx = NumericProperty(0)
+    mode_filter = NumericProperty(0b101011010101)
+    note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        with open('chord_voicings_by_tuning.json') as read_file:
+            chord_voicings_by_tuning = json.load(read_file)
+        self.chords_to_voicings = chord_voicings_by_tuning[str(standard_tuning)]
+        Clock.schedule_once(self.on_mode, 2)
+
     def top_justify_all(self):
         for chord_group in self.ids.display_box.children:
             chord_group.top_justify()
+
+    def on_mode(self, *args):
+        write_idx = 0
+        for i, bit in enumerate(bin(self.mode_filter)[2:]):
+            if int(bit) == 1:
+                note_idx = (self.root_note_idx + i) % 12
+                if write_idx < len(self.note_idxs):
+                    self.note_idxs[write_idx] = note_idx
+                write_idx += 1
 
 
 class ChordDisplayApp(App):

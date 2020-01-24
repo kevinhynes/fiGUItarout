@@ -1,4 +1,3 @@
-
 chrom_scale = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B']
 chrom_scale_no_acc = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
 scale_degrees = ["1", "♭2", "2", "♭3", "3", "4", "♯4/♭5", "5", "♯5/♭6", "6", "♭7", "7"]
@@ -13,7 +12,6 @@ chord_shapes = {
     'Major 7': 0b100010010001,
     'Major 9': 0b101010010001,
     'Major 11': 0b101011010001,
-    'Major 13': 0b101011010101,
 
     'Minor': 0b100100010000,
     'Minor 6': 0b100100010100,
@@ -25,7 +23,6 @@ chord_shapes = {
     'Dominant 7': 0b100010010010,
     'Dominant 9': 0b101010010010,
     'Dominant 11': 0b101011010010,
-    'Dominant 13': 0b101011010110,
 
     'Sus 2': 0b101000010000,
     'Sus 4': 0b100001010000,
@@ -39,7 +36,7 @@ chord_shapes = {
 
 major_chord_shapes= {
     'Major'  : 0b100010010000, 'Major 6': 0b100010010100, 'Major 7': 0b100010010001,
-    'Major 9': 0b101010010001, 'Major 11': 0b101011010001, 'Major 13': 0b101011010101,
+    'Major 9': 0b101010010001, 'Major 11': 0b101011010001,
     }
 
 minor_chord_shapes = {
@@ -49,7 +46,6 @@ minor_chord_shapes = {
 
 dom_chord_shapes = {
     'Dominant 7' : 0b100010010010, 'Dominant 9': 0b101010010010, 'Dominant 11': 0b101011010010,
-    'Dominant 13': 0b101011010110,
     }
 
 sus_chord_shapes = {

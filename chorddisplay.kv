@@ -17,19 +17,27 @@
         height: root.height * 3
         width: root.width
         y: 0
+        ChordTitleBar:
+            id: titlebar
+            y: major.top
+            note_idxs: display.note_idxs
+            display: display
         ChordGroup:
             id: major
             chord_group: 'Major'
             display: display
-            background: (0, 0, 1, 0)
+            background: (1, 0, 0, 0.5)
+            top: titlebar.y
             y: minor.top
+            note_idxs: display.note_idxs
         ChordGroup:
             id: minor
             chord_group: 'Minor'
             top: major.y
             y: dominant.top
             display: display
-            background: (1, 0, 0, 0.5)
+            background: (0, 0, 1, 0.5)
+            note_idxs: display.note_idxs
         ChordGroup:
             id: dominant
             chord_group: 'Dominant'
@@ -37,6 +45,7 @@
             y: suspended.top
             display: display
             background: (0, 1, 0, 0.5)
+            note_idxs: display.note_idxs
         ChordGroup:
             id: suspended
             chord_group: 'Suspended'
@@ -44,6 +53,7 @@
             y: diminished.top
             display: display
             background: (1, 1, 0, 0.5)
+            note_idxs: display.note_idxs
         ChordGroup:
             id: diminished
             chord_group: 'Diminished'
@@ -51,17 +61,41 @@
             y: augmented.top
             display: display
             background: (0, 1, 1, 0.5)
+            note_idxs: display.note_idxs
         ChordGroup:
             id: augmented
             chord_group: 'Augmented'
             top: diminished.y
             display: display
             background: (1, 0, 1, 0.5)
+            note_idxs: display.note_idxs
 
 
 <ChordGroup>:
     size_hint: [1, None]
     height: dp(90)
+
+<ChordTitleBar>:
+    orientation: 'horizontal'
+    size_hint: [1, None]
+    height: dp(90)
+    Button:
+        text: 'Chords'
+        on_press: root.update_note_idxs()
+    Label:
+        text: root.chrom_scale[root.note_idxs[0]]
+    Label:
+        text: root.chrom_scale[root.note_idxs[1]]
+    Label:
+        text: root.chrom_scale[root.note_idxs[2]]
+    Label:
+        text: root.chrom_scale[root.note_idxs[3]]
+    Label:
+        text: root.chrom_scale[root.note_idxs[4]]
+    Label:
+        text: root.chrom_scale[root.note_idxs[5]]
+    Label:
+        text: root.chrom_scale[root.note_idxs[6]]
 
 
 <ChordRow>:
@@ -70,11 +104,32 @@
     Label:
         id: label
     ChordDiagramContainer:
+        note_idx: root.note_idxs[0]
+        bin_chord_shape: root.bin_chord_shape
+        display: root.display
     ChordDiagramContainer:
+        note_idx: root.note_idxs[1]
+        bin_chord_shape: root.bin_chord_shape
+        display: root.display
     ChordDiagramContainer:
+        note_idx: root.note_idxs[2]
+        bin_chord_shape: root.bin_chord_shape
+        display: root.display
     ChordDiagramContainer:
+        note_idx: root.note_idxs[3]
+        bin_chord_shape: root.bin_chord_shape
+        display: root.display
     ChordDiagramContainer:
+        note_idx: root.note_idxs[4]
+        bin_chord_shape: root.bin_chord_shape
+        display: root.display
     ChordDiagramContainer:
+        note_idx: root.note_idxs[5]
+        bin_chord_shape: root.bin_chord_shape
+        display: root.display
     ChordDiagramContainer:
+        note_idx: root.note_idxs[6]
+        bin_chord_shape: root.bin_chord_shape
+        display: root.display
 
 

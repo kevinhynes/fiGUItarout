@@ -20,6 +20,13 @@
             size: self.size
             pos: self.pos
 
+        # Border
+        Color:
+            rgba: (0, 0, 0, 1)
+        Line:
+            rectangle: (*self.pos, *self.size)
+            width: root.line_weight
+
         # Strings.
         Color:
             rgba: (0, 0, 0, 1)
@@ -220,25 +227,33 @@
             size: root.marker_radius * 2, root.marker_radius * 2
             pos: root.draw_x + root.step_x - root.marker_radius, root.draw_y + root.step_y / 2 - root.marker_radius + root.s5_fret_y
         Color:
-            rgba: (root.s5_red, 0, 0, root.s4_marker_opac)
+            rgba: (root.s4_red, 0, 0, root.s4_marker_opac)
         Ellipse:
             size: root.marker_radius * 2, root.marker_radius * 2
             pos: root.draw_x + root.step_x * 2 - root.marker_radius, root.draw_y + root.step_y / 2 - root.marker_radius + root.s4_fret_y
         Color:
-            rgba: (root.s5_red, 0, 0, root.s3_marker_opac)
+            rgba: (root.s3_red, 0, 0, root.s3_marker_opac)
         Ellipse:
             size: root.marker_radius * 2, root.marker_radius * 2
             pos: root.draw_x + root.step_x * 3 - root.marker_radius, root.draw_y + root.step_y / 2 - root.marker_radius + root.s3_fret_y
         Color:
-            rgba: (root.s5_red, 0, 0, root.s2_marker_opac)
+            rgba: (root.s2_red, 0, 0, root.s2_marker_opac)
         Ellipse:
             size: root.marker_radius * 2, root.marker_radius * 2
             pos: root.draw_x + root.step_x * 4 - root.marker_radius, root.draw_y + root.step_y / 2 - root.marker_radius + root.s2_fret_y
         Color:
-            rgba: (root.s5_red, 0, 0, root.s2_marker_opac)
+            rgba: (root.s1_red, 0, 0, root.s1_marker_opac)
         Ellipse:
             size: root.marker_radius * 2, root.marker_radius * 2
             pos: root.draw_x + root.step_x * 5 - root.marker_radius, root.draw_y + root.step_y / 2 - root.marker_radius + root.s1_fret_y
+
+    canvas.after:
+        # Disabled overlay.
+        Color:
+            rgba: (0.5, 0.5, 0.5, root.disable_opac)
+        Rectangle:
+            size: self.size
+            pos: self.pos
 
     Label:
         size_hint: [None, None]
@@ -260,5 +275,5 @@
         size: root.step_x, root.step_y
         pos: root.x, root.y + root.step_y * 4
         text: "1"
-        color: (1, 0, 0, 1)
+        color: (0, 0, 0, 1)
         font_size: self.height * 0.75
