@@ -1,4 +1,4 @@
-#: import cd chorddiagram
+#: import cdm chorddiagram
 
 <ChordDiagram>:
     step_x: self.width / 7
@@ -133,7 +133,6 @@
                 root.draw_x - root.step_x * 0.25,
                 root.draw_y + root.step_y * 4 + root.nut_height * 2 + root.step_x * (1/4))
             width: root.line_weight
-
         Color:
             rgba: (0, 0, 0, root.s5_x_mark_opac)
         Line:
@@ -254,7 +253,6 @@
         Rectangle:
             size: self.size
             pos: self.pos
-
     Label:
         size_hint: [None, None]
         size: root.step_x * 5, root.step_y
@@ -277,3 +275,59 @@
         text: "1"
         color: (0, 0, 0, 1)
         font_size: self.height * 0.75
+
+
+<ChordDiagramContainer>:
+    chord_diagram: cd
+    pos_hint: {'center': [0.5, 0.5]}
+    ChordDiagram:
+        id: cd
+        voicing: root.voicing
+        bin_chord_shape: root.bin_chord_shape
+        note_idx: root.note_idx
+        root_note_idx: root.root_note_idx
+        mode_filter: root.mode_filter
+        display: root.display
+
+
+<ChordDiagramMain>:
+    cd_container: cdc
+    canvas:
+        Color:
+            rgba: (1, 0, 1,  0.5)
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+    ChordDiagramContainer:
+        id: cdc
+        bin_chord_shape: root.bin_chord_shape
+        note_idx: root.note_idx
+        root_note_idx: root.root_note_idx
+        mode_filter: root.mode_filter
+        display: root.display
+
+
+<ChordDiagramPopupContent>:
+#    id: sv
+#    text: "CONTENT"
+#    pos_hint: {'center': [0.5, 0.5]}
+    height: dp(95)
+    do_scroll_y: False
+#    BoxLayout:
+#        orientation: "horizontal"
+#        size_hint: [None, None]
+#        size: [sv.width * 2, dp(95)]
+#        ChordDiagramContainer:
+#            pos_hint: {'center_y': 0.5}
+#        ChordDiagramContainer:
+#            pos_hint: {'center_y': 0.5}
+#        ChordDiagramContainer:
+#            pos_hint: {'center_y': 0.5}
+#        ChordDiagramContainer:
+#            pos_hint: {'center_y': 0.5}
+
+
+<ChordDiagramPopup>:
+    title: "TEST"
+    size_hint: [None, None]

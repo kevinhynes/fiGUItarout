@@ -1,14 +1,19 @@
 from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
-from kivy.properties import ListProperty, NumericProperty, ReferenceListProperty
+from kivy.uix.popup import Popup
+from kivy.properties import ListProperty, NumericProperty, ReferenceListProperty, ObjectProperty
 from kivy.clock import Clock
+from kivy.metrics import dp
 
 
 class ChordDiagram(Widget):
     voicing = ListProperty([None, None, None, None, None])
     note_idx = NumericProperty(0)
     root_note_idx = NumericProperty(0)
+    display = ObjectProperty(None)
 
     draw_x = NumericProperty(0)
     draw_y = NumericProperty(0)
@@ -150,22 +155,23 @@ class ChordDiagram(Widget):
         self.disable_opac = 1
 
 
-
 class ChordDiagramContainer(FloatLayout):
     bin_chord_shape = NumericProperty()
     note_idx = NumericProperty(0)
     root_note_idx = NumericProperty(0)
     mode_filter = NumericProperty(0b101011010101)
-    voicings = ListProperty()
+    voicing = ListProperty([None, None, None, None, None, None])
+    display = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.chord_diagram = ChordDiagram()
-        self.bind(note_idx=self.chord_diagram.setter('note_idx'))
-        self.bind(root_note_idx=self.chord_diagram.setter('root_note_idx'))
-        self.bind(mode_filter=self.chord_diagram.setter('mode_filter'))
-        self.add_widget(self.chord_diagram)
-        Clock.schedule_once(self.update_diagram, 5)
+        # self.chord_diagram = ChordDiagram()
+        # self.bind(note_idx=self.chord_diagram.setter('note_idx'))
+        # self.bind(root_note_idx=self.chord_diagram.setter('root_note_idx'))
+        # self.bind(mode_filter=self.chord_diagram.setter('mode_filter'))
+        # self.bind(display=self.chord_diagram.setter('display'))
+        # self.add_widget(self.chord_diagram)
+        Clock.schedule_once(self.update_diagram, 2)
 
     def on_size(self, *args):
         target_ratio = 21 / 26  # width / height
@@ -183,14 +189,23 @@ class ChordDiagramContainer(FloatLayout):
     def on_note_idx(self, *args):
         self.update_diagram()
 
+    def on_voicing(self, *args):
+        self.update_diagram()
+
     def update_diagram(self, *args):
         if self.display:
             # Major 13th chord has 7 notes, guitar only has 6 strings.
             chord_possible_on_guitar = bin(self.bin_chord_shape) in self.display.chords_to_voicings
+            # print(f'ChordDiagramContainer.update_diagram() - chord_possible_on_guitar {chord_possible_on_guitar}')
+            # print(f'ChordDiagramContainer.update_diagram() - bin_chord_shape {self.bin_chord_shape}')
             if chord_possible_on_guitar and self.is_chord_in_key():
-                self.voicings = self.display.chords_to_voicings[bin(self.bin_chord_shape)]
-                self.chord_diagram.voicing = self.voicings[0]
+                # print(f'ChordDiagramContainer.update_diagram() - draw')
+                # self.voicings = self.display.chords_to_voicings[bin(self.bin_chord_shape)]
+                # self.chord_diagram.voicing = self.voicings[0]
+                self.chord_diagram.voicing = self.voicing
+                return
             else:
+                # print(f'ChordDiagramContainer.update_diagram() - disable')
                 self.chord_diagram.disable()
 
     def is_chord_in_key(self):
@@ -220,6 +235,60 @@ class ChordDiagramContainer(FloatLayout):
         chord_in_key = rotated_mode & chord_mask == chord_mask
         return chord_in_key
 
+
+class ChordDiagramMain(FloatLayout):
+    bin_chord_shape = NumericProperty(0)
+    note_idx = NumericProperty(0)
+    root_note_idx = NumericProperty(0)
+    mode_filter = NumericProperty(0b101011010101)
+    display = ObjectProperty(None)
+    voicings = ListProperty([])
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.popup = None
+        # self.cd_container = ChordDiagramContainer()
+        # self.bind(note_idx=self.cd_container.setter('note_idx'))
+        # self.bind(root_note_idx=self.cd_container.setter('root_note_idx'))
+        # self.bind(mode_filter=self.cd_container.setter('mode_filter'))
+        # self.bind(display=self.cd_container.setter('display'))
+        # self.add_widget(self.cd_container)
+
+    def on_touch_down(self, touch):
+        if self.collide_point(touch.x, touch.y):
+            if self.popup:
+                self.popup.dismiss()
+                self.popup = None
+            else:
+                content = ChordDiagramPopupContent(voicings=self.voicings)
+                self.popup = ChordDiagramPopup(content=content, size=[self.row.width, dp(200)])
+                self.popup.open()
+            return True
+        return super().on_touch_down(touch)
+
+    def on_voicings(self, *args):
+        self.cd_container.voicing = self.voicings[0]
+
+
+class ChordDiagramPopupContent(ScrollView):
+
+    def __init__(self, voicings, **kwargs):
+        super().__init__(**kwargs)
+        self.scroll_box = BoxLayout(orientation='horizontal',
+                                    size_hint=[None, None])
+        sb_width = boxes = 0
+        for voicing in voicings:
+            if boxes > 10:
+                return
+            cdc = ChordDiagramContainer(pos_hint={'center_x': 0.5})
+            cdc.voicing = voicing
+            sb_width += cdc.width
+            self.scroll_box.add_widget(cdc)
+        self.scroll_box.width = sb_width
+        self.add_widget(self.scroll_box)
+
+class ChordDiagramPopup(Popup):
+    pass
 
 class ChordDiagramApp(App):
     def build(self):

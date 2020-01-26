@@ -5,7 +5,8 @@ from kivy.uix.stencilview import StencilView
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
-from kivy.properties import NumericProperty, StringProperty, ListProperty, ObjectProperty
+from kivy.properties import NumericProperty, StringProperty, ListProperty, ObjectProperty, \
+    DictProperty
 from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.lang import Builder
@@ -33,6 +34,11 @@ class ChordRow(BoxLayout):
     bin_chord_shape = NumericProperty(0b000000000000)
     note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
     display = ObjectProperty(None)
+    voicings = ListProperty()
+
+    def on_display(self, row, display):
+        # Once display becomes available, look up voicings for this row.
+        self.voicings = self.display.chords_to_voicings.get(bin(self.bin_chord_shape), [])
 
 
 class ChordTitleBar(BoxLayout):
@@ -73,15 +79,15 @@ class ChordGroup(StencilView, BackGroundColorWidget):
     def on_chord_group(self, *args):
         # Using this as a sort of __init__ method to avoid repetitive classes.
         # self.chord_group is just some text in kv.
-        chord_list = chord_groups[self.chord_group]
-        for chord_name, bin_chord_shape in chord_list.items():
+        chord_group_list = chord_groups[self.chord_group]
+        for chord_name, bin_chord_shape in chord_group_list.items():
             chord_row = ChordRow()
             chord_row.label.text = chord_name
             chord_row.bin_chord_shape = bin_chord_shape
             self.bind(note_idxs=chord_row.setter('note_idxs'))
             self.bind(display=chord_row.setter('display'))
             self.box.add_widget(chord_row)
-        self.group_height = 95 * len(chord_list)
+        self.group_height = 95 * len(chord_group_list)
         self.box.height = self.group_height
         self.fold_button.height = self.group_height
         self.fold_button.width = self.box.children[0].ids.label.width if self.box.children else 100
@@ -105,10 +111,10 @@ class ChordDisplay(ScrollView):
     note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
         with open('chord_voicings_by_tuning.json') as read_file:
             chord_voicings_by_tuning = json.load(read_file)
         self.chords_to_voicings = chord_voicings_by_tuning[str(standard_tuning)]
+        super().__init__(**kwargs)
         Clock.schedule_once(self.on_mode, 2)
 
     def top_justify_all(self):
