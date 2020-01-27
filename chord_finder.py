@@ -47,8 +47,10 @@ def list_chords_in_key_at_this_root(note_idx, dummy_mode):
     return chord_list
 
 
-note_idx = 0
-scale = 0b101011010101
+note_idx = 9
+major_scale = 0b101011010101
+minor_scale = 0b101101011010
+scale = minor_scale
 
 for _ in range(7):
     print(chrom_scale[note_idx], " ", bin(scale))

@@ -5,7 +5,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 from kivy.uix.popup import Popup
 from kivy.properties import ListProperty, NumericProperty, ReferenceListProperty, ObjectProperty, \
-    StringProperty
+    StringProperty, BooleanProperty
 from kivy.clock import Clock
 from kivy.metrics import dp
 
@@ -159,10 +159,11 @@ class ChordDiagramContainer(FloatLayout):
     voicing = ListProperty([None, None, None, None, None, None])
     display = ObjectProperty(None)
     chord_name = StringProperty('')
+    chord_in_key = BooleanProperty(False)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        Clock.schedule_once(self.update_diagram, 0.1)
+        # Clock.schedule_once(self.update_diagram, 0.1)
 
     def on_size(self, *args):
         target_ratio = 27 / 28  # width / height
@@ -178,6 +179,14 @@ class ChordDiagramContainer(FloatLayout):
         self.update_diagram()
 
     def on_note_idx(self, *args):
+        self.update_diagram()
+
+    def on_root_note_idx(self, *args):
+        self.update_diagram()
+
+    def on_mode_filter(self, *args):
+        # if self.note_idx == 0:
+        print('ChordDiagramContainer.on_mode_filter')
         self.update_diagram()
 
     def on_voicing(self, *args):
@@ -221,8 +230,10 @@ class ChordDiagramContainer(FloatLayout):
         rotated_mode = do_circular_bit_rotation(num_shifts, self.mode_filter)
         chord_mask = int(self.bin_chord_shape)
         # Are all the notes that make this chord also in this mode/key?
-        chord_in_key = rotated_mode & chord_mask == chord_mask
-        return chord_in_key
+        self.chord_in_key = rotated_mode & chord_mask == chord_mask
+        if self.note_idx == 0:
+            print(self.chord_in_key, self.mode_filter, rotated_mode, chord_mask)
+        return self.chord_in_key
 
 
 class ChordDiagramMain(FloatLayout):

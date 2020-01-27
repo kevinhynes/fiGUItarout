@@ -48,6 +48,7 @@ class ChordRow(BoxLayout):
     note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
     display = ObjectProperty(None)
     voicings = ListProperty()
+    mode_filter = NumericProperty(0)
 
     def on_display(self, row, display):
         # Once display becomes available, look up voicings for this row.
@@ -59,6 +60,7 @@ class ChordGroup(StencilView, BackGroundColorWidget):
     chord_group = StringProperty('')
     note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
     display = ObjectProperty(None)
+    mode_filter = NumericProperty(0)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -82,6 +84,7 @@ class ChordGroup(StencilView, BackGroundColorWidget):
             chord_row.bin_chord_shape = bin_chord_shape
             self.bind(note_idxs=chord_row.setter('note_idxs'))
             self.bind(display=chord_row.setter('display'))
+            self.bind(mode_filter=chord_row.setter('mode_filter'))
             self.box.add_widget(chord_row)
         self.group_height = ROW_HEIGHT * len(chord_group_list)
         self.box.height = self.group_height
