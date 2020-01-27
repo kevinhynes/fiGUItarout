@@ -27,19 +27,9 @@ chord_groups = {
 
 ROW_HEIGHT = dp(95)
 
+
 class BackGroundColorWidget(Widget):
     pass
-
-
-class ChordRow(BoxLayout):
-    bin_chord_shape = NumericProperty(0b000000000000)
-    note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
-    display = ObjectProperty(None)
-    voicings = ListProperty()
-
-    def on_display(self, row, display):
-        # Once display becomes available, look up voicings for this row.
-        self.voicings = self.display.chords_to_voicings.get(bin(self.bin_chord_shape), [])
 
 
 class ChordTitleBar(BoxLayout):
@@ -52,11 +42,16 @@ class ChordTitleBar(BoxLayout):
     def top_justify(self, *args):
         pass
 
-    def update_note_idxs(self, *args):
-        for i, note_idx in enumerate(self.note_idxs):
-            if note_idx is not None:
-                self.note_idxs[i] = (note_idx + 1) % 12
-                self.display.note_idxs[i] = self.note_idxs[i]
+
+class ChordRow(BoxLayout):
+    bin_chord_shape = NumericProperty(0b000000000000)
+    note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
+    display = ObjectProperty(None)
+    voicings = ListProperty()
+
+    def on_display(self, row, display):
+        # Once display becomes available, look up voicings for this row.
+        self.voicings = self.display.chords_to_voicings.get(bin(self.bin_chord_shape), [])
 
 
 class ChordGroup(StencilView, BackGroundColorWidget):

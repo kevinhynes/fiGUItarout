@@ -220,7 +220,7 @@ class ChordDiagramContainer(FloatLayout):
             num_shifts = 12 - (self.root_note_idx - self.note_idx)
         rotated_mode = do_circular_bit_rotation(num_shifts, self.mode_filter)
         chord_mask = int(self.bin_chord_shape)
-        # Are all the notes that make this chord also in this mode?
+        # Are all the notes that make this chord also in this mode/key?
         chord_in_key = rotated_mode & chord_mask == chord_mask
         return chord_in_key
 
@@ -244,7 +244,9 @@ class ChordDiagramMain(FloatLayout):
                 self.popup.dismiss()
                 self.popup = None
             else:
-                content = ChordDiagramPopupContent(voicings=self.voicings)
+                content = ChordDiagramPopupContent(note_idx=self.note_idx,
+                                                   chord_name=self.chord_name,
+                                                   voicings=self.voicings)
                 self.popup = ChordDiagramPopup(content=content, width=self.row.width)
                 self.popup.open()
             return True
@@ -256,7 +258,7 @@ class ChordDiagramMain(FloatLayout):
 
 class ChordDiagramPopupContent(ScrollView):
 
-    def __init__(self, voicings, **kwargs):
+    def __init__(self, note_idx, chord_name, voicings, **kwargs):
         super().__init__(**kwargs)
         self.scroll_box = BoxLayout(orientation='horizontal',
                                     size_hint=[None, None])
@@ -266,6 +268,8 @@ class ChordDiagramPopupContent(ScrollView):
                 return
             cdc = ChordDiagramContainer(pos_hint={'center_x': 0.5})
             cdc.voicing = voicing
+            cdc.note_idx = note_idx
+            cdc.chord_name = chord_name
             sb_width += cdc.width
             self.scroll_box.add_widget(cdc)
         self.scroll_box.width = sb_width

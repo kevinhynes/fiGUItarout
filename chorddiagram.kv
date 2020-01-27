@@ -258,18 +258,13 @@
             pos: self.pos
     Label:
         size_hint: [None, None]
-        size: root.step_x * 5, root.step_x
+        size: root.step_x * 5, root.step_y
         pos: root.draw_x, root.draw_y + root.step_y * 5
         text: root.chrom_scale[root.note_idx] + " " + root.chord_name
         font_name: "./fonts/Arial"
-        color: (1, 0, 0, 1)
+        color: (0, 0, 0, 1)
         font_size: self.height * 0.75
-        canvas:
-            Color:
-                rgba: (0, 1, 1, 0.5)
-            Rectangle:
-                size: self.size
-                pos: self.pos
+
     Label:
         id: fret_label
         size_hint: [None, None]
