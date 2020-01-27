@@ -260,7 +260,7 @@
         size_hint: [None, None]
         size: root.step_x * 5, root.step_x
         pos: root.draw_x, root.draw_y + root.step_y * 5
-        text: root.chrom_scale[root.note_idx]
+        text: root.chrom_scale[root.note_idx] + " " + root.chord_name
         font_name: "./fonts/Arial"
         color: (1, 0, 0, 1)
         font_size: self.height * 0.75
@@ -301,7 +301,7 @@
         note_idx: root.note_idx
         root_note_idx: root.root_note_idx
         mode_filter: root.mode_filter
-
+        chord_name: root.chord_name
 
 <ChordDiagramMain>:
     cd_container: cdc
@@ -319,7 +319,7 @@
         root_note_idx: root.root_note_idx
         mode_filter: root.mode_filter
         display: root.display
-
+        chord_name: root.chord_name
 
 <ChordDiagramPopupContent>:
     id: sv

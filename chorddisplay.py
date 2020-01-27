@@ -116,13 +116,12 @@ class ChordDisplay(ScrollView, FloatLayout):
             chord_voicings_by_tuning = json.load(read_file)
         self.chords_to_voicings = chord_voicings_by_tuning[str(standard_tuning)]
         super().__init__(**kwargs)
-        Clock.schedule_once(self.on_mode, 5)
 
     def top_justify_all(self):
         for chord_group in self.ids.display_box.children:
             chord_group.top_justify()
 
-    def on_mode(self, *args):
+    def on_mode_filter(self, *args):
         write_idx = 0
         for i, bit in enumerate(bin(self.mode_filter)[2:]):
             if int(bit) == 1:
@@ -131,6 +130,10 @@ class ChordDisplay(ScrollView, FloatLayout):
                     self.note_idxs[write_idx] = note_idx
                 write_idx += 1
 
+    def on_root_note_idx(self, *args):
+        prev_root_note_idx = self.note_idxs[0]
+        diff = self.root_note_idx - prev_root_note_idx
+        self.note_idxs = [(note_idx + diff) % 12 for note_idx in self.note_idxs]
 
 class ChordDisplayApp(App):
     def build(self):

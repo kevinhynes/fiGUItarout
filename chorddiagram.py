@@ -4,7 +4,8 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 from kivy.uix.popup import Popup
-from kivy.properties import ListProperty, NumericProperty, ReferenceListProperty, ObjectProperty
+from kivy.properties import ListProperty, NumericProperty, ReferenceListProperty, ObjectProperty, \
+    StringProperty
 from kivy.clock import Clock
 from kivy.metrics import dp
 
@@ -16,6 +17,7 @@ class ChordDiagram(Widget):
     voicing = ListProperty([None, None, None, None, None])
     note_idx = NumericProperty(0)
     root_note_idx = NumericProperty(0)
+    chord_name = StringProperty('')
 
     draw_x = NumericProperty(0)
     draw_y = NumericProperty(0)
@@ -77,17 +79,6 @@ class ChordDiagram(Widget):
     def on_size(self, *args):
         if any(self.voicing):
             self.draw_diagram()
-
-    # def on_note_idx(self, *args):
-    #     if self.voicing:
-    #         self.slide_voicing()
-    #
-    # def on_root_note_idx(self, *args):
-    #     if self.voicing:
-    #         self.slide_voicing()
-    #
-    # def on_voicing(self, *args):
-    #     self.slide_voicing()
 
     def draw_diagram(self):
         if not self.voicing or not any(fret_num for fret_num in self.voicing):
@@ -167,6 +158,7 @@ class ChordDiagramContainer(FloatLayout):
     mode_filter = NumericProperty(0b101011010101)
     voicing = ListProperty([None, None, None, None, None, None])
     display = ObjectProperty(None)
+    chord_name = StringProperty('')
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -240,6 +232,7 @@ class ChordDiagramMain(FloatLayout):
     mode_filter = NumericProperty(0b101011010101)
     display = ObjectProperty(None)
     voicings = ListProperty([])
+    chord_name = StringProperty('')
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
