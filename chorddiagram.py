@@ -9,6 +9,7 @@ from kivy.clock import Clock
 from kivy.metrics import dp
 
 from music_constants import chrom_scale
+ROW_HEIGHT = dp(95)
 
 
 class ChordDiagram(Widget):
@@ -172,7 +173,7 @@ class ChordDiagramContainer(FloatLayout):
         Clock.schedule_once(self.update_diagram, 0.1)
 
     def on_size(self, *args):
-        target_ratio = 21 / 26  # width / height
+        target_ratio = 27 / 28  # width / height
         if self.width / self.height > target_ratio:
             # available space is wider than desired width
             self.chord_diagram.height = self.height
@@ -229,8 +230,6 @@ class ChordDiagramContainer(FloatLayout):
         chord_mask = int(self.bin_chord_shape)
         # Are all the notes that make this chord also in this mode?
         chord_in_key = rotated_mode & chord_mask == chord_mask
-        if chord_mask == 2320 and self.note_idx == 0:
-            print(rotated_mode)
         return chord_in_key
 
 
@@ -253,7 +252,7 @@ class ChordDiagramMain(FloatLayout):
                 self.popup = None
             else:
                 content = ChordDiagramPopupContent(voicings=self.voicings)
-                self.popup = ChordDiagramPopup(content=content, size=[self.row.width, dp(200)])
+                self.popup = ChordDiagramPopup(content=content, width=self.row.width)
                 self.popup.open()
             return True
         return super().on_touch_down(touch)

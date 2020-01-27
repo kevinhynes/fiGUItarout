@@ -1,11 +1,13 @@
 #: import cdm chorddiagram
 
 <ChordDiagram>:
-    step_x: self.width / 7
+    # ChordDiagram is 27 wide by 28 tall; step_x is 3, step_y is 4.
+    # We start drawing at (step_x * 2, step_y), or (6, 4).
+    step_x: self.width / 9
     step_y: self.height / 7
-    nut_height: self.height / 24
-    draw_x: self.x + self.step_x        # draw_x, draw_y is bottom left of diagram (not pos of ChordDiagram)
-    draw_y: self.y + self.step_y * 0.5
+    nut_height: self.height / 28
+    draw_x: self.x + self.step_x * 2    # draw_x, draw_y is bottom left of diagram (not pos of ChordDiagram)
+    draw_y: self.y + self.step_y
     line_weight: self.width * 0.005
     marker_radius: (self.step_x / 2) * 0.9
 
@@ -255,8 +257,8 @@
             pos: self.pos
     Label:
         size_hint: [None, None]
-        size: root.step_x * 5, root.step_y
-        pos: root.draw_x, root.draw_y + root.step_y * 5 + root.nut_height
+        size: root.step_x * 5, root.step_x
+        pos: root.draw_x, root.draw_y + root.step_y * 5
         text: root.chrom_scale[root.note_idx]
         font_name: "./fonts/Arial"
         color: (1, 0, 0, 1)
@@ -270,12 +272,23 @@
     Label:
         id: fret_label
         size_hint: [None, None]
-        size: root.step_x, root.step_y
+        size: root.step_x * 2, root.step_y
         pos: root.x, root.y + root.step_y * 4
         text: "1"
+        halign: 'center'
+        valign: 'center'
         color: (0, 0, 0, 1)
         font_size: self.height * 0.75
 
+    Label:
+        size_hint: [None, None]
+        size: root.step_x * 2, root.step_y
+        pos: root.x, root.y + root.step_y
+        text: str(int(fret_label.text) + 3) if fret_label.text else '4'
+        halign: 'center'
+        valign: 'center'
+        color: (0, 0, 0, 1)
+        font_size: self.height * 0.75
 
 <ChordDiagramContainer>:
     chord_diagram: cd
@@ -309,11 +322,12 @@
 
 <ChordDiagramPopupContent>:
     id: sv
+    size_hint_y: None
     height: dp(95)
     do_scroll_y: False
-
 
 
 <ChordDiagramPopup>:
     title: "TEST"
     size_hint: [None, None]
+    height: dp(200)

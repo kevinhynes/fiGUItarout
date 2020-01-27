@@ -25,6 +25,7 @@ chord_groups = {
     'Diminished': dim_chord_shapes, 'Augmented': aug_chord_shapes
     }
 
+ROW_HEIGHT = dp(95)
 
 class BackGroundColorWidget(Widget):
     pass
@@ -87,7 +88,7 @@ class ChordGroup(StencilView, BackGroundColorWidget):
             self.bind(note_idxs=chord_row.setter('note_idxs'))
             self.bind(display=chord_row.setter('display'))
             self.box.add_widget(chord_row)
-        self.group_height = 95 * len(chord_group_list)
+        self.group_height = ROW_HEIGHT * len(chord_group_list)
         self.box.height = self.group_height
         self.fold_button.height = self.group_height
         self.fold_button.width = self.box.children[0].ids.label.width if self.box.children else 100
@@ -95,7 +96,7 @@ class ChordGroup(StencilView, BackGroundColorWidget):
         self.top_justify()
 
     def fold(self, *args):
-        self.height = dp(95) if self.height > dp(95) else dp(self.group_height)
+        self.height = ROW_HEIGHT if self.height > ROW_HEIGHT else dp(self.group_height)
         self.display.top_justify_all()
 
     def top_justify(self, *args):
