@@ -8,12 +8,13 @@ from kivy.properties import ListProperty, NumericProperty, ReferenceListProperty
 from kivy.clock import Clock
 from kivy.metrics import dp
 
+from music_constants import chrom_scale
+
 
 class ChordDiagram(Widget):
     voicing = ListProperty([None, None, None, None, None])
     note_idx = NumericProperty(0)
     root_note_idx = NumericProperty(0)
-    display = ObjectProperty(None)
 
     draw_x = NumericProperty(0)
     draw_y = NumericProperty(0)
@@ -70,54 +71,57 @@ class ChordDiagram(Widget):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.chrom_scale = chrom_scale
 
     def on_size(self, *args):
         if any(self.voicing):
-            self.slide_voicing()
+            self.draw_diagram()
 
-    def on_note_idx(self, *args):
-        if self.voicing:
-            self.slide_voicing()
+    # def on_note_idx(self, *args):
+    #     if self.voicing:
+    #         self.slide_voicing()
+    #
+    # def on_root_note_idx(self, *args):
+    #     if self.voicing:
+    #         self.slide_voicing()
+    #
+    # def on_voicing(self, *args):
+    #     self.slide_voicing()
 
-    def on_root_note_idx(self, *args):
-        if self.voicing:
-            self.slide_voicing()
+    def draw_diagram(self):
+        if not self.voicing or not any(fret_num for fret_num in self.voicing):
+            return
+        slid_voicing = self.slide_voicing(self.voicing)
+        min_fret = min(fret_num for fret_num in slid_voicing if fret_num is not None)
+        has_fret_0 = any(fret_num == 0 for fret_num in slid_voicing)
+        if has_fret_0:
+            self.nut_opac = 1
+            self.ids.fret_label.text = ''
+            min_fret = 1
+        else:
+            self.nut_opac = 0
+            self.ids.fret_label.text = str(min_fret)
 
-    def on_voicing(self, *args):
-        self.slide_voicing()
+        # fret markers closest to nut need to move the most step_y's.
+        for i, fret_num in enumerate(slid_voicing):
+            if fret_num is None:
+                self.draw_muted_string(i)
+            elif fret_num == 0:
+                self.draw_open_string(i)
+            else:
+                self.draw_fingered_string(i, fret_num, min_fret)
 
-    def slide_voicing(self):
+        self.disable_opac = 0
+
+    def slide_voicing(self, voicing):
         # ALL chord voicings are rooted at C. Slide appropriate number of frets.
-        slid_voicing = self.voicing[:]  # Make a copy to avoid infinite loop.
+        slid_voicing = voicing[:]  # Make a copy to avoid infinite loop.
         for i, fret_num in enumerate(slid_voicing):
             if fret_num is not None:
                 slid_voicing[i] = fret_num + self.note_idx
         if all(fret_num is None or fret_num >= 12 for fret_num in slid_voicing):
             slid_voicing = [fret_num % 12 for fret_num in self.voicing if fret_num is not None]
-        self.draw_diagram(slid_voicing)
-
-    def draw_diagram(self, voicing):
-        if not voicing:
-            return
-        has_fret_0 = False
-        min_fret = min(fret_num for fret_num in voicing if fret_num is not None)
-        # fret markers closest to nut need to move the most step_y's.
-        for i, fret_num in enumerate(voicing):
-            if fret_num is None:
-                self.draw_muted_string(i)
-            elif fret_num == 0:
-                has_fret_0 = True
-                self.draw_open_string(i)
-            else:
-                self.draw_fingered_string(i, fret_num, min_fret)
-
-        if has_fret_0:
-            self.nut_opac = 1
-            self.ids.fret_label.text = ''
-        else:
-            self.nut_opac = 0
-            self.ids.fret_label.text = str(min_fret)
-        self.disable_opac = 0
+        return slid_voicing
 
     def draw_muted_string(self, string_idx):
         self.open_mark_opacs[string_idx] = 0
@@ -165,13 +169,7 @@ class ChordDiagramContainer(FloatLayout):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # self.chord_diagram = ChordDiagram()
-        # self.bind(note_idx=self.chord_diagram.setter('note_idx'))
-        # self.bind(root_note_idx=self.chord_diagram.setter('root_note_idx'))
-        # self.bind(mode_filter=self.chord_diagram.setter('mode_filter'))
-        # self.bind(display=self.chord_diagram.setter('display'))
-        # self.add_widget(self.chord_diagram)
-        Clock.schedule_once(self.update_diagram, 2)
+        Clock.schedule_once(self.update_diagram, 0.1)
 
     def on_size(self, *args):
         target_ratio = 21 / 26  # width / height
@@ -193,20 +191,18 @@ class ChordDiagramContainer(FloatLayout):
         self.update_diagram()
 
     def update_diagram(self, *args):
-        if self.display:
+        # if self.display:
             # Major 13th chord has 7 notes, guitar only has 6 strings.
-            chord_possible_on_guitar = bin(self.bin_chord_shape) in self.display.chords_to_voicings
+            # chord_possible_on_guitar = bin(self.bin_chord_shape) in self.display.chords_to_voicings
             # print(f'ChordDiagramContainer.update_diagram() - chord_possible_on_guitar {chord_possible_on_guitar}')
             # print(f'ChordDiagramContainer.update_diagram() - bin_chord_shape {self.bin_chord_shape}')
-            if chord_possible_on_guitar and self.is_chord_in_key():
-                # print(f'ChordDiagramContainer.update_diagram() - draw')
-                # self.voicings = self.display.chords_to_voicings[bin(self.bin_chord_shape)]
-                # self.chord_diagram.voicing = self.voicings[0]
-                self.chord_diagram.voicing = self.voicing
-                return
-            else:
-                # print(f'ChordDiagramContainer.update_diagram() - disable')
-                self.chord_diagram.disable()
+        if self.is_chord_in_key():
+            # print(f'ChordDiagramContainer.update_diagram() - draw')
+            self.chord_diagram.voicing = self.voicing
+            self.chord_diagram.draw_diagram()
+        else:
+            # print(f'ChordDiagramContainer.update_diagram() - disable')
+            self.chord_diagram.disable()
 
     def is_chord_in_key(self):
         def do_circular_bit_rotation(num_shifts, mode):
@@ -233,6 +229,8 @@ class ChordDiagramContainer(FloatLayout):
         chord_mask = int(self.bin_chord_shape)
         # Are all the notes that make this chord also in this mode?
         chord_in_key = rotated_mode & chord_mask == chord_mask
+        if chord_mask == 2320 and self.note_idx == 0:
+            print(rotated_mode)
         return chord_in_key
 
 
@@ -247,12 +245,6 @@ class ChordDiagramMain(FloatLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.popup = None
-        # self.cd_container = ChordDiagramContainer()
-        # self.bind(note_idx=self.cd_container.setter('note_idx'))
-        # self.bind(root_note_idx=self.cd_container.setter('root_note_idx'))
-        # self.bind(mode_filter=self.cd_container.setter('mode_filter'))
-        # self.bind(display=self.cd_container.setter('display'))
-        # self.add_widget(self.cd_container)
 
     def on_touch_down(self, touch):
         if self.collide_point(touch.x, touch.y):
@@ -287,8 +279,10 @@ class ChordDiagramPopupContent(ScrollView):
         self.scroll_box.width = sb_width
         self.add_widget(self.scroll_box)
 
+
 class ChordDiagramPopup(Popup):
     pass
+
 
 class ChordDiagramApp(App):
     def build(self):

@@ -47,14 +47,14 @@ def list_chords_in_key_at_this_root(note_idx, dummy_mode):
     return chord_list
 
 
-# note_idx = 0
-# scale = 0b101011010101
-#
-# for _ in range(7):
-#     print(chrom_scale[note_idx], " ", bin(scale))
-#     chords_this_root = list_chords_in_key_at_this_root(note_idx, scale)
-#     print(*chords_this_root, sep="\n")
-#     note_idx, scale = do_circular_bit_rotation(note_idx, scale)
+note_idx = 0
+scale = 0b101011010101
+
+for _ in range(7):
+    print(chrom_scale[note_idx], " ", bin(scale))
+    chords_this_root = list_chords_in_key_at_this_root(note_idx, scale)
+    print(*chords_this_root, sep="\n")
+    note_idx, scale = do_circular_bit_rotation(note_idx, scale)
 
 
 # Notes to self:

@@ -115,7 +115,7 @@ class ChordDisplay(ScrollView):
             chord_voicings_by_tuning = json.load(read_file)
         self.chords_to_voicings = chord_voicings_by_tuning[str(standard_tuning)]
         super().__init__(**kwargs)
-        Clock.schedule_once(self.on_mode, 2)
+        Clock.schedule_once(self.on_mode, 5)
 
     def top_justify_all(self):
         for chord_group in self.ids.display_box.children:
