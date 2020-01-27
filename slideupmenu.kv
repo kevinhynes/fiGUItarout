@@ -12,6 +12,18 @@
 
     do_default_tab: False
     TabbedPanelItem:
+        text: "Key Signature"
+        BoxLayout:
+            orientation: "horizontal"
+            BoxLayout:
+                orientation: "vertical"
+                KeySigChooser:
+                    id: keysigchooser
+                ScaleOptionsChooser:
+                    id: scale_options_chooser
+            ChordDisplay:
+
+    TabbedPanelItem:
         text: "Tuner"
         BoxLayout:
             Tuner:
@@ -22,15 +34,8 @@
                 box_width: tuner.box_width
             BoxLayout:
     TabbedPanelItem:
-        text: "Key Signature"
+        text: "Metronome"
         BoxLayout:
-            orientation: "horizontal"
-            BoxLayout:
-                orientation: "vertical"
-                KeySigChooser:
-                    id: keysigchooser
-                ScaleOptionsChooser:
-                    id: scale_options_chooser
             Metronome:
 
 <SlideUpMenu>:

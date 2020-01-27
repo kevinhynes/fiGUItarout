@@ -106,7 +106,7 @@ class ChordGroup(StencilView, BackGroundColorWidget):
         self.fold_button.top = self.top
 
 
-class ChordDisplay(ScrollView):
+class ChordDisplay(ScrollView, FloatLayout):
     root_note_idx = NumericProperty(0)
     mode_filter = NumericProperty(0b101011010101)
     note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
