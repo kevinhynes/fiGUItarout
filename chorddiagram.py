@@ -112,7 +112,7 @@ class ChordDiagram(Widget):
             if fret_num is not None:
                 slid_voicing[i] = fret_num + self.note_idx
         if all(fret_num is None or fret_num >= 12 for fret_num in slid_voicing):
-            slid_voicing = [fret_num % 12 for fret_num in self.voicing if fret_num is not None]
+            slid_voicing[:] = [fret_num % 12 if fret_num is not None else None for fret_num in slid_voicing]
         return slid_voicing
 
     def draw_muted_string(self, string_idx):
@@ -136,7 +136,7 @@ class ChordDiagram(Widget):
         self.fret_ys[string_idx] = 0
         self.x_mark_opacs[string_idx] = 0
 
-        # fret_y moves marker up the fretboard, to lower notes.
+        # fret_y moves marker up the fretboard vertically, to lower notes.
         fret_y = self.step_y * 3
         steps_down = fret_num - min_fret
         self.fret_ys[string_idx] = fret_y - steps_down * self.step_y
@@ -163,7 +163,6 @@ class ChordDiagramContainer(FloatLayout):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Clock.schedule_once(self.update_diagram, 0.1)
 
     def on_size(self, *args):
         target_ratio = 27 / 28  # width / height
@@ -185,25 +184,16 @@ class ChordDiagramContainer(FloatLayout):
         self.update_diagram()
 
     def on_mode_filter(self, *args):
-        # if self.note_idx == 0:
-        print('ChordDiagramContainer.on_mode_filter')
         self.update_diagram()
 
     def on_voicing(self, *args):
         self.update_diagram()
 
     def update_diagram(self, *args):
-        # if self.display:
-            # Major 13th chord has 7 notes, guitar only has 6 strings.
-            # chord_possible_on_guitar = bin(self.bin_chord_shape) in self.display.chords_to_voicings
-            # print(f'ChordDiagramContainer.update_diagram() - chord_possible_on_guitar {chord_possible_on_guitar}')
-            # print(f'ChordDiagramContainer.update_diagram() - bin_chord_shape {self.bin_chord_shape}')
         if self.is_chord_in_key():
-            # print(f'ChordDiagramContainer.update_diagram() - draw')
             self.chord_diagram.voicing = self.voicing
             self.chord_diagram.draw_diagram()
         else:
-            # print(f'ChordDiagramContainer.update_diagram() - disable')
             self.chord_diagram.disable()
 
     def is_chord_in_key(self):
@@ -221,8 +211,14 @@ class ChordDiagramContainer(FloatLayout):
                 mode &= 0b111111111111
             return mode
 
-        # TODO: how many left shifts are needed to rotate a mode based on root_note_idx and note_idx?
-        # C -> B == 11.  B -> C = 1.. ?
+        # C Major Scale =   0b101011010101
+        #                     C D EF G A B
+        # Any Major Chord = 0b100010010000
+        # To test if D Major is in C Major scale, rotate C Major Scale 2 bits, so D is leftmost.
+        # C rooted at D =   0b101101010110
+        # D Major Chord =   0b100010010000
+        # D Major Chord has 1 bit set that is not in C rooted at D, therefore
+        # D Major Chord is not in the C Major scale.
         if self.note_idx >= self.root_note_idx:
             num_shifts = self.note_idx - self.root_note_idx
         else:
@@ -230,16 +226,14 @@ class ChordDiagramContainer(FloatLayout):
         rotated_mode = do_circular_bit_rotation(num_shifts, self.mode_filter)
         chord_mask = int(self.bin_chord_shape)
         # Are all the notes that make this chord also in this mode/key?
-        self.chord_in_key = rotated_mode & chord_mask == chord_mask
-        if self.note_idx == 0:
-            print(self.chord_in_key, self.mode_filter, rotated_mode, chord_mask)
-        return self.chord_in_key
+        chord_in_key = rotated_mode & chord_mask == chord_mask
+        return chord_in_key
 
 
 class ChordDiagramMain(FloatLayout):
-    bin_chord_shape = NumericProperty(0)
     note_idx = NumericProperty(0)
     root_note_idx = NumericProperty(0)
+    bin_chord_shape = NumericProperty(0)
     mode_filter = NumericProperty(0b101011010101)
     display = ObjectProperty(None)
     voicings = ListProperty([])
@@ -255,10 +249,14 @@ class ChordDiagramMain(FloatLayout):
                 self.popup.dismiss()
                 self.popup = None
             else:
+                full_chord_name = chrom_scale[self.note_idx] + " " + self.chord_name
+                title = full_chord_name + " Alternative Voicings"
                 content = ChordDiagramPopupContent(note_idx=self.note_idx,
+                                                   root_note_idx=self.root_note_idx,
+                                                   bin_chord_shape=self.bin_chord_shape,
                                                    chord_name=self.chord_name,
                                                    voicings=self.voicings)
-                self.popup = ChordDiagramPopup(content=content, width=self.row.width)
+                self.popup = ChordDiagramPopup(title=title, content=content, width=self.row.width)
                 self.popup.open()
             return True
         return super().on_touch_down(touch)
@@ -269,7 +267,7 @@ class ChordDiagramMain(FloatLayout):
 
 class ChordDiagramPopupContent(ScrollView):
 
-    def __init__(self, note_idx, chord_name, voicings, **kwargs):
+    def __init__(self, note_idx, root_note_idx, bin_chord_shape, chord_name, voicings, **kwargs):
         super().__init__(**kwargs)
         self.scroll_box = BoxLayout(orientation='horizontal',
                                     size_hint=[None, None])
@@ -277,12 +275,14 @@ class ChordDiagramPopupContent(ScrollView):
         for voicing in voicings:
             if boxes > 10:
                 return
-            cdc = ChordDiagramContainer(pos_hint={'center_x': 0.5})
-            cdc.voicing = voicing
-            cdc.note_idx = note_idx
-            cdc.chord_name = chord_name
-            sb_width += cdc.width
-            self.scroll_box.add_widget(cdc)
+            cd_container = ChordDiagramContainer(pos_hint={'center_x': 0.5})
+            cd_container.bin_chord_shape = bin_chord_shape
+            cd_container.note_idx = note_idx
+            cd_container.root_note_idx = root_note_idx
+            cd_container.voicing = voicing
+            cd_container.chord_name = chord_name
+            sb_width += cd_container.width
+            self.scroll_box.add_widget(cd_container)
         self.scroll_box.width = sb_width
         self.add_widget(self.scroll_box)
 

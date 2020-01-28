@@ -286,6 +286,7 @@
         color: (0, 0, 0, 1)
         font_size: self.height * 0.75
 
+
 <ChordDiagramContainer>:
     chord_diagram: cd
     pos_hint: {'center': [0.5, 0.5]}
@@ -298,15 +299,9 @@
         mode_filter: root.mode_filter
         chord_name: root.chord_name
 
+
 <ChordDiagramMain>:
     cd_container: cdc
-    canvas:
-        Color:
-            rgba: (1, 0, 1, 0.5)
-        Rectangle:
-            size: self.size
-            pos: self.pos
-
     ChordDiagramContainer:
         id: cdc
         bin_chord_shape: root.bin_chord_shape
@@ -315,6 +310,7 @@
         mode_filter: root.mode_filter
         display: root.display
         chord_name: root.chord_name
+
 
 <ChordDiagramPopupContent>:
     id: sv
@@ -326,4 +322,4 @@
 <ChordDiagramPopup>:
     title: "TEST"
     size_hint: [None, None]
-    height: dp(200)
+    height: dp(175)

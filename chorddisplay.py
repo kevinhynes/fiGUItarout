@@ -49,6 +49,7 @@ class ChordRow(BoxLayout):
     display = ObjectProperty(None)
     voicings = ListProperty()
     mode_filter = NumericProperty(0)
+    root_note_idx = NumericProperty(0)
 
     def on_display(self, row, display):
         # Once display becomes available, look up voicings for this row.
@@ -85,6 +86,7 @@ class ChordGroup(StencilView, BackGroundColorWidget):
             self.bind(note_idxs=chord_row.setter('note_idxs'))
             self.bind(display=chord_row.setter('display'))
             self.bind(mode_filter=chord_row.setter('mode_filter'))
+            self.bind(root_note_idx=chord_row.setter('root_note_idx'))
             self.box.add_widget(chord_row)
         self.group_height = ROW_HEIGHT * len(chord_group_list)
         self.box.height = self.group_height
@@ -129,9 +131,11 @@ class ChordDisplay(ScrollView, FloatLayout):
                 write_idx += 1
 
     def on_root_note_idx(self, *args):
-        prev_root_note_idx = self.note_idxs[0]
-        diff = self.root_note_idx - prev_root_note_idx
-        self.note_idxs = [(note_idx + diff) % 12 for note_idx in self.note_idxs]
+        self.note_idxs[0] = self.root_note_idx
+        self.on_mode_filter()
+        # prev_root_note_idx = self.note_idxs[0]
+        # diff = self.root_note_idx - prev_root_note_idx
+        # self.note_idxs = [(note_idx + diff) % 12 for note_idx in self.note_idxs]
 
 class ChordDisplayApp(App):
     def build(self):

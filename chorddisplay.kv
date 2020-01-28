@@ -34,6 +34,7 @@
             y: minor.top
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
+            root_note_idx: display.root_note_idx
         ChordGroup:
             id: minor
             chord_group: 'Minor'
@@ -43,6 +44,7 @@
             background: (0, 0, 1, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
+            root_note_idx: display.root_note_idx
         ChordGroup:
             id: dominant
             chord_group: 'Dominant'
@@ -52,6 +54,7 @@
             background: (0, 1, 0, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
+            root_note_idx: display.root_note_idx
         ChordGroup:
             id: suspended
             chord_group: 'Suspended'
@@ -61,6 +64,7 @@
             background: (1, 1, 0, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
+            root_note_idx: display.root_note_idx
         ChordGroup:
             id: diminished
             chord_group: 'Diminished'
@@ -70,6 +74,7 @@
             background: (0, 1, 1, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
+            root_note_idx: display.root_note_idx
         ChordGroup:
             id: augmented
             chord_group: 'Augmented'
@@ -78,6 +83,7 @@
             background: (1, 0, 1, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
+            root_note_idx: display.root_note_idx
 
 
 <ChordGroup>:
@@ -114,6 +120,7 @@
         id: label
     ChordDiagramMain:
         note_idx: root.note_idxs[0]
+        root_note_idx: root.root_note_idx
         bin_chord_shape: root.bin_chord_shape
         display: root.display
         voicings: root.voicings
@@ -122,6 +129,7 @@
         mode_filter: root.mode_filter
     ChordDiagramMain:
         note_idx: root.note_idxs[1]
+        root_note_idx: root.root_note_idx
         bin_chord_shape: root.bin_chord_shape
         display: root.display
         voicings: root.voicings
@@ -130,6 +138,7 @@
         mode_filter: root.mode_filter
     ChordDiagramMain:
         note_idx: root.note_idxs[2]
+        root_note_idx: root.root_note_idx
         bin_chord_shape: root.bin_chord_shape
         display: root.display
         voicings: root.voicings
@@ -138,6 +147,7 @@
         mode_filter: root.mode_filter
     ChordDiagramMain:
         note_idx: root.note_idxs[3]
+        root_note_idx: root.root_note_idx
         bin_chord_shape: root.bin_chord_shape
         display: root.display
         voicings: root.voicings
@@ -146,6 +156,7 @@
         mode_filter: root.mode_filter
     ChordDiagramMain:
         note_idx: root.note_idxs[4]
+        root_note_idx: root.root_note_idx
         bin_chord_shape: root.bin_chord_shape
         display: root.display
         voicings: root.voicings
@@ -154,6 +165,7 @@
         mode_filter: root.mode_filter
     ChordDiagramMain:
         note_idx: root.note_idxs[5]
+        root_note_idx: root.root_note_idx
         bin_chord_shape: root.bin_chord_shape
         display: root.display
         voicings: root.voicings
@@ -162,6 +174,7 @@
         mode_filter: root.mode_filter
     ChordDiagramMain:
         note_idx: root.note_idxs[6]
+        root_note_idx: root.root_note_idx
         bin_chord_shape: root.bin_chord_shape
         display: root.display
         voicings: root.voicings
