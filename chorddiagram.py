@@ -254,6 +254,7 @@ class ChordDiagramMain(FloatLayout):
                 content = ChordDiagramPopupContent(note_idx=self.note_idx,
                                                    root_note_idx=self.root_note_idx,
                                                    bin_chord_shape=self.bin_chord_shape,
+                                                   mode_filter=self.mode_filter,
                                                    chord_name=self.chord_name,
                                                    voicings=self.voicings)
                 self.popup = ChordDiagramPopup(title=title, content=content, width=self.row.width)
@@ -267,7 +268,8 @@ class ChordDiagramMain(FloatLayout):
 
 class ChordDiagramPopupContent(ScrollView):
 
-    def __init__(self, note_idx, root_note_idx, bin_chord_shape, chord_name, voicings, **kwargs):
+    def __init__(self, note_idx, root_note_idx, bin_chord_shape, mode_filter, chord_name, voicings,
+                 **kwargs):
         super().__init__(**kwargs)
         self.scroll_box = BoxLayout(orientation='horizontal',
                                     size_hint=[None, None])
@@ -277,6 +279,7 @@ class ChordDiagramPopupContent(ScrollView):
                 return
             cd_container = ChordDiagramContainer(pos_hint={'center_x': 0.5})
             cd_container.bin_chord_shape = bin_chord_shape
+            cd_container.mode_filter = mode_filter
             cd_container.note_idx = note_idx
             cd_container.root_note_idx = root_note_idx
             cd_container.voicing = voicing

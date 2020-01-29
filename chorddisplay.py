@@ -5,8 +5,7 @@ from kivy.uix.stencilview import StencilView
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
-from kivy.properties import NumericProperty, StringProperty, ListProperty, ObjectProperty, \
-    DictProperty
+from kivy.properties import NumericProperty, StringProperty, ListProperty, ObjectProperty
 from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.lang import Builder
@@ -126,6 +125,7 @@ class ChordDisplay(ScrollView, FloatLayout):
         for i, bit in enumerate(bin(self.mode_filter)[2:]):
             if int(bit) == 1:
                 note_idx = (self.root_note_idx + i) % 12
+                # Modes with more than 7 notes (Melodic Minor) don't work.
                 if write_idx < len(self.note_idxs):
                     self.note_idxs[write_idx] = note_idx
                 write_idx += 1
@@ -133,9 +133,7 @@ class ChordDisplay(ScrollView, FloatLayout):
     def on_root_note_idx(self, *args):
         self.note_idxs[0] = self.root_note_idx
         self.on_mode_filter()
-        # prev_root_note_idx = self.note_idxs[0]
-        # diff = self.root_note_idx - prev_root_note_idx
-        # self.note_idxs = [(note_idx + diff) % 12 for note_idx in self.note_idxs]
+
 
 class ChordDisplayApp(App):
     def build(self):

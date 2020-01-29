@@ -71,7 +71,7 @@ for _ in range(7):
 #       Major add11, Major add13, Major7 add11, Major7 add13,
 #       Major 9 add13..
 
-#   Confusingly, this logic can be extended to all other chords
+#   Confusingly, this logic can be extended to all other chords.
 #   A depth-first search can be performed that chooses to
 #   1) include this digit, 2) not include this digit.
 #   For example at some point we will arrive at the minor third interval.
