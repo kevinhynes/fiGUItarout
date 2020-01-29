@@ -52,11 +52,11 @@ major_scale = 0b101011010101
 minor_scale = 0b101101011010
 scale = minor_scale
 
-for _ in range(7):
-    print(chrom_scale[note_idx], " ", bin(scale))
-    chords_this_root = list_chords_in_key_at_this_root(note_idx, scale)
-    print(*chords_this_root, sep="\n")
-    note_idx, scale = do_circular_bit_rotation(note_idx, scale)
+# for _ in range(7):
+#     print(chrom_scale[note_idx], " ", bin(scale))
+#     chords_this_root = list_chords_in_key_at_this_root(note_idx, scale)
+#     print(*chords_this_root, sep="\n")
+#     note_idx, scale = do_circular_bit_rotation(note_idx, scale)
 
 
 # Notes to self:
@@ -138,7 +138,7 @@ def chord_voicing_dfs(string_idx, bin_chord_shape, is_triad, voicing, min_fret, 
 
     # I'm restricting a guitar chord to a span of 4 frets (inclusive).
     # This range will target between 4 to 8 frets - 8 at first, 4 later in recursion.
-    for fret_num in range(max(max_fret-3, 0), min(min_fret+4, 12)):
+    for fret_num in range(max(max_fret-3, 0), min(min_fret+4, 24)):
         octave, note_idx = divmod(string[fret_num], 12)
         bin_note = 2**(11 - note_idx)
         voicing = voicing[:string_idx] + [fret_num] + voicing[string_idx+1:]
@@ -178,13 +178,12 @@ if chord_voicings_by_tuning.get(str(tuning), None):
     print("retreived")
 else:
     print("calculating")
-    fretboard = [[note_val for note_val in range(string_val, string_val+12)]
+    fretboard = [[note_val for note_val in range(string_val, string_val+24)]
                  for string_val in standard_tuning][::-1]
     chord_to_voicings = collections.defaultdict(list)
-    chord_voicing_dfs(5, 0b000000000000, False, [None, None, None, None, None, None], 0, 12)
-    chord_voicing_dfs(4, 0b000000000000, False, [None, None, None, None, None, None], 0, 12)
-    chord_voicing_dfs(3, 0b000000000000, False, [None, None, None, None, None, None], 0, 12)
-    chord_voicing_dfs(2, 0b000000000000, False, [None, None, None, None, None, None], 0, 12)
+    for string_idx in range(2, 6):
+        chord_voicing_dfs(string_idx, 0b000000000000, False, [None, None, None, None, None, None], 0, 12)
+
 
     for bin_chord_shape, chord_voicings in chord_to_voicings.items():
         chord_voicings.sort(key=chord_voicing_sort)

@@ -3,14 +3,44 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
+from kivy.uix.label import Label
+from kivy.uix.bubble import Bubble
 from kivy.uix.popup import Popup
 from kivy.properties import ListProperty, NumericProperty, ReferenceListProperty, ObjectProperty, \
     StringProperty, BooleanProperty
-from kivy.clock import Clock
 from kivy.metrics import dp
+from kivy.graphics import Color, Rectangle
+
+import json
 
 from music_constants import chrom_scale
 ROW_HEIGHT = dp(95)
+
+
+class ChordDiagramBubble(Bubble):
+
+    def __init__(self, voicing, cd_container, **kwargs):
+        super().__init__(**kwargs)
+        self.size_hint = [None, None]
+        self.pos_hint = {'center': [0.5, 0.5]}
+        self.size = [100, 50]
+        self.voicing = voicing
+        self.cd_container = cd_container
+
+    def select(self, *args):
+        print('selected!')
+        self.cd_container.popup.voicing = self.voicing
+        self.cd_container.remove_bubble()
+
+    def delete(self, *args):
+        print(self.voicing)
+        with open('impossible_fingerings.json', 'r') as read_file:
+            impossible_fingerings = json.load(read_file)
+        impossible_fingerings += [self.voicing]
+        print(impossible_fingerings)
+        with open('impossible_fingerings.json', 'w') as write_file:
+            json.dump(impossible_fingerings, write_file)
+        self.cd_container.remove_bubble()
 
 
 class ChordDiagram(Widget):
@@ -102,7 +132,6 @@ class ChordDiagram(Widget):
                 self.draw_open_string(i)
             else:
                 self.draw_fingered_string(i, fret_num, min_fret)
-
         self.disable_opac = 0
 
     def slide_voicing(self, voicing):
@@ -163,6 +192,9 @@ class ChordDiagramContainer(FloatLayout):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.is_popup = False
+        self.bubble = None
+        self.popup = None
 
     def on_size(self, *args):
         target_ratio = 27 / 28  # width / height
@@ -229,6 +261,22 @@ class ChordDiagramContainer(FloatLayout):
         chord_in_key = rotated_mode & chord_mask == chord_mask
         return chord_in_key
 
+    def on_touch_down(self, touch):
+        if self.collide_point(touch.x, touch.y) and self.is_popup:
+            if not self.bubble:
+                self.bubble = bubble = ChordDiagramBubble(self.voicing, self)
+                self.bind(pos=bubble.setter('pos'))
+                self.add_widget(bubble)
+                print('bubble added')
+            else:
+                super().on_touch_down(touch)
+                if self.bubble:
+                    self.remove_bubble()
+
+    def remove_bubble(self, *args):
+        self.remove_widget(self.bubble)
+        self.bubble = None
+
 
 class ChordDiagramMain(FloatLayout):
     note_idx = NumericProperty(0)
@@ -238,6 +286,7 @@ class ChordDiagramMain(FloatLayout):
     display = ObjectProperty(None)
     voicings = ListProperty([])
     chord_name = StringProperty('')
+    voicing = ListProperty([None, None, None, None, None, None])
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -257,7 +306,11 @@ class ChordDiagramMain(FloatLayout):
                                                    mode_filter=self.mode_filter,
                                                    chord_name=self.chord_name,
                                                    voicings=self.voicings)
-                self.popup = ChordDiagramPopup(title=title, content=content, width=self.row.width)
+                self.popup = ChordDiagramPopup(title=title,
+                                               content=content,
+                                               width=content.width * 1.2)
+                content.bind(voicing=self.popup.setter('voicing'))
+                self.popup.bind(voicing=self.setter('voicing'))
                 self.popup.open()
             return True
         return super().on_touch_down(touch)
@@ -265,33 +318,83 @@ class ChordDiagramMain(FloatLayout):
     def on_voicings(self, *args):
         self.cd_container.voicing = self.voicings[0]
 
+    def on_voicing(self, *args):
+        self.cd_container.voicing = self.voicing
+
+
+class ChordDiagramPopup(Popup):
+    voicing = ListProperty()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.size_hint = [None, None]
+        self.height = ROW_HEIGHT * 7
+
 
 class ChordDiagramPopupContent(ScrollView):
+    voicing = ListProperty()
 
     def __init__(self, note_idx, root_note_idx, bin_chord_shape, mode_filter, chord_name, voicings,
                  **kwargs):
         super().__init__(**kwargs)
-        self.scroll_box = BoxLayout(orientation='horizontal',
-                                    size_hint=[None, None])
-        sb_width = boxes = 0
+        self.pos_hint = {'center_x': 0.5}
+        self.size_hint = [None, None]
+        self.height = ROW_HEIGHT * 6
+        self.scroll_grid = BoxLayout(orientation='horizontal',
+                                     size_hint=[None, None],
+                                     pos_hint = {'center_x': 0.5})
+        self.add_columns()
+        self.build_title_bar()
+        self.build_columns(note_idx, root_note_idx, bin_chord_shape, mode_filter, chord_name, voicings)
+        # Child widgets are displayed right to left in horizontal BoxLayout; reverse this.
+        self.scroll_grid.children = self.scroll_grid.children[::-1]
+        self.width = self.scroll_grid.width
+        self.add_widget(self.scroll_grid)
+
+    def add_columns(self):
+        for i in range(4):
+            column = BoxLayout(orientation='vertical',
+                               size_hint=[None, None],
+                               pos_hint={'top': 1},
+                               spacing=1)
+            self.scroll_grid.add_widget(column)
+
+    def build_title_bar(self):
+        # Add labels for chords rooted at string 6, 5, 4, 3.
+        # String 6 is children[0], 5 is children[1], 4 is children[2], 3 is children[3].
+        for i in range(6, 2, -1):
+            label = Label(text='Root ' + str(i) + ' string', size_hint_y=None, height=ROW_HEIGHT/2)
+            column = self.scroll_grid.children[6 - i]
+            column.add_widget(label)
+
+    def build_columns(self, note_idx, root_note_idx, bin_chord_shape, mode_filter, chord_name, voicings):
+        def get_col_idx(voicing):
+            for i, fret_num in enumerate(voicing):
+                if fret_num is not None:
+                    return i
         for voicing in voicings:
-            if boxes > 10:
-                return
-            cd_container = ChordDiagramContainer(pos_hint={'center_x': 0.5})
-            cd_container.bin_chord_shape = bin_chord_shape
-            cd_container.mode_filter = mode_filter
+            column_idx = get_col_idx(voicing)
+            column = self.scroll_grid.children[column_idx]
+            cd_container = ChordDiagramContainer()
+            cd_container.is_popup = True
+            cd_container.popup = self
             cd_container.note_idx = note_idx
             cd_container.root_note_idx = root_note_idx
-            cd_container.voicing = voicing
+            cd_container.bin_chord_shape = bin_chord_shape
+            cd_container.mode_filter = mode_filter
             cd_container.chord_name = chord_name
-            sb_width += cd_container.width
-            self.scroll_box.add_widget(cd_container)
-        self.scroll_box.width = sb_width
-        self.add_widget(self.scroll_box)
+            cd_container.voicing = voicing
+            column.add_widget(cd_container)
 
+        # Set scroll_grid width.
+        self.scroll_grid.width = column.width * 4
 
-class ChordDiagramPopup(Popup):
-    pass
+        # Set the column and scroll_grid heights.
+        for column_idx in range(4):
+            column = self.scroll_grid.children[column_idx]
+            height = ROW_HEIGHT * len(column.children) - (ROW_HEIGHT / 2)
+            column.height = height
+            self.scroll_grid.height = max(self.scroll_grid.height, height)
 
 
 class ChordDiagramApp(App):

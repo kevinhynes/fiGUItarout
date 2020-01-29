@@ -1,6 +1,17 @@
 #: import cdm chorddiagram
 
 
+<ChordDiagramBubble>:
+    orientation: 'horizontal'
+    BubbleButton:
+        text: "Select"
+        on_press: root.select()
+    BubbleButton:
+        text: "Delete"
+        background_color: (1, 0, 0, 0.5)
+        on_press: root.delete()
+
+
 <ChordDiagram>:
     # ChordDiagram is 27 wide by 28 tall; step_x is 3, step_y is 4.
     # We start drawing at (step_x * 2, step_y), or (6, 4).
@@ -312,14 +323,3 @@
         chord_name: root.chord_name
 
 
-<ChordDiagramPopupContent>:
-    id: sv
-    size_hint_y: None
-    height: dp(95)
-    do_scroll_y: False
-
-
-<ChordDiagramPopup>:
-    title: "TEST"
-    size_hint: [None, None]
-    height: dp(175)
