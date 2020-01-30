@@ -116,6 +116,8 @@ class ChordDisplay(ScrollView):
         Clock.schedule_once(self.top_justify_all, 5)
 
     def top_justify_all(self, *args):
+        if self.ids.display_box and self.ids.titlebar:
+            self.ids.titlebar.top = self.ids.display_box.top
         for chord_group in self.ids.display_box.children:
             chord_group.top_justify()
 

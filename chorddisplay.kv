@@ -14,12 +14,26 @@
 
 <ChordDisplay>:
     id: display
+    canvas:
+        Color:
+            rgba: (0, 0, 1, 1)
+        Line:
+            rectangle: (*self.pos, *self.size)
+            width: 2
+            dash_offset: 5
     FloatLayout:
         id: display_box
 #        orientation: 'vertical'
         size_hint: [None, None]
         height: ROW_HEIGHT * 21
         width: root.width
+        canvas:
+            Color:
+                rgba: (0, 1, 0, 1)
+            Line:
+                rectangle: (*self.pos, *self.size)
+                width: 2
+                dash_offset: 50
         ChordTitleBar:
             id: titlebar
             top: display_box.top
