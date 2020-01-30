@@ -27,7 +27,6 @@ scale_highlights = {
     "R, 3, 5": 0b100110110000,
     }
 
-
 black = Color(0, 0, 0, 1)
 white = Color(1, 1, 1, 1)
 gray = Color(0.5, 0.5, 0.5, 1)
@@ -44,6 +43,7 @@ octave_colors = [
     rainbow[6],
     rainbow[8],
     rainbow[10]]
+
 
 class String(FloatLayout):
     open_note_val = NumericProperty(0)
@@ -79,12 +79,6 @@ class String(FloatLayout):
             marker = Marker()
             self.note_markers.add(marker)
 
-    def update_canvas(self, *args):
-        if self.fret_positions:  # self.fret_positions is empty during instantiation.
-            # self.redraw_octave_markers()
-            self.redraw_string()
-            self.redraw_note_markers()
-
     def animate_marker(self, index, *args):
         markers = self.note_markers.children
         anim = Animation(animation_prop=1, duration=2, t="in_circ")
@@ -97,7 +91,13 @@ class String(FloatLayout):
         if self.collide_point(*touch.pos):
             self.animate_marker(0)
 
-    def redraw_string(self):
+    def update_canvas(self, *args):
+        if self.fret_positions:  # self.fret_positions is empty during instantiation.
+            # self.update_octave_markers()
+            self.update_string_grapics()
+            self.update_note_markers()
+
+    def update_string_grapics(self):
         w, h = self.width, self.height * 0.1
         x, y = self.pos
         cy = y + (self.height / 2)
@@ -111,7 +111,7 @@ class String(FloatLayout):
         self.string_graphic.size = [w, h]
         self.string_graphic.pos = [x, string_y]
 
-    def redraw_note_markers(self, *args):
+    def update_note_markers(self, *args):
         x, y = self.pos
         r1 = self.height / 2
         r2 = r1 * 0.9
@@ -141,12 +141,12 @@ class String(FloatLayout):
 
             marker.update(i, note_text, c1x, c1y, r1, c2x, c2y, r2, included, highlighted, color)
 
-    def redraw_octave_markers(self):
+    def update_octave_markers(self):
         self.octave_markers.clear()
         for i, note_val in enumerate(self.note_vals):
-            self.redraw_octave_marker(i, note_val)
+            self.update_octave_marker(i, note_val)
 
-    def redraw_octave_marker(self, i, note_val):
+    def update_octave_marker(self, i, note_val):
         if self.fret_ranges:
             octave = (note_val - self.fretboard.root_note_idx) // 12
             octave -= 2  # second musical octave is 0th on guitar... sloopy
@@ -171,13 +171,13 @@ class String(FloatLayout):
         self.update_canvas(instance, value)
 
     def on_scale_text(self, instance, value):
-        self.redraw_note_markers()
+        self.update_note_markers()
 
     def on_notes_to_highlight(self, instance, value):
-        self.redraw_note_markers()
+        self.update_note_markers()
 
     def on_notes_or_octaves(self, *args):
-        self.redraw_note_markers()
+        self.update_note_markers()
 
 class Fretboard(StencilView, FloatLayout):
     num_frets = NumericProperty(24)
@@ -204,8 +204,8 @@ class Fretboard(StencilView, FloatLayout):
         self.fingerboard = Rectangle()
         self.fret_bars = InstructionGroup()
         self.inlays = InstructionGroup()
-        self.add_fret_bars()
-        self.add_inlays()
+        self._add_fret_bars()
+        self._add_inlays()
 
         # When launching Fretboard as App, need to use canvas.before..
         self.canvas.before.add(brown)
@@ -215,14 +215,14 @@ class Fretboard(StencilView, FloatLayout):
         self.canvas.before.add(white)
         self.canvas.before.add(self.inlays)
 
-    def add_fret_bars(self):
+    def _add_fret_bars(self):
         """Add Rectangles to display fret bars.
         Setting maximum to 24 frets (25 with nut) - the most on any common guitar.
         When less frets are chosen, some will be drawn off screen."""
         for fret in range(25):
             self.fret_bars.add(Rectangle())
 
-    def add_inlays(self):
+    def _add_inlays(self):
         """Add Ellipses to display inlays.
         There will be a maximum of 12 for a 24-fret guitar (for a typical Fender style).
         When less frets are chosen, some will be drawn off screen."""
@@ -282,15 +282,15 @@ class Fretboard(StencilView, FloatLayout):
         box = self.ids.box
         self.calc_fret_positions(box)
         self.calc_fret_ranges(box)
-        self.redraw_fingerboard(box)
-        self.redraw_fret_bars(box)
-        self.redraw_inlays(box)
+        self.update_fingerboard(box)
+        self.update_fret_bars(box)
+        self.update_inlays(box)
 
-    def redraw_fingerboard(self, box):
+    def update_fingerboard(self, box):
         self.fingerboard.size = box.size
         self.fingerboard.pos = box.pos
 
-    def redraw_fret_bars(self, box):
+    def update_fret_bars(self, box):
         # When adding Rectangle to InstructionGroup, BindTextures are added first.
         self.fret_bar_width = self.width * (0.1/24.75)
         rects = [obj for obj in self.fret_bars.children if isinstance(obj, Rectangle)]
@@ -299,7 +299,7 @@ class Fretboard(StencilView, FloatLayout):
             rect.size = [self.fret_bar_width, box.height]
             rect.pos = [x_pos, box.y]
 
-    def redraw_inlays(self, box):
+    def update_inlays(self, box):
         inlays = [obj for obj in self.inlays.children if isinstance(obj, Ellipse)]
         inlay_num = 0
         d = box.width * 0.01

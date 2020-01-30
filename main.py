@@ -4,6 +4,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.core.window import Window
 Window.maximize()
 
+
 Builder.load_file("style.kv")
 Builder.load_file("slideupmenu.kv")
 Builder.load_file("fretboarddisplay.kv")

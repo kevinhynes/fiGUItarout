@@ -1,8 +1,9 @@
 #: import cdsply chorddisplay
+#: import ROW_HEIGHT chorddisplay.ROW_HEIGHT
 
 
 <BackGroundColorWidget>:
-    background: (1, 0, 0, 0.5)
+    background: (0, 0, 0, 0)
     canvas.before:
         Color:
             rgba: self.background
@@ -13,15 +14,15 @@
 
 <ChordDisplay>:
     id: display
-    BoxLayout:
+    FloatLayout:
         id: display_box
-        orientation: 'vertical'
+#        orientation: 'vertical'
         size_hint: [None, None]
-        height: root.height * 3
+        height: ROW_HEIGHT * 21
         width: root.width
-        y: 0
         ChordTitleBar:
             id: titlebar
+            top: display_box.top
             y: major.top
             note_idxs: display.note_idxs
             display: display
@@ -29,7 +30,7 @@
             id: major
             chord_group: 'Major'
             display: display
-            background: (1, 0, 0, 0.5)
+#            background: (1, 0, 0, 0.5)
             top: titlebar.y
             y: minor.top
             note_idxs: display.note_idxs
@@ -41,7 +42,7 @@
             top: major.y
             y: dominant.top
             display: display
-            background: (0, 0, 1, 0.5)
+#            background: (0, 0, 1, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
             root_note_idx: display.root_note_idx
@@ -51,7 +52,7 @@
             top: minor.y
             y: suspended.top
             display: display
-            background: (0, 1, 0, 0.5)
+#            background: (0, 1, 0, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
             root_note_idx: display.root_note_idx
@@ -61,7 +62,7 @@
             top: dominant.y
             y: diminished.top
             display: display
-            background: (1, 1, 0, 0.5)
+#            background: (1, 1, 0, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
             root_note_idx: display.root_note_idx
@@ -71,7 +72,7 @@
             top: suspended.y
             y: augmented.top
             display: display
-            background: (0, 1, 1, 0.5)
+#            background: (0, 1, 1, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
             root_note_idx: display.root_note_idx
@@ -80,7 +81,7 @@
             chord_group: 'Augmented'
             top: diminished.y
             display: display
-            background: (1, 0, 1, 0.5)
+#            background: (1, 0, 1, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
             root_note_idx: display.root_note_idx
@@ -88,14 +89,16 @@
 
 <ChordGroup>:
     size_hint: [1, None]
-    height: dp(90)
+    height: ROW_HEIGHT
 
 
 <ChordTitleBar>:
     orientation: 'horizontal'
     size_hint: [1, None]
-    height: dp(90)
+    height: ROW_HEIGHT
+    label: label
     Label:
+        id: label
         text: 'Chords'
     Label:
         text: root.chrom_scale[root.note_idxs[0]]
@@ -181,5 +184,3 @@
         chord_name: root.label.text
         row: root
         mode_filter: root.mode_filter
-
-

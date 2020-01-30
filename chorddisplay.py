@@ -65,14 +65,11 @@ class ChordGroup(StencilView, BackGroundColorWidget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.box = BoxLayout(orientation='vertical')
-        self.fold_button = Button(background_normal='',
-                                  background_down='',
-                                  background_color=(0, 0, 0, 0))
+        self.fold_button = Button(background_color=(1, 0, 0, 0.5))
         self.fold_button.bind(on_press=self.fold)
         self.add_widget(self.fold_button)
         self.add_widget(self.box)
         self.bind(pos=self.top_justify, size=self.top_justify)
-        Clock.schedule_once(self.top_justify, 0.1)  # no text in some groups initially without this
 
     def on_chord_group(self, *args):
         # Using this as a sort of __init__ method to avoid repetitive classes.
@@ -90,7 +87,7 @@ class ChordGroup(StencilView, BackGroundColorWidget):
         self.group_height = ROW_HEIGHT * len(chord_group_list)
         self.box.height = self.group_height
         self.fold_button.height = self.group_height
-        self.fold_button.width = self.box.children[0].ids.label.width if self.box.children else 100
+        self.fold_button.width = ROW_HEIGHT
         self.fold_button.x = self.box.children[0].ids.label.x if self.box.children else 0
         self.top_justify()
 
@@ -101,11 +98,11 @@ class ChordGroup(StencilView, BackGroundColorWidget):
     def top_justify(self, *args):
         self.box.width = self.width
         self.box.top = self.top
-        self.fold_button.width = self.box.children[0].ids.label.width if self.box.children else 100
+        self.fold_button.width = self.box.children[0].ids.label.width if self.box.children else ROW_HEIGHT
         self.fold_button.top = self.top
 
 
-class ChordDisplay(ScrollView, FloatLayout):
+class ChordDisplay(ScrollView):
     root_note_idx = NumericProperty(0)
     mode_filter = NumericProperty(0b101011010101)
     note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
@@ -115,13 +112,21 @@ class ChordDisplay(ScrollView, FloatLayout):
             chord_voicings_by_tuning = json.load(read_file)
         self.chords_to_voicings = chord_voicings_by_tuning[str(standard_tuning)]
         super().__init__(**kwargs)
-        Clock.schedule_once(self.top_justify_all, 0.5)  # no text in some groups initially without this
+        # No text in some groups and fold_buttons are tiny initially without this.
+        Clock.schedule_once(self.top_justify_all, 5)
 
     def top_justify_all(self, *args):
         for chord_group in self.ids.display_box.children:
             chord_group.top_justify()
 
     def on_mode_filter(self, *args):
+        self.update_note_idxs()
+
+    def on_root_note_idx(self, *args):
+        self.note_idxs[0] = self.root_note_idx
+        self.update_note_idxs()
+
+    def update_note_idxs(self):
         write_idx = 0
         for i, bit in enumerate(bin(self.mode_filter)[2:]):
             if int(bit) == 1:
@@ -131,9 +136,6 @@ class ChordDisplay(ScrollView, FloatLayout):
                     self.note_idxs[write_idx] = note_idx
                 write_idx += 1
 
-    def on_root_note_idx(self, *args):
-        self.note_idxs[0] = self.root_note_idx
-        self.on_mode_filter()
 
 
 class ChordDisplayApp(App):

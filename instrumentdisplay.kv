@@ -1,0 +1,57 @@
+<Outline@Widget>:
+    canvas:
+        Color:
+            rgba: (1, 0, 0, 0.5)
+        Line:
+            rectangle: (*self.pos, *self.size)
+
+
+<BackGroundColorWidget>:
+    background: (0, 0, 0, 0)
+    canvas.before:
+        Color:
+            rgba: self.background
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+
+<OutlinedFretboard@Fretboard+Outline>:
+
+
+<ColoredChordDisplay@ChordDisplay+BackGroundColorWidget>:
+
+
+<InstrumentDisplay>:
+    id: display
+    orientation: 'vertical'
+    rack: rack
+    InstrumentRack:
+        id: rack
+    SlidingChordDisplay:
+        id: chorddisplay
+        display: display
+        top: self.top_hint
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 50
+        pos: (0, 0)
+        Button:
+            text: "Show Piano Roll"
+            on_press: root.fold()
+        Button:
+            text: "Move Chord Display"
+            on_press: chorddisplay.slide()
+
+
+<InstrumentRack>:
+    size_hint_y: None
+    height: dp(250)
+    pos_hint: {'top': 1}
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint_y: None
+        height: dp(500)
+        OutlinedFretboard:
+        OutlinedFretboard:
