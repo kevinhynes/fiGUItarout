@@ -1,7 +1,7 @@
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty, NumericProperty
 
 
 class ScaleTextChooser(BoxLayout):
@@ -25,6 +25,11 @@ class GroupHighlighter(BoxLayout):
 
 
 class ScaleOptionsChooser(FloatLayout):
+    scale_text = StringProperty("")
+    notes_to_highlight = StringProperty("")
+    notes_or_octaves = StringProperty("")
+
+    top_prop = NumericProperty(0)
 
     def on_size(self, instance, value):
         width, height = self.size
@@ -37,6 +42,12 @@ class ScaleOptionsChooser(FloatLayout):
         else:
             self.ids.box.width = width
             self.ids.box.height = width / target_ratio
+
+    def slide(self, *args):
+        if self.top == 0:
+            self.top_prop = 150
+        else:
+            self.top_prop = 0
 
 
 class ScaleOptionsChooserApp(App):

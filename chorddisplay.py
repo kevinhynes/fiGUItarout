@@ -107,19 +107,41 @@ class ChordDisplay(ScrollView):
     mode_filter = NumericProperty(0b101011010101)
     note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
 
+    top_prop = NumericProperty(0)
+    instrument_rack = ObjectProperty(None)
+
     def __init__(self, **kwargs):
         with open('chord_voicings_by_tuning.json') as read_file:
             chord_voicings_by_tuning = json.load(read_file)
         self.chords_to_voicings = chord_voicings_by_tuning[str(standard_tuning)]
         super().__init__(**kwargs)
+        self.is_shown = False
         # No text in some groups and fold_buttons are tiny initially without this.
         Clock.schedule_once(self.top_justify_all, 5)
 
     def top_justify_all(self, *args):
-        if self.ids.display_box and self.ids.titlebar:
-            self.ids.titlebar.top = self.ids.display_box.top
-        for chord_group in self.ids.display_box.children:
-            chord_group.top_justify()
+        if self.ids.scroll_child and self.ids.titlebar:
+            self.ids.titlebar.top = self.ids.scroll_child.top
+        for child in self.ids.scroll_child.children:
+            child.top_justify()
+
+    def slide(self, *args):
+        if self.instrument_rack:
+            instrument_rack = self.instrument_rack
+            if not self.is_shown:
+                self.height = instrument_rack.y  # Change the size,
+                self.top_prop = instrument_rack.y  # before changing the position.
+                instrument_rack.bind(y=self.top_prop_setter)
+                self.is_shown = True
+            else:
+                instrument_rack.unbind(y=self.top_prop_setter)
+                self.top_prop = 0
+                self.is_shown = False
+
+    def top_prop_setter(self, instrument_rack, instrument_rack_y):
+        # Unbinding from the self.setter('top_prop') callback is not working.
+        self.height = instrument_rack.y
+        self.top_prop = instrument_rack.y
 
     def on_mode_filter(self, *args):
         self.update_note_idxs()

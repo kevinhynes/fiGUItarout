@@ -3,12 +3,11 @@ from kivy.properties import NumericProperty, ObjectProperty, StringProperty
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.relativelayout import RelativeLayout
-from kivy.graphics import InstructionGroup, Line, Color, RoundedRectangle, Rectangle, Ellipse
 # from kivy.uix.label import CoreLabel
 # from kivy.core.text import Label as CoreLabel
 
-chrom_scale = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B']
-chrom_scale_no_acc = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
+from music_constants import chrom_scale, chrom_scale_no_acc
+
 
 mode_filters = {
     "Chromatic": 0b111111111111,
@@ -64,7 +63,6 @@ class ModeChooser(BoxLayout):
         self.mode_text = mode_groups[self.mode_group][self.group_idx]
         self.spinner.text = self.mode_text
         self.mode_filter = mode_filters[self.mode_text]
-        num_notes = bin(self.mode_filter).count("1")
 
     def increment_group_idx(self):
         self.group_idx = (self.group_idx + 1) % len(mode_groups[self.mode_group])
@@ -85,7 +83,9 @@ class ModeChooser(BoxLayout):
 class KeySigChooser(FloatLayout):
     root_note_idx = NumericProperty(0)
     mode_filter = NumericProperty(0b111111111111)
-    key_sig = StringProperty("")
+    key_sig_text = StringProperty("")
+
+    top_prop = NumericProperty(0)
 
     def on_size(self, instance, value):
         width, height = self.size
@@ -99,6 +99,12 @@ class KeySigChooser(FloatLayout):
             else:
                 self.ids.box.width = width
                 self.ids.box.height = width / target_ratio
+
+    def slide(self, *args):
+        if self.top == 0:
+            self.top_prop = 150
+        else:
+            self.top_prop = 0
 
 
 class KeySigChooserApp(App):

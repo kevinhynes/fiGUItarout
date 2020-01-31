@@ -71,13 +71,15 @@
     Spinner:
         id: spinner
         text_autoupdate: True
-#        background_normal: ''
         background_color: [1, 1, 1, 1]
         values: ["All", "Modern", "Pentatonic", "Minor"]
         font_size: root.box.box_font_size or self.width
 
 <KeySigChooser>:
     id: keysigchooser
+    size_hint: [None, None]
+    size: [dp(1000), dp(100)]
+    top: self.top_prop
     root_note_idx: rootnotechooser.root_note_idx
     mode_filter: modechooser.mode_filter
     key_sig_text: rootnotechooser.spinner.text + " " + modechooser.spinner.text

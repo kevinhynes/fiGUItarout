@@ -14,6 +14,7 @@
 
 <ChordDisplay>:
     id: display
+    size_hint_y: None
     canvas:
         Color:
             rgba: (0, 0, 1, 1)
@@ -22,10 +23,11 @@
             width: 2
             dash_offset: 5
     FloatLayout:
-        id: display_box
-#        orientation: 'vertical'
+        id: scroll_child
         size_hint: [None, None]
-        height: ROW_HEIGHT * 21
+        height:
+            titlebar.height + major.height + minor.height + dominant.height \
+            + suspended.height + diminished.height + augmented.height
         width: root.width
         canvas:
             Color:
@@ -36,7 +38,7 @@
                 dash_offset: 50
         ChordTitleBar:
             id: titlebar
-            top: display_box.top
+            top: scroll_child.top
             y: major.top
             note_idxs: display.note_idxs
             display: display

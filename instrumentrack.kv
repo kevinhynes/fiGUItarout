@@ -1,0 +1,17 @@
+#: import ir instrumentrack
+
+
+<InstrumentRack>:
+    id: rack
+    size_hint_y: None
+    height: dp(250)
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint_y: None
+        height: dp(500)
+        Fretboard:
+            root_note_idx: rack.root_note_idx
+            mode_filter: rack.mode_filter
+            notes_to_highlight: rack.notes_to_highlight
+            notes_or_octaves: rack.notes_or_octaves
+        Fretboard:

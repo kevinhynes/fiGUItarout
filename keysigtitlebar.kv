@@ -1,0 +1,21 @@
+#: import kstb keysigtitlebar
+
+
+<KeySigTitleBar>:
+    id: titlebar
+    orientation: "horizontal"
+    size_hint: [1, 0.2]
+    pos_hint: {'top': 1}
+    Label:
+        text: "    " + titlebar.key_sig_text
+        text_size: self.size
+        font_size: self.height / 2.5
+        font_name: "./fonts/Impact"
+        halign: "left"
+        valign: "middle"
+    KeySigDisplay:
+        root_note_idx: titlebar.root_note_idx
+        mode_filter: titlebar.mode_filter
+        scale_text: titlebar.scale_text
+        notes_to_highlight: titlebar.notes_to_highlight
+        notes_or_octaves: titlebar.notes_or_octaves

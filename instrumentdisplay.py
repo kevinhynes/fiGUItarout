@@ -1,6 +1,5 @@
 from kivy.app import App
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.stencilview import StencilView
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import NumericProperty, ObjectProperty
@@ -14,7 +13,7 @@ from chorddisplay import ChordDisplay
 
 
 class SlidingChordDisplay(ChordDisplay):
-    top_hint = NumericProperty(0)
+    top_prop = NumericProperty(0)
     display = ObjectProperty(None)
 
     def __init__(self, **kwargs):
@@ -25,28 +24,30 @@ class SlidingChordDisplay(ChordDisplay):
         if self.display:
             rack = self.display.ids.rack
             if not self.is_shown:
-                self.top_hint = rack.y
-                # rack.bind(y=self.setter('top_hint'))
+                self.height = rack.y  # Change the size,
+                self.top_prop = rack.y  # before changing the position.
+                rack.bind(y=self.top_prop_setter)
                 self.is_shown = True
             else:
-                # rack.unbind(y=self.setter('top_hint'))
-                self.top_hint = 0
+                rack.unbind(y=self.top_prop_setter)
+                self.top_prop = 0
                 self.is_shown = False
 
-
-class InstrumentDisplay(FloatLayout):
-
-    def fold(self, *args):
-        if self.rack.height == dp(250):
-            self.rack.height = dp(500)
-        else:
-            self.rack.height = dp(250)
-
-    def remove_chord_display(self, *args):
-        self.remove_widget(self.ids.chorddisplay)
+    def top_prop_setter(self, rack, rack_y):
+        self.height = rack.y
+        self.top_prop = rack_y
 
 
 class InstrumentRack(ScrollView):
+
+    def fold(self, *args):
+        if self.height == dp(250):
+            self.height = dp(500)
+        else:
+            self.height = dp(250)
+
+
+class InstrumentDisplay(FloatLayout):
     pass
 
 

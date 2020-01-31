@@ -30,8 +30,9 @@
         id: rack
     SlidingChordDisplay:
         id: chorddisplay
+        top: self.top_prop
+        size_hint_y: None
         display: display
-        top: self.top_hint
     BoxLayout:
         orientation: 'horizontal'
         size_hint_y: None
@@ -39,7 +40,7 @@
         pos: (0, 0)
         Button:
             text: "Show Piano Roll"
-            on_press: root.fold()
+            on_press: rack.fold()
         Button:
             text: "Move Chord Display"
             on_press: chorddisplay.slide()

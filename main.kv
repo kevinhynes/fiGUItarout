@@ -1,16 +1,76 @@
 <MainPage>:
 
-    FretboardDisplay:
-        tuning: menu.tuning
-        num_frets: menu.num_frets
-        root_note_idx: menu.root_note_idx
-        mode_filter: menu.mode_filter
-        key_sig_text: menu.key_sig_text
-        scale_text: menu.scale_text
-        notes_to_highlight: menu.notes_to_highlight
-        notes_or_octaves: menu.notes_or_octaves
+#    FretboardDisplay:
+#        tuning: menu.tuning
+#        num_frets: menu.num_frets
+#        root_note_idx: menu.root_note_idx
+#        mode_filter: menu.mode_filter
+#        key_sig_text: menu.key_sig_text
+#        scale_text: menu.scale_text
+#        notes_to_highlight: menu.notes_to_highlight
+#        notes_or_octaves: menu.notes_or_octaves
 
-    SlideUpMenu:
-        id: menu
+#    SlideUpMenu:
+#        id: menu
+
+    KeySigTitleBar:
+        id: titlebar
+        key_sig_text: keysigchooser.key_sig_text
+        root_note_idx: keysigchooser.root_note_idx
+        mode_filter: keysigchooser.mode_filter
+        scale_text: scaleoptionschooser.scale_text
+        notes_to_highlight: scaleoptionschooser.notes_to_highlight
+        notes_or_octaves: scaleoptionschooser.notes_or_octaves
+
+    InstrumentRack:
+        id: rack
+        top: titlebar.y
+        key_sig_title_bar: titlebar
+        root_note_idx: keysigchooser.root_note_idx
+        mode_filter: keysigchooser.mode_filter
+        notes_to_highlight: scaleoptionschooser.notes_to_highlight
+        notes_or_octaves: scaleoptionschooser.notes_or_octaves
+
+    ChordDisplay:
+        id: chorddisplay
+        top: self.top_prop
+        instrument_rack: rack
+        root_note_idx: keysigchooser.root_note_idx
+        mode_filter: keysigchooser.mode_filter
+
+    KeySigChooser:
+        id: keysigchooser
+
+    ScaleOptionsChooser:
+        id: scaleoptionschooser
+
+    Button:
+        id: btn1
+        text: 'Show Chord Display'
+        size_hint: [None, None]
+        size: [100, 50]
+        pos: (0, 0)
+        on_press: chorddisplay.slide()
+    Button:
+        id: btn2
+        text: 'Fold / Unfold Rack'
+        size_hint: [None, None]
+        size: [100, 50]
+        x: btn1.right
+        on_press: rack.fold()
+    Button:
+        id: btn3
+        text: 'Choose Key Sig'
+        size_hint: [None, None]
+        size: [100, 50]
+        x: btn2.right
+        on_press: keysigchooser.slide()
+    Button:
+        id: btn4
+        text: 'Choose Key Sig'
+        size_hint: [None, None]
+        size: [100, 50]
+        x: btn3.right
+        on_press: scaleoptionschooser.slide()
 
 

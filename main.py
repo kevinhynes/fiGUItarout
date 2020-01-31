@@ -11,11 +11,13 @@ Builder.load_file("fretboarddisplay.kv")
 Builder.load_file("scaleoptionschooser.kv")
 Builder.load_file("keysigchooser.kv")
 Builder.load_file("keysigdisplay.kv")
+Builder.load_file("keysigtitlebar.kv")
 Builder.load_file("chorddisplay.kv")
 Builder.load_file("metronome.kv")
 Builder.load_file("tuner.kv")
 Builder.load_file("numfretschanger.kv")
 Builder.load_file("fretboard.kv")
+Builder.load_file("instrumentrack.kv")
 
 
 class MainPage(FloatLayout):
