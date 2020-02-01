@@ -94,10 +94,10 @@ class String(FloatLayout):
     def update_canvas(self, *args):
         if self.fret_positions:  # self.fret_positions is empty during instantiation.
             # self.update_octave_markers()
-            self.update_string_grapics()
+            self.update_string_graphics()
             self.update_note_markers()
 
-    def update_string_grapics(self):
+    def update_string_graphics(self):
         w, h = self.width, self.height * 0.1
         x, y = self.pos
         cy = y + (self.height / 2)
@@ -179,6 +179,7 @@ class String(FloatLayout):
     def on_notes_or_octaves(self, *args):
         self.update_note_markers()
 
+
 class Fretboard(StencilView, FloatLayout):
     num_frets = NumericProperty(24)
     tuning = ListProperty([28, 33, 38, 43, 47, 52])
@@ -192,7 +193,6 @@ class Fretboard(StencilView, FloatLayout):
     scale_text = StringProperty("")
     notes_to_highlight = StringProperty("")
     notes_or_octaves = StringProperty("")
-
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

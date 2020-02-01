@@ -17,6 +17,7 @@ Builder.load_file("metronome.kv")
 Builder.load_file("tuner.kv")
 Builder.load_file("numfretschanger.kv")
 Builder.load_file("fretboard.kv")
+Builder.load_file("piano.kv")
 Builder.load_file("instrumentrack.kv")
 
 
