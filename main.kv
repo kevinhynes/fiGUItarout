@@ -21,6 +21,12 @@
         scale_text: scaleoptionschooser.scale_text
         notes_to_highlight: scaleoptionschooser.notes_to_highlight
         notes_or_octaves: scaleoptionschooser.notes_or_octaves
+#        canvas:
+#            Color:
+#                rgba: (1, 0, 0, 0.5)
+#            Rectangle:
+#                size: self.size
+#                pos: self.pos
 
     InstrumentRack:
         id: rack
@@ -30,6 +36,8 @@
         mode_filter: keysigchooser.mode_filter
         notes_to_highlight: scaleoptionschooser.notes_to_highlight
         notes_or_octaves: scaleoptionschooser.notes_or_octaves
+        scale_text: scaleoptionschooser.scale_text
+
 
     ChordDisplay:
         id: chorddisplay
@@ -48,28 +56,28 @@
         id: btn1
         text: 'Show Chord Display'
         size_hint: [None, None]
-        size: [100, 50]
+        size: [150, 50]
         pos: (0, 0)
         on_press: chorddisplay.slide()
     Button:
         id: btn2
         text: 'Fold / Unfold Rack'
         size_hint: [None, None]
-        size: [100, 50]
+        size: [150, 50]
         x: btn1.right
         on_press: rack.fold()
     Button:
         id: btn3
         text: 'Choose Key Sig'
         size_hint: [None, None]
-        size: [100, 50]
+        size: [150, 50]
         x: btn2.right
         on_press: keysigchooser.slide()
     Button:
         id: btn4
-        text: 'Choose Key Sig'
+        text: 'Highlight Options'
         size_hint: [None, None]
-        size: [100, 50]
+        size: [150, 50]
         x: btn3.right
         on_press: scaleoptionschooser.slide()
 

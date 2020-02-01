@@ -1,8 +1,7 @@
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.stencilview import StencilView
-from kivy.uix.scrollview import ScrollView
-from kivy.properties import NumericProperty, ListProperty, ReferenceListProperty,StringProperty
+from kivy.properties import NumericProperty, ListProperty, ReferenceListProperty, StringProperty
 from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color
 from kivy.core.text import Label as CoreLabel
 from kivy.animation import Animation

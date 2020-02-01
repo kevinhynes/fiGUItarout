@@ -11,6 +11,7 @@ class InstrumentRack(ScrollView):
     mode_filter = NumericProperty(0b111111111111)
     notes_to_highlight = StringProperty("")
     notes_or_octaves = StringProperty("")
+    scale_text = StringProperty("")
 
     def fold(self, *args):
         if self.height == dp(250):
