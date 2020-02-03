@@ -106,6 +106,17 @@
 <ChordGroup>:
     size_hint: [1, None]
     height: ROW_HEIGHT
+    canvas.after:
+        Color:
+            rgba: (0.5, 0.5, 0.5, 0.5)
+        Line:
+            points:
+                (self.x, self.y, self.x + self.width,
+                self.y, self.x + self.width,
+                self.y + self.height, self.x,
+                self.y + self.height)
+            close: True
+#            width: 2
 
 
 <ChordTitleBar>:

@@ -1,0 +1,50 @@
+<TabWidget>:
+    size_hint: [None, None]
+    size: [self.step_x * 128 * self.num_measures, self.step_y * 10]
+    canvas.before:
+        # White background.
+        Color:
+            rgba: (1, 1, 1, 1)
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+        # Add lines.
+        Color:
+            rgba: (0, 0, 0, 1)
+        Line:
+            points:
+                (self.x, self.y + self.step_y * 3,
+                self.x + self.step_x * 128 * self.num_measures, self.y + self.step_y * 3)
+        Line:
+            points:
+                (self.x, self.y + self.step_y* 4,
+                self.x + self.step_x * 128 * self.num_measures, self.y + self.step_y * 4)
+        Line:
+            points:
+                (self.x, self.y + self.step_y * 5,
+                self.x + self.step_x * 128 * self.num_measures, self.y + self.step_y * 5)
+        Line:
+            points:
+                (self.x, self.y + self.step_y * 6,
+                self.x + self.step_x * 128 * self.num_measures, self.y + self.step_y * 6)
+        Line:
+            points:
+                (self.x, self.y + self.step_y * 7,
+                self.x + self.step_x * 128 * self.num_measures, self.y + self.step_y * 7)
+        Line:
+            points:
+                (self.x, self.y + self.step_y * 8,
+                self.x + self.step_x * 128 * self.num_measures, self.y + self.step_y * 8)
+
+
+<TabScroller>:
+    bar_width: 5
+    size_hint_y: None
+    height: self.step_y * 10
+    TabWidget:
+
+
+FloatLayout:
+    TabScroller:
+        pos_hint: {'center_y': 0.5}

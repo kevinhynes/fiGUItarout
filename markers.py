@@ -119,7 +119,7 @@ class Marker(InstructionGroup):
             # Locate coords of where to place Rectangle. Affected by font_size, text length...
             b1x, b1y = lx1, ly1 + a1  # Lower left of box 1, aiming to put text here.
             b2x, b2y = lx1 + a1, ly1
-            b1cx, b1cy = b1x + a1 / 2, b1y + a1 / 2  # Center of box 1.
+            b1cx, b1cy = b1x + a1 / 2, b1y + a1 / 2    # Center of box 1.
             b2cx, b2cy = b2x + a1 / 2, b2y + a1 / 2
             t1w, t1h = self.text1_label.texture.size
             t2w, t2h = self.text2_label.texture.size

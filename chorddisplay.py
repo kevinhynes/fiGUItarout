@@ -161,7 +161,6 @@ class ChordDisplay(ScrollView):
                 write_idx += 1
 
 
-
 class ChordDisplayApp(App):
     def build(self):
         return ChordDisplay()
