@@ -50,6 +50,8 @@ class ChordRow(BoxLayout):
     mode_filter = NumericProperty(0)
     root_note_idx = NumericProperty(0)
 
+    label = ObjectProperty(None)
+
     def on_display(self, row, display):
         # Once display becomes available, look up voicings for this row.
         self.voicings = self.display.chords_to_voicings.get(bin(self.bin_chord_shape), [])
@@ -65,11 +67,14 @@ class ChordGroup(StencilView, BackGroundColorWidget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.box = BoxLayout(orientation='vertical')
-        self.fold_button = Button(background_color=(1, 0, 0, 0.5))
+        self.fold_button = Button()
         self.fold_button.bind(on_press=self.fold)
         self.add_widget(self.fold_button)
         self.add_widget(self.box)
         self.bind(pos=self.top_justify, size=self.top_justify)
+
+    def on_kv_post(self, base_widget):
+        self.box.children[0].label.bind(width=self.fold_button.setter('width'))
 
     def on_chord_group(self, *args):
         # Using this as a sort of __init__ method to avoid repetitive classes.
@@ -87,7 +92,6 @@ class ChordGroup(StencilView, BackGroundColorWidget):
         self.group_height = ROW_HEIGHT * len(chord_group_list)
         self.box.height = self.group_height
         self.fold_button.height = self.group_height
-        self.fold_button.width = ROW_HEIGHT
         self.fold_button.x = self.box.children[0].ids.label.x if self.box.children else 0
         self.top_justify()
 
@@ -98,7 +102,6 @@ class ChordGroup(StencilView, BackGroundColorWidget):
     def top_justify(self, *args):
         self.box.width = self.width
         self.box.top = self.top
-        self.fold_button.width = self.box.children[0].ids.label.width if self.box.children else ROW_HEIGHT
         self.fold_button.top = self.top
 
 
@@ -125,7 +128,17 @@ class ChordDisplay(ScrollView):
         for child in self.ids.scroll_child.children:
             child.top_justify()
 
-    def slide(self, *args):
+    def slide(self, keysigtitlebar):
+        if not self.is_shown:
+            app = App.get_running_app()
+            self.height = keysigtitlebar.top
+            self.top = keysigtitlebar.top
+            self.is_shown = True
+        else:
+            self.top = 0
+            self.is_shown = False
+
+    def slide_to_rack(self, *args):
         if self.instrument_rack:
             instrument_rack = self.instrument_rack
             if not self.is_shown:

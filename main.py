@@ -3,7 +3,7 @@ from kivy.lang import Builder
 from kivy.uix.floatlayout import FloatLayout
 from kivy.core.window import Window
 Window.maximize()
-
+# Window.size = (500, 300)
 
 Builder.load_file("style.kv")
 Builder.load_file("slideupmenu.kv")

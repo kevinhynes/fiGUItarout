@@ -1,8 +1,8 @@
+import collections, itertools, json
+from typing import List
 from music_constants import chrom_scale, chrom_scale_no_acc, chord_shapes, standard_tuning
 
-import collections, itertools
-
-
+# FINDING CHORDS IN A GIVEN KEY
 # All chords are defined by the distance between their notes (ignoring inversions for now).
 # Chords are constants.  Key signatures determine which chords "naturally" occur.
 # C Major chord (C-E-G) "naturally" falls into C Major (C-D-E-F-G-A-B),
@@ -20,48 +20,54 @@ import collections, itertools
 # Dominant 7 Chord Shape:    1     0     0     0     1     0     0     1     0     0     1     0
 # A Dominant 7 = A-C#-E-G    A                       C#                E                 G
 
-
-def do_circular_bit_rotation(note_idx, dummy_mode):
-    rotate_bit = 0b100000000000 & dummy_mode
-    if rotate_bit:
-        rotate_bit = 1
-    else:
-        rotate_bit = 0
-    dummy_mode <<= 1
-    note_idx = (note_idx + 1) % 12
-    while 0b100000000000 & dummy_mode == 0:
+def list_chords_in_key(root_note_idx: int, mode: int) -> List[str]:
+    '''Given a root note and mode, collect all chords that naturally fall into this key.
+    Chords are defined as binary numbers in the chord_shapes dict.
+    '''
+    def do_circular_bit_rotation(note_idx, dummy_mode):
+        rotate_bit = 0b100000000000 & dummy_mode
+        if rotate_bit:
+            rotate_bit = 1
+        else:
+            rotate_bit = 0
         dummy_mode <<= 1
-        rotate_bit <<= 1
         note_idx = (note_idx + 1) % 12
-    dummy_mode &= 0b111111111111
-    dummy_mode |= rotate_bit
-    return note_idx, dummy_mode
+        while 0b100000000000 & dummy_mode == 0:
+            dummy_mode <<= 1
+            rotate_bit <<= 1
+            note_idx = (note_idx + 1) % 12
+        dummy_mode &= 0b111111111111
+        dummy_mode |= rotate_bit
+        return note_idx, dummy_mode
 
 
-def list_chords_in_key_at_this_root(note_idx, dummy_mode):
-    root_note = chrom_scale[note_idx]
+    def list_chords_in_key_at_this_root(note_idx, dummy_mode):
+        root_note = chrom_scale[note_idx]
+        chord_list = []
+        for chord_name, chord_shape in chord_shapes.items():
+            if dummy_mode & chord_shape == chord_shape:
+                chord_list.append(root_note + " " + chord_name)
+        return chord_list
+
     chord_list = []
-    for chord_name, chord_shape in chord_shapes.items():
-        if dummy_mode & chord_shape == chord_shape:
-            chord_list.append(root_note + " " + chord_name)
+    note_idx = root_note_idx
+    for _ in range(7):
+        chords_this_root = list_chords_in_key_at_this_root(note_idx, mode)
+        chord_list.extend(chords_this_root)
+        note_idx, mode = do_circular_bit_rotation(note_idx, mode)
     return chord_list
 
-
-note_idx = 9
-major_scale = 0b101011010101
-minor_scale = 0b101101011010
-scale = minor_scale
-
-# for _ in range(7):
-#     print(chrom_scale[note_idx], " ", bin(scale))
-#     chords_this_root = list_chords_in_key_at_this_root(note_idx, scale)
-#     print(*chords_this_root, sep="\n")
-#     note_idx, scale = do_circular_bit_rotation(note_idx, scale)
+# For testing:
+# root_note_idx = 9
+# major_scale = 0b101011010101
+# minor_scale = 0b101101011010
+# mode = minor_scale
+# chord_list = list_chords_in_key(root_note_idx, minor_scale)
 
 
-# Notes to self:
-# 1) Need to search guitar fretboard for voicings of a given chord.
-# 	A chord is defined by a shape, which is a "binary string".
+# FINDING ALL POSSIBLE VOICINGS/FINGERINGS OF A CHORD ON GUITAR
+#   Need to search guitar fretboard for voicings of a given chord.
+# 	A chord is defined by a shape, as an integer or "binary string".
 # 	Many chords are similar ie they are built of the same parts.
 # 	For example Major 6 is 1-3-5-6 and Major is 1-3-5.
 # 	Thus, searching for a Major 6 separately from a Major will cause
@@ -73,50 +79,41 @@ scale = minor_scale
 
 #   Confusingly, this logic can be extended to all other chords.
 #   A depth-first search can be performed that chooses to
-#   1) include this digit, 2) not include this digit.
+#   1) include this string, 2) not include this string.
 #   For example at some point we will arrive at the minor third interval.
 #   When we include it, the search will go on to build minor chords.
 #   When we do not include it, *some* of the search will go on to build major chords.
-#   The problem is that many of the chords that will be explored with this method
-#   are non-sensical or 'expensive'.
-
-#   Chords are valid when they have at least 3 bits set.
+#   The problem is that many of the chords that will be caught with this method
+#   are non-sense chords (like a 0b111111000000 chord); this is a bit brute-force.
 
 #   Chords are "in key" when the binary chord shape & the rotated mode == the binary chord shape.
 #   (equivocally, we can rotate the chord shape and compare to the unrotated mode).
 
 #   If this is used as a means of searching the guitar fretboard, then all Major chords
-#   (from a certain starting note) will originate from the same search.
+#   (from a certain starting string) will originate from the same search.
+
+#   Chords are valid when they have at least 3 bits set.
+
+#   The maximum portion of the fretboard that should ever get searched would be basically the
+#   root note fret number +/- 3 frets inclusive.
 
 #   All chord shapes are specific to a tuning.  All chord shapes are valid starting at different
 #   root notes.  It doesn't make sense to search for C Major and F Major chords in
 #   standard tuning.  This is repeat work.  The Major chord shape will be the same, just at
 #   a different fret number.
 
-#   So... search guitar fretboard for every possible chord in a specific tuning.
-#   Pick up all major, minor, suspended, etc chord shapes.
-#   Then figure out which chords are in key.
-#   Then build chord diagrams based on that.
-
-#   Since chord shapes that get built are semi root-note agnostic, just build it for C.
-
-#   The maximum portion of the fretboard that should ever get searched would be basically the
-#   root note fret number +/- 3 frets inclusive.
-
-#   When the chord contains same notes as one of the open strings, opportunity for 'wide'
-#   chords using open strings.
-
-#   Performing the DFS is easy, how to validate & classify the chords that get built from
-#   this combinatoric process?
-
-#   Need to list out all the binary chord shapes that are actually meaningful I guess?
+#   1) Search guitar fretboard for every possible chord in a specific tuning.
+#   2) Pick up all possible chords (combinations) containing 3 unique notes starting at C.
+#   3) Save the result; it won't ever change for that guitar tuning.
+#   4) Given a key signature (root note, mode), figure out which chords are in key.
+#   5) Build chord diagrams from there, based on that.
 
 
-
-def chord_voicing_dfs(string_idx, bin_chord_shape, is_triad, voicing, min_fret, max_fret):
+def chord_voicing_dfs(string_idx: int, bin_chord_shape: int, is_triad: bool,
+                      voicing: List[int], min_fret: int, max_fret: int) -> None:
     '''
     Explore the fretboard from the original string_idx,  creating ALL possible chords
-    and saving them to a dictionary based on chord quality (major, minor, etc).
+    and save the voicing to a dictionary based on chord quality (major, minor, etc).
     '''
     # There are no more strings.
     if string_idx < 0:
@@ -126,7 +123,7 @@ def chord_voicing_dfs(string_idx, bin_chord_shape, is_triad, voicing, min_fret, 
 
     # Search for the C note on this string and start recursion - only happens once.
     if all(note is None for note in voicing):
-        fret_num = 0
+        fret_num = 3  #  If C note is lower than fret 3, chords will be missed.
         while string[fret_num] % 12 != 0:
             fret_num += 1
         voicing[string_idx] = fret_num
@@ -168,7 +165,6 @@ def chord_voicing_sort(voicing):
     num_strings = sum([1 for fret_num in voicing if fret_num is not None])
     return skips, -num_strings
 
-import json
 with open('chord_voicings_by_tuning.json') as read_file:
     chord_voicings_by_tuning = json.load(read_file)
 
@@ -195,7 +191,3 @@ else:
         json.dump(tuning_to_chord_voicings, write_file)
     print("saved")
 
-for chord_name, bin_chord_shape in chord_shapes.items():
-    if chord_to_voicings.get(str(bin_chord_shape), None):
-        if 'Major' in chord_name:
-            print(chord_name, *chord_to_voicings[str(bin_chord_shape)], sep='\n')

@@ -47,7 +47,6 @@
     valign: "center"
     text_size: self.size
     texture_size: self.size
-#    size: self.texture_size
     border: [2,2,2,2]
 
 
@@ -82,6 +81,9 @@
 
 <Tuner>:
     tuning: six_string_tuner.tuning
+    size_hint: [None, None]
+    size: [600, 300]
+    top: self.top_prop
     canvas:
         Color:
             rgba: [1, 0, 0, 0.5]

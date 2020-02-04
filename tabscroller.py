@@ -10,7 +10,6 @@ from kivy.core.text import Label as CoreLabel
 from kivy.graphics import Color, Line, Rectangle, InstructionGroup
 from kivy.animation import Animation
 
-
 from song_data import song_data
 
 black = Color(0, 0, 0, 1)
@@ -44,7 +43,7 @@ class TabWidget(Widget):
                 steps = (128 / note_dur) * (enters / times) * self.step_x
                 voicing = beat[0]
                 for y, fret_num in enumerate(voicing):
-                    y_pos = self.step_y * (3 + y)
+                    y_pos = self.step_y * (8 - y)
                     label_x = x_pos - self.step_x/2
                     label_y = y_pos - self.step_y/2
                     if fret_num is not None:
@@ -73,10 +72,8 @@ class TabWidget(Widget):
 class TabScroller(ScrollView):
     step_y = NumericProperty(20)
 
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
 
     def on_touch_down(self, touch):
         anim = Animation(scroll_x=1, duration=150)

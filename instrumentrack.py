@@ -1,8 +1,9 @@
 from kivy.app import App
 from kivy.uix.scrollview import ScrollView
-from kivy.properties import NumericProperty, ObjectProperty, StringProperty
+from kivy.properties import NumericProperty, ObjectProperty, StringProperty, ListProperty
 from kivy.metrics import dp
 
+from music_constants import standard_tuning
 
 class InstrumentRack(ScrollView):
     key_sig_title_bar = ObjectProperty(None)
@@ -12,6 +13,7 @@ class InstrumentRack(ScrollView):
     notes_to_highlight = StringProperty("")
     notes_or_octaves = StringProperty("")
     scale_text = StringProperty("")
+    tuning = ListProperty(standard_tuning)
 
     def fold(self, *args):
         if self.height == dp(250):

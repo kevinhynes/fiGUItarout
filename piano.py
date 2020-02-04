@@ -3,8 +3,9 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import ListProperty, NumericProperty, StringProperty
 from kivy.graphics import InstructionGroup, Color, Line, Rectangle
 
-from music_constants import chrom_scale, chrom_scale_no_acc, scale_degrees
+from music_constants import chrom_scale, chrom_scale_no_acc, scale_degrees, standard_tuning
 from markers import Marker
+from colors import black, white, rainbow, octave_colors
 
 scale_texts = {
     None: chrom_scale,
@@ -22,19 +23,6 @@ scale_highlights = {
     "R, 3, 5": 0b100110110000,
     }
 
-black = Color(0, 0, 0, 1)
-white = Color(1, 1, 1, 1)
-
-rainbow = [Color(hsv=[i / 12, 1, 0.95]) for i in range(12)]
-
-octave_colors = [
-    rainbow[0],
-    rainbow[2],
-    rainbow[4],
-    rainbow[6],
-    rainbow[8],
-    rainbow[10]]
-
 
 class Piano(FloatLayout):
     keyboard_pos = ListProperty()
@@ -42,6 +30,7 @@ class Piano(FloatLayout):
     mode_filter = NumericProperty(0b111111111111)
     scale_text = StringProperty("")
     notes_or_octaves = StringProperty("")
+    tuning = ListProperty(standard_tuning)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -58,7 +47,7 @@ class Piano(FloatLayout):
         self.key_midpoints = []        # For placing note markers.
         self.black_key_midpoints = []  # For placing black keys.
         self.rel_marker_heights = [0.1, 0.5, 0.1, 0.5, 0.1, 0.1, 0.5, 0.1, 0.5, 0.1, 0.5, 0.1]
-        self.note_vals = [note_val for note_val in range(24, 85)]
+        self.note_vals = [note_val for note_val in range(24, 24 + 61)]
         self.bind(pos=self.update_canvas, size=self.update_canvas)
 
     def on_kv_post(self, *args):
@@ -135,7 +124,7 @@ class Piano(FloatLayout):
 
     def update_black_keys(self):
         white_key_width = self.ids.keyboard.width / 35
-        black_key_width = white_key_width * 0.6
+        black_key_width = white_key_width * 0.55
         black_keys = [obj for obj in self.black_keys.children if isinstance(obj, Rectangle)]
         for center_x, black_key in zip(self.black_key_midpoints, black_keys):
             x = center_x * self.ids.keyboard.width - (black_key_width / 2)
@@ -164,7 +153,7 @@ class Piano(FloatLayout):
                 color_idx = note_idx - self.root_note_idx
                 color = rainbow[color_idx]
             else:
-                color_idx = octave - 2
+                color_idx = octave
                 color = octave_colors[color_idx]
 
             if self.scale_text == "Scale Degrees":
@@ -188,6 +177,17 @@ class Piano(FloatLayout):
 
     def on_notes_or_octaves(self, *args):
         self.update_note_markers()
+
+    def on_tuning(self, *args):
+        # Piano will always use C as lowest note.
+        lowest_guitar_octave, note_idx = divmod(self.tuning[0], 12)
+        lowest_piano_octave, _ = divmod(self.note_vals[0], 12)
+        if lowest_guitar_octave != lowest_piano_octave:
+            # if lowest_guitar_octave < lowest_piano_octave:
+            low_c_note_val = lowest_guitar_octave * 12
+            self.note_vals = [note_val for note_val in range(low_c_note_val, low_c_note_val + 61)]
+            self.update_note_markers()
+
 
 
 class PianoApp(App):

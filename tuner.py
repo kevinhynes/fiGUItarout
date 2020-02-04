@@ -5,10 +5,9 @@ from kivy.properties import NumericProperty, ReferenceListProperty, \
     StringProperty, ObjectProperty, ListProperty
 from kivy.clock import Clock
 
-sub = [u'\u2080', u'\u2081', u'\u2082', u'\u2083', u'\u2084', u'\u2085', u'\u2086', u'\u2087',
+from music_constants import chrom_scale, chrom_scale_no_acc
+subscripts = subs = [u'\u2080', u'\u2081', u'\u2082', u'\u2083', u'\u2084', u'\u2085', u'\u2086', u'\u2087',
        u'\u2088', u'\u2089']
-chrom_scale = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B']
-chrom_scale2 = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
 
 
 class StringTuner(BoxLayout):
@@ -25,16 +24,9 @@ class StringTuner(BoxLayout):
         if self.note_val == -1:
             self.note_val = 83
 
-    def on_touch_up(self, touch):
-        if self.collide_point(touch.x, touch.y) and touch.is_mouse_scrolling and not touch.is_touch:
-            if touch.button == "scrolldown":
-                self.increment_note_val()
-            elif touch.button == "scrollup":
-                self.decrement_note_val()
-
     def on_note_val(self, instance, value):
         octave, note_idx = divmod(self.note_val, 12)
-        note_text = chrom_scale2[note_idx] + sub[octave]
+        note_text = chrom_scale_no_acc[note_idx] + subs[octave]
         self.note_text = note_text
 
 
@@ -79,21 +71,24 @@ class Tuner(FloatLayout):
     tuning = ListProperty()
     box_height = NumericProperty(0)
     box_width = NumericProperty(0)
+    top_prop = NumericProperty(0)
 
     def on_size(self, instance, value):
         width, height = self.size
-        if height > 0:  # Avoid ZeroDivisionError when TabbedPanel.do_default_tab == False.
-            target_ratio = 60/20
-            # check which size is the limiting factor
-            if width / height > target_ratio:
-                # window is "wider" than targeted, so the limitation is the height.
-                self.ids.box.height = height
-                self.ids.box.width = height * target_ratio
-            else:
-                self.ids.box.width = width
-                self.ids.box.height = width / target_ratio
-            self.box_height = self.ids.box.height
-            self.box_width = self.ids.box.width
+        target_ratio = 60/20
+        if width / height > target_ratio:
+            # window is "wider" than targeted, so the limitation is the height.
+            self.ids.box.height = height
+            self.ids.box.width = height * target_ratio
+        else:
+            self.ids.box.width = width
+            self.ids.box.height = width / target_ratio
+
+    def slide(self, *args):
+        if self.top_prop == 0:
+            self.top_prop = self.height + 50
+        else:
+            self.top_prop = 0
 
 
 class TunerApp(App):

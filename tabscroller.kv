@@ -2,11 +2,12 @@
     size_hint: [None, None]
     size: [self.step_x * 128 * self.num_measures, self.step_y * 10]
     canvas.before:
+
         # White background.
         Color:
             rgba: (1, 1, 1, 1)
         Rectangle:
-            size: self.size
+            size: (self.width - 10, self.height - 10)
             pos: self.pos
 
         # Add lines.

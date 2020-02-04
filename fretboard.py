@@ -8,6 +8,7 @@ from kivy.animation import Animation
 
 from music_constants import chrom_scale, chrom_scale_no_acc, scale_degrees
 from markers import Marker
+from colors import black, white, gray, brown, rainbow, reds, blues, octave_colors
 
 
 scale_texts = {
@@ -26,22 +27,6 @@ scale_highlights = {
     "R, 3, 5": 0b100110110000,
     }
 
-black = Color(0, 0, 0, 1)
-white = Color(1, 1, 1, 1)
-gray = Color(0.5, 0.5, 0.5, 1)
-brown = Color(rgba=[114 / 255, 69 / 255, 16 / 255, 1])
-
-rainbow = [Color(hsv=[i / 12, 1, 0.95]) for i in range(12)]
-reds = [Color(hsv=[0, i / 12, 1]) for i in range(12)][::-1]
-blues = [Color(hsv=[0.6, i / 12, 1]) for i in range(12)][::-1]
-
-octave_colors = [
-    rainbow[0],
-    rainbow[2],
-    rainbow[4],
-    rainbow[6],
-    rainbow[8],
-    rainbow[10]]
 
 
 class String(FloatLayout):
@@ -130,7 +115,7 @@ class String(FloatLayout):
                 color_idx = note_idx - self.root_note_idx
                 color = rainbow[color_idx]
             else:
-                color_idx = octave - 2
+                color_idx = octave
                 color = octave_colors[color_idx]
 
             if self.scale_text == "Scale Degrees":
@@ -148,11 +133,9 @@ class String(FloatLayout):
     def update_octave_marker(self, i, note_val):
         if self.fret_ranges:
             octave = (note_val - self.fretboard.root_note_idx) // 12
-            octave -= 2  # second musical octave is 0th on guitar... sloopy
-            color = Color(*octave_colors[octave])
             left, right = self.fret_ranges[i]
             width = right - left
-            self.octave_markers.add(color)
+            self.octave_markers.add(octave_colors[octave])
             self.octave_markers.add(Rectangle(pos=[left, 0], size=[width, self.height]))
 
     def on_open_note_val(self, instance, value):

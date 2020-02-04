@@ -1,18 +1,4 @@
 <MainPage>:
-
-#    FretboardDisplay:
-#        tuning: menu.tuning
-#        num_frets: menu.num_frets
-#        root_note_idx: menu.root_note_idx
-#        mode_filter: menu.mode_filter
-#        key_sig_text: menu.key_sig_text
-#        scale_text: menu.scale_text
-#        notes_to_highlight: menu.notes_to_highlight
-#        notes_or_octaves: menu.notes_or_octaves
-
-#    SlideUpMenu:
-#        id: menu
-
     KeySigTitleBar:
         id: titlebar
         key_sig_text: keysigchooser.key_sig_text
@@ -21,12 +7,6 @@
         scale_text: scaleoptionschooser.scale_text
         notes_to_highlight: scaleoptionschooser.notes_to_highlight
         notes_or_octaves: scaleoptionschooser.notes_or_octaves
-#        canvas:
-#            Color:
-#                rgba: (1, 0, 0, 0.5)
-#            Rectangle:
-#                size: self.size
-#                pos: self.pos
 
     InstrumentRack:
         id: rack
@@ -37,11 +17,10 @@
         notes_to_highlight: scaleoptionschooser.notes_to_highlight
         notes_or_octaves: scaleoptionschooser.notes_or_octaves
         scale_text: scaleoptionschooser.scale_text
-
+        tuning: tuner.tuning
 
     ChordDisplay:
         id: chorddisplay
-        top: self.top_prop
         instrument_rack: rack
         root_note_idx: keysigchooser.root_note_idx
         mode_filter: keysigchooser.mode_filter
@@ -52,13 +31,16 @@
     ScaleOptionsChooser:
         id: scaleoptionschooser
 
+    Tuner:
+        id: tuner
+
     Button:
         id: btn1
         text: 'Show Chord Display'
         size_hint: [None, None]
         size: [150, 50]
         pos: (0, 0)
-        on_press: chorddisplay.slide()
+        on_press: chorddisplay.slide(titlebar)
     Button:
         id: btn2
         text: 'Fold / Unfold Rack'
@@ -80,5 +62,11 @@
         size: [150, 50]
         x: btn3.right
         on_press: scaleoptionschooser.slide()
-
+    Button:
+        id: btn5
+        text: 'Tuner'
+        size_hint: [None, None]
+        size: [150, 50]
+        x: btn4.right
+        on_press: tuner.slide()
 
