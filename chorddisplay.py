@@ -15,6 +15,7 @@ import json
 from music_constants import major_chord_shapes, minor_chord_shapes, \
     dom_chord_shapes, sus_chord_shapes, dim_chord_shapes, aug_chord_shapes, \
     chrom_scale, standard_tuning
+from chord_finder import get_chord_voicings_for_tuning
 
 Builder.load_file('chorddiagram.kv')
 
@@ -114,9 +115,7 @@ class ChordDisplay(ScrollView):
     instrument_rack = ObjectProperty(None)
 
     def __init__(self, **kwargs):
-        with open('chord_voicings_by_tuning.json') as read_file:
-            chord_voicings_by_tuning = json.load(read_file)
-        self.chords_to_voicings = chord_voicings_by_tuning[str(standard_tuning)]
+        self.chords_to_voicings = get_chord_voicings_for_tuning(standard_tuning)
         super().__init__(**kwargs)
         self.is_shown = False
         # No text in some groups and fold_buttons are tiny initially without this.

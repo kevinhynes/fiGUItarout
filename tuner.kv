@@ -82,7 +82,7 @@
 <Tuner>:
     tuning: six_string_tuner.tuning
     size_hint: [None, None]
-    size: [600, 300]
+    size: [400, 200]
     top: self.top_prop
     canvas:
         Color:
@@ -94,20 +94,15 @@
         orientation: "vertical"
         size_hint: [None, None]
         pos_hint: {"center": [0.5, 0.5]}
-        padding: [20, 20]
-        spacing: 5
+#        padding: [20, 20]
+#        spacing: 5
         canvas:
             Color:
                 rgba: [1, 1, 1, 0.5]
-            RoundedRectangle:
+            Rectangle:
                 pos: self.pos
                 size: self.size
-                radius: [15, 15]
-            Color:
-                rgba: [0,0,0,1]
-            Line:
-                rounded_rectangle: [*self.pos, *self.size, 15]
-                width: 2
+
         ControlBar:
             tuner_ref: six_string_tuner
             size_hint: [1, 1/5]
