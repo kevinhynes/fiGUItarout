@@ -10,6 +10,8 @@ from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.lang import Builder
 
+from kivy.graphics import Rectangle, Color
+
 import json
 
 from music_constants import major_chord_shapes, minor_chord_shapes, \
@@ -30,80 +32,6 @@ ROW_HEIGHT = dp(95)
 
 class BackGroundColorWidget(Widget):
     pass
-
-
-class ChordTitleBar(BoxLayout):
-    note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.chrom_scale = chrom_scale
-
-    def top_justify(self, *args):
-        pass
-
-
-class ChordRow(BoxLayout):
-    bin_chord_shape = NumericProperty(0b000000000000)
-    note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
-    display = ObjectProperty(None)
-    voicings = ListProperty()
-    mode_filter = NumericProperty(0)
-    root_note_idx = NumericProperty(0)
-
-    label = ObjectProperty(None)
-
-    def on_display(self, row, display):
-        # Once display becomes available, look up voicings for this row.
-        self.voicings = self.display.chords_to_voicings.get(bin(self.bin_chord_shape), [])
-
-
-class ChordGroup(StencilView, BackGroundColorWidget):
-    group_height = NumericProperty(0)
-    chord_group = StringProperty('')
-    note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
-    display = ObjectProperty(None)
-    mode_filter = NumericProperty(0)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.box = BoxLayout(orientation='vertical')
-        self.fold_button = Button()
-        self.fold_button.bind(on_press=self.fold)
-        self.add_widget(self.fold_button)
-        self.add_widget(self.box)
-        self.bind(pos=self.top_justify, size=self.top_justify)
-
-    def on_kv_post(self, base_widget):
-        self.box.children[0].label.bind(width=self.fold_button.setter('width'))
-
-    def on_chord_group(self, *args):
-        # Using this as a sort of __init__ method to avoid repetitive classes.
-        # self.chord_group is just some text in kv.
-        chord_group_list = chord_groups[self.chord_group]
-        for chord_name, bin_chord_shape in chord_group_list.items():
-            chord_row = ChordRow()
-            chord_row.label.text = chord_name
-            chord_row.bin_chord_shape = bin_chord_shape
-            self.bind(note_idxs=chord_row.setter('note_idxs'))
-            self.bind(display=chord_row.setter('display'))
-            self.bind(mode_filter=chord_row.setter('mode_filter'))
-            self.bind(root_note_idx=chord_row.setter('root_note_idx'))
-            self.box.add_widget(chord_row)
-        self.group_height = ROW_HEIGHT * len(chord_group_list)
-        self.box.height = self.group_height
-        self.fold_button.height = self.group_height
-        self.fold_button.x = self.box.children[0].ids.label.x if self.box.children else 0
-        self.top_justify()
-
-    def fold(self, *args):
-        self.height = ROW_HEIGHT if self.height > ROW_HEIGHT else dp(self.group_height)
-        self.display.top_justify_all()
-
-    def top_justify(self, *args):
-        self.box.width = self.width
-        self.box.top = self.top
-        self.fold_button.top = self.top
 
 
 class ChordDisplay(ScrollView):
@@ -171,6 +99,97 @@ class ChordDisplay(ScrollView):
                 if write_idx < len(self.note_idxs):
                     self.note_idxs[write_idx] = note_idx
                 write_idx += 1
+
+
+class ChordGroup(StencilView, BackGroundColorWidget):
+    group_height = NumericProperty(0)
+    chord_group = StringProperty('')
+    note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
+    display = ObjectProperty(None)
+    mode_filter = NumericProperty(0)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.box = BoxLayout(orientation='vertical', size_hint_x=None)
+        with self.box.canvas:
+            Color(1, 1, 0, 0.5)
+            self.rect = Rectangle(size=self.box.size, pos=self.box.pos)
+        self.box.bind(pos=self.update_box_rect, size=self.update_box_rect)
+        self.fold_button = Button()
+        self.fold_button.bind(on_press=self.fold)
+        self.add_widget(self.fold_button)
+        self.add_widget(self.box)
+        self.bind(pos=self.top_justify, size=self.top_justify)
+
+    def update_box_rect(self, *args):
+        self.rect.pos = self.box.pos
+        self.rect.size = self.box.size
+
+    def on_kv_post(self, base_widget):
+        self.box.children[0].label.bind(width=self.fold_button.setter('width'))
+
+    def on_chord_group(self, *args):
+        # Using this as a sort of __init__ method to avoid repetitive classes.
+        # self.chord_group is just some text in kv.
+        chord_group_list = chord_groups[self.chord_group]
+        for chord_name, bin_chord_shape in chord_group_list.items():
+            chord_row = ChordRow()
+            chord_row.label.text = chord_name
+            chord_row.bin_chord_shape = bin_chord_shape
+            self.bind(note_idxs=chord_row.setter('note_idxs'))
+            self.bind(display=chord_row.setter('display'))
+            self.bind(mode_filter=chord_row.setter('mode_filter'))
+            self.bind(root_note_idx=chord_row.setter('root_note_idx'))
+            self.box.add_widget(chord_row)
+        # ChordDiagram size being set explicitly. ChordRow width set to sum of its ChordDiagrams.
+        # ChordGroup (and ChordGroup.box) should match ChordRow.width. Can't use bindings,
+        # because ChordRow.width never actually changes.
+        self.box.width = self.width = chord_row.width
+        self.group_height = ROW_HEIGHT * len(chord_group_list)
+        self.box.height = self.group_height
+        self.fold_button.height = self.group_height
+        self.fold_button.x = self.box.children[0].ids.label.x if self.box.children else 0
+        self.top_justify()
+
+    def fold(self, *args):
+        self.height = ROW_HEIGHT if self.height > ROW_HEIGHT else dp(self.group_height)
+        self.display.top_justify_all()
+
+    def top_justify(self, *args):
+        self.box.top = self.top
+        self.fold_button.top = self.top
+
+
+class ChordTitleBar(BoxLayout):
+    note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.chrom_scale = chrom_scale
+
+    def top_justify(self, *args):
+        pass
+
+
+class ChordRow(BoxLayout):
+    bin_chord_shape = NumericProperty(0b000000000000)
+    note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
+    display = ObjectProperty(None)
+    voicings = ListProperty()
+    mode_filter = NumericProperty(0)
+    root_note_idx = NumericProperty(0)
+
+    label = ObjectProperty(None)
+
+    def on_display(self, row, display):
+        # Once display becomes available, look up voicings for this row.
+        self.voicings = self.display.chords_to_voicings.get(bin(self.bin_chord_shape), [])
+
+
+
+
+
+
 
 
 class ChordDisplayApp(App):

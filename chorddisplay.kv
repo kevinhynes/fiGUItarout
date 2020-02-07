@@ -14,7 +14,8 @@
 
 <ChordDisplay>:
     id: display
-    size_hint_y: None
+    size_hint: [None, None]
+    width: major.box.width
     top: self.top_prop
     canvas:
         Color:
@@ -25,10 +26,10 @@
     FloatLayout:
         id: scroll_child
         size_hint: [None, None]
+        width: major.box.width
         height:
             titlebar.height + major.height + minor.height + dominant.height \
             + suspended.height + diminished.height + augmented.height
-        width: root.width
         canvas:
             Color:
                 rgba: (0, 1, 0, 1)
@@ -38,6 +39,8 @@
         ChordTitleBar:
             id: titlebar
             top: scroll_child.top
+            size_hint_x: None
+            width: major.box.width
             y: major.top
             note_idxs: display.note_idxs
             display: display
@@ -45,7 +48,6 @@
             id: major
             chord_group: 'Major'
             display: display
-#            background: (1, 0, 0, 0.5)
             top: titlebar.y
             y: minor.top
             note_idxs: display.note_idxs
@@ -57,7 +59,6 @@
             top: major.y
             y: dominant.top
             display: display
-#            background: (0, 0, 1, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
             root_note_idx: display.root_note_idx
@@ -67,7 +68,6 @@
             top: minor.y
             y: suspended.top
             display: display
-#            background: (0, 1, 0, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
             root_note_idx: display.root_note_idx
@@ -77,7 +77,6 @@
             top: dominant.y
             y: diminished.top
             display: display
-#            background: (1, 1, 0, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
             root_note_idx: display.root_note_idx
@@ -87,7 +86,6 @@
             top: suspended.y
             y: augmented.top
             display: display
-#            background: (0, 1, 1, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
             root_note_idx: display.root_note_idx
@@ -96,34 +94,36 @@
             chord_group: 'Augmented'
             top: diminished.y
             display: display
-#            background: (1, 0, 1, 0.5)
             note_idxs: display.note_idxs
             mode_filter: display.mode_filter
             root_note_idx: display.root_note_idx
 
 
 <ChordGroup>:
-    size_hint: [1, None]
+    size_hint: [None, None]
     height: ROW_HEIGHT
     canvas.before:
         Color:
-            rgba: (0.5, 0.5, 0.5, 0.5)
+            rgba: (0.5, 0.5, 0.5, 0.9)
         Rectangle:
             size: self.size
             pos: self.pos
-#        Line:
-#            points:
-#                (self.x, self.y, self.x + self.width,
-#                self.y, self.x + self.width,
-#                self.y + self.height, self.x,
-#                self.y + self.height)
-#            close: True
+        Color:
+            rgba: (1, 0, 0, 1)
+        Line:
+            points:
+                (self.x, self.y, self.x + self.width,
+                self.y, self.x + self.width,
+                self.y + self.height, self.x,
+                self.y + self.height)
+            close: True
 #        BorderImage:
 #            # BorderImage behaves like the CSS BorderImage
 #            size: (100, 100)
 #            pos: (10, 10)
 #            border: 50, 50, 50, 50
 #            source: './images/red_button.png'
+
 
 <ChordTitleBar>:
     orientation: 'horizontal'
@@ -159,6 +159,7 @@
     ChordTitleBarLabel:
         text: root.chrom_scale[root.note_idxs[6]]
 
+
 <ChordTitleBarLabel@Label>:
     multiline: True
     halign: 'center'
@@ -169,9 +170,22 @@
         Line:
             rectangle: (*self.pos, *self.size)
 
+
 <ChordRow>:
     orientation: 'horizontal'
+    size_hint_x: None
+    width: sum(child.width for child in self.children)
     label: label
+    canvas:
+        Color:
+            rgba: (0, 1, 1, 1)
+        Line:
+            points:
+                (self.x, self.y, self.x + self.width,
+                self.y, self.x + self.width,
+                self.y + self.height, self.x,
+                self.y + self.height)
+            close: True
     Label:
         id: label
     ChordDiagramMain:

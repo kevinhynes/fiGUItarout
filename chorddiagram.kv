@@ -301,28 +301,13 @@
             font_size: self.height * 0.75
 
 
-#<ChordDiagramContainer>:
-#    chord_diagram: cd
-#    pos_hint: {'center': [0.5, 0.5]}
-#    ChordDiagram:
-#        id: cd
-#        voicing: root.voicing
-#        bin_chord_shape: root.bin_chord_shape
-#        note_idx: root.note_idx
-#        root_note_idx: root.root_note_idx
-#        mode_filter: root.mode_filter
-#        chord_name: root.chord_name
-
-
 <ChordDiagramMain>:
-    cd_container: cdc
+    chord_diagram: cd
     ChordDiagram:
-        id: cdc
+        id: cd
         bin_chord_shape: root.bin_chord_shape
         note_idx: root.note_idx
         root_note_idx: root.root_note_idx
         mode_filter: root.mode_filter
         display: root.display
         chord_name: root.chord_name
-
-

@@ -19,18 +19,18 @@ ROW_HEIGHT = dp(95)
 
 class ChordDiagramBubble(Bubble):
 
-    def __init__(self, voicing, cd_container, **kwargs):
+    def __init__(self, voicing, chord_diagram, **kwargs):
         super().__init__(**kwargs)
         self.size_hint = [None, None]
         self.pos_hint = {'center': [0.5, 0.5]}
         self.size = [100, 50]
         self.voicing = voicing
-        self.cd_container = cd_container
+        self.chord_diagram = chord_diagram
 
     def select(self, *args):
         print('selected!')
-        self.cd_container.popup.voicing = self.voicing
-        self.cd_container.remove_bubble()
+        self.chord_diagram.popup.voicing = self.voicing
+        self.chord_diagram.remove_bubble()
 
     def delete(self, *args):
         print(self.voicing)
@@ -40,10 +40,11 @@ class ChordDiagramBubble(Bubble):
         print(impossible_fingerings)
         with open('impossible_fingerings.json', 'w') as write_file:
             json.dump(impossible_fingerings, write_file)
-        self.cd_container.remove_bubble()
+        self.chord_diagram.remove_bubble()
 
 
 class ChordDiagram(FloatLayout):
+    chrom_scale = chrom_scale
     voicing = ListProperty([None, None, None, None, None])
     note_idx = NumericProperty(0)
     root_note_idx = NumericProperty(0)
@@ -52,10 +53,7 @@ class ChordDiagram(FloatLayout):
     mode_filter = NumericProperty(0b101011010101)
     display = ObjectProperty(None)
     chord_in_key = BooleanProperty(False)
-
-    chrom_scale = chrom_scale
-
-    diagram: ObjectProperty(None)
+    diagram = ObjectProperty(None)
 
     draw_x = NumericProperty(0)
     draw_y = NumericProperty(0)
@@ -117,6 +115,7 @@ class ChordDiagram(FloatLayout):
         self.bubble = None
         self.popup = None
         self.selected = False
+        self.disabled = False
 
     def on_bin_chord_shape(self, *args):
         self.update_diagram()
@@ -209,6 +208,7 @@ class ChordDiagram(FloatLayout):
             else:
                 self.draw_fingered_string(i, fret_num, min_fret)
         self.disable_opac = 0
+        self.disabled = False
 
     def slide_voicing(self, voicing):
         # ALL chord voicings are rooted at C. Slide appropriate number of frets.
@@ -254,6 +254,7 @@ class ChordDiagram(FloatLayout):
             self.fret_ys[string_idx] = 0
             self.x_mark_opacs[string_idx] = 0
         self.disable_opac = 1
+        self.disabled = True
 
     ####################################  POPUP METHODS  ###########################################
     def on_touch_up(self, touch):
@@ -296,109 +297,12 @@ class ChordDiagram(FloatLayout):
         self.center_y = self.cur_y = self.cur_y + dy
 
 
-# class ChordDiagramContainer(FloatLayout):
-#     bin_chord_shape = NumericProperty()
-#     note_idx = NumericProperty(0)
-#     root_note_idx = NumericProperty(0)
-#     mode_filter = NumericProperty(0b101011010101)
-#     voicing = ListProperty([None, None, None, None, None, None])
-#     display = ObjectProperty(None)
-#     chord_name = StringProperty('')
-#     chord_in_key = BooleanProperty(False)
-#
-#     def __init__(self, **kwargs):
-#         super().__init__(**kwargs)
-#         self.is_popup = False
-#         self.bubble = None
-#         self.popup = None
-#
-#     def on_size(self, *args):
-#         target_ratio = 27 / 28  # width / height
-#         if self.width / self.height > target_ratio:
-#             # available space is wider than desired width
-#             self.chord_diagram.height = self.height
-#             self.chord_diagram.width = target_ratio * self.height
-#         else:
-#             self.chord_diagram.width = self.width
-#             self.chord_diagram.height = self.width / target_ratio
-#
-    # def on_bin_chord_shape(self, *args):
-    #     self.update_diagram()
-    #
-    # def on_note_idx(self, *args):
-    #     self.update_diagram()
-    #
-    # def on_root_note_idx(self, *args):
-    #     self.update_diagram()
-    #
-    # def on_mode_filter(self, *args):
-    #     self.update_diagram()
-    #
-    # def on_voicing(self, *args):
-    #     self.update_diagram()
-
-#     def update_diagram(self, *args):
-#         if self.is_chord_in_key():
-#             self.chord_diagram.voicing = self.voicing
-#             self.chord_diagram.draw_diagram()
-#         else:
-#             self.chord_diagram.disable()
-#
-#     def is_chord_in_key(self):
-#         def do_circular_bit_rotation(num_shifts, mode):
-#             for _ in range(num_shifts):
-#                 rotate_bit = 0b100000000000 & mode
-#                 mode <<= 1
-#
-#                 if rotate_bit:
-#                     rotate_bit = 1
-#                 else:
-#                     rotate_bit = 0
-#
-#                 mode |= rotate_bit
-#                 mode &= 0b111111111111
-#             return mode
-#
-#         # C Major Scale =   0b101011010101
-#         #                     C D EF G A B
-#         # Any Major Chord = 0b100010010000
-#         # To test if D Major is in C Major scale, rotate C Major Scale 2 bits, so D is leftmost.
-#         # C rooted at D =   0b101101010110
-#         # D Major Chord =   0b100010010000
-#         # D Major Chord has 1 bit set that is not in C rooted at D, therefore
-#         # D Major Chord is not in the C Major scale.
-#         if self.note_idx >= self.root_note_idx:
-#             num_shifts = self.note_idx - self.root_note_idx
-#         else:
-#             num_shifts = 12 - (self.root_note_idx - self.note_idx)
-#         rotated_mode = do_circular_bit_rotation(num_shifts, self.mode_filter)
-#         chord_mask = int(self.bin_chord_shape)
-#         # Are all the notes that make this chord also in this mode/key?
-#         chord_in_key = rotated_mode & chord_mask == chord_mask
-#         return chord_in_key
-#
-    # def on_touch_down(self, touch):
-    #     if self.collide_point(touch.x, touch.y) and self.is_popup:
-    #         if not self.bubble:
-    #             self.bubble = bubble = ChordDiagramBubble(self.voicing, self)
-    #             self.bind(pos=bubble.setter('pos'))
-    #             self.add_widget(bubble)
-    #             print('bubble added')
-    #         else:
-    #             super().on_touch_down(touch)
-    #             if self.bubble:
-    #                 self.remove_bubble()
-    #
-    # def remove_bubble(self, *args):
-    #     self.remove_widget(self.bubble)
-    #     self.bubble = None
-
-
 class ChordDiagramMain(FloatLayout):
     note_idx = NumericProperty(0)
     root_note_idx = NumericProperty(0)
     bin_chord_shape = NumericProperty(0)
     mode_filter = NumericProperty(0b101011010101)
+    chord_diagram = ObjectProperty(None)
     display = ObjectProperty(None)
     voicings = ListProperty([])
     chord_name = StringProperty('')
@@ -413,7 +317,7 @@ class ChordDiagramMain(FloatLayout):
             if self.popup:
                 self.popup.dismiss()
                 self.popup = None
-            else:
+            elif not self.chord_diagram.disabled:
                 full_chord_name = chrom_scale[self.note_idx] + " " + self.chord_name
                 title = full_chord_name + " Alternative Voicings"
                 content = ChordDiagramPopupContent(note_idx=self.note_idx,
@@ -432,10 +336,10 @@ class ChordDiagramMain(FloatLayout):
         return super().on_touch_down(touch)
 
     def on_voicings(self, *args):
-        self.cd_container.voicing = self.voicings[0]
+        self.chord_diagram.voicing = self.voicings[0]
 
     def on_voicing(self, *args):
-        self.cd_container.voicing = self.voicing
+        self.chord_diagram.voicing = self.voicing
 
 
 class ChordDiagramPopup(Popup):
@@ -491,16 +395,16 @@ class ChordDiagramPopupContent(ScrollView):
         for voicing in voicings:
             column_idx = get_col_idx(voicing)
             column = self.scroll_grid.children[column_idx]
-            cd_container = ChordDiagram()
-            cd_container.is_popup = True
-            cd_container.popup = self
-            cd_container.note_idx = note_idx
-            cd_container.root_note_idx = root_note_idx
-            cd_container.bin_chord_shape = bin_chord_shape
-            cd_container.mode_filter = mode_filter
-            cd_container.chord_name = chord_name
-            cd_container.voicing = voicing
-            column.add_widget(cd_container)
+            cd = ChordDiagram()
+            cd.is_popup = True
+            cd.popup = self
+            cd.note_idx = note_idx
+            cd.root_note_idx = root_note_idx
+            cd.bin_chord_shape = bin_chord_shape
+            cd.mode_filter = mode_filter
+            cd.chord_name = chord_name
+            cd.voicing = voicing
+            column.add_widget(cd)
 
         # Set scroll_grid width.
         self.scroll_grid.width = column.width * 4
