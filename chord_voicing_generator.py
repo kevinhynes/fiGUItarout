@@ -204,10 +204,8 @@ def get_chord_num_master_voicings(tuning: List, chord_num: int) -> List:
         return voicings
 
 
-# with sqlite3.connect("chord_voicing_DB.db") as connection:
-#     cursor = connection.cursor()
-#     cursor.execute("DROP TABLE IF EXISTS ChordVoicings")
-# rows = get_all_voicings(standard_tuning)
-rows = get_chord_num_master_voicings(standard_tuning, 2192)
-print(*rows, sep="\n")
-
+if __name__ == "__main__":
+    # Some testing:
+    # rows = get_all_voicings(standard_tuning)
+    rows = get_chord_num_master_voicings(standard_tuning, 2192)
+    print(*rows, sep="\n")

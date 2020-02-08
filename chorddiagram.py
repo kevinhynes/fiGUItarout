@@ -151,7 +151,6 @@ class ChordDiagram(FloatLayout):
     ####################################  DRAWING METHODS  #########################################
     def update_diagram(self, *args):
         if self.is_chord_in_key():
-            self.voicing = self.voicing
             self.draw_diagram()
         else:
             self.disable()
@@ -340,7 +339,8 @@ class ChordDiagramMain(FloatLayout):
         return super().on_touch_down(touch)
 
     def on_voicings(self, *args):
-        self.chord_diagram.voicing = self.voicings[0]
+        if self.voicings:
+            self.chord_diagram.voicing = self.voicings[0]
 
     def on_voicing(self, *args):
         self.chord_diagram.voicing = self.voicing

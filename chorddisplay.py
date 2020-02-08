@@ -20,14 +20,14 @@ from music_constants import major_chord_shapes, minor_chord_shapes, \
 from chord_finder import get_chord_voicings_for_tuning
 from chord_voicing_generator import get_chord_num_master_voicings
 
-
-Builder.load_file('chorddiagram.kv')
-
 chord_groups = {
     'Major': major_chord_shapes, 'Minor': minor_chord_shapes,
     'Dominant': dom_chord_shapes, 'Suspended': sus_chord_shapes,
     'Diminished': dim_chord_shapes, 'Augmented': aug_chord_shapes
     }
+
+Builder.load_file('chorddiagram.kv')
+
 
 ROW_HEIGHT = dp(95)
 
@@ -40,6 +40,7 @@ class ChordDisplay(ScrollView):
     root_note_idx = NumericProperty(0)
     mode_filter = NumericProperty(0b101011010101)
     note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
+    tuning = ListProperty(standard_tuning)
 
     top_prop = NumericProperty(0)
     instrument_rack = ObjectProperty(None)
@@ -59,7 +60,6 @@ class ChordDisplay(ScrollView):
 
     def slide(self, keysigtitlebar):
         if not self.is_shown:
-            app = App.get_running_app()
             self.height = keysigtitlebar.top
             self.top = keysigtitlebar.top
             self.is_shown = True
@@ -109,6 +109,8 @@ class ChordGroup(StencilView, BackGroundColorWidget):
     note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
     display = ObjectProperty(None)
     mode_filter = NumericProperty(0)
+    tuning = ListProperty(standard_tuning)
+
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -134,14 +136,15 @@ class ChordGroup(StencilView, BackGroundColorWidget):
         # Using this as a sort of __init__ method to avoid repetitive classes.
         # self.chord_group is just some text in kv.
         chord_group_list = chord_groups[self.chord_group]
-        for chord_name, bin_chord_shape in chord_group_list.items():
+        for chord_name, chord_num in chord_group_list.items():
             chord_row = ChordRow()
-            chord_row.label.text = chord_name
-            chord_row.chord_num = bin_chord_shape
             self.bind(note_idxs=chord_row.setter('note_idxs'))
             self.bind(display=chord_row.setter('display'))
             self.bind(mode_filter=chord_row.setter('mode_filter'))
             self.bind(root_note_idx=chord_row.setter('root_note_idx'))
+            self.bind(tuning=chord_row.setter('tuning'))
+            chord_row.label.text = chord_name
+            chord_row.chord_num = chord_num
             self.box.add_widget(chord_row)
         # ChordDiagram size being set explicitly. ChordRow width set to sum of its ChordDiagrams.
         # ChordGroup (and ChordGroup.box) should match ChordRow.width. Can't use bindings,
@@ -180,15 +183,21 @@ class ChordRow(BoxLayout):
     voicings = ListProperty()
     mode_filter = NumericProperty(0)
     root_note_idx = NumericProperty(0)
+    tuning = ListProperty(standard_tuning)
 
     label = ObjectProperty(None)
 
-    # def on_display(self, row, display):
-    #     # Once display becomes available, look up voicings for this row.
-    #     self.voicings = self.display.chords_to_voicings.get(bin(self.chord_num), [])
-
     def on_chord_num(self, *args):
-        self.voicings = get_chord_num_master_voicings(standard_tuning, self.chord_num)
+        self.update_voicings()
+
+    def on_tuning(self, *args):
+        self.update_voicings()
+
+    def update_voicings(self):
+        if self.display:
+            self.voicings = get_chord_num_master_voicings(self.display.tuning, self.chord_num)
+        else:
+            self.voicings = get_chord_num_master_voicings(standard_tuning, self.chord_num)
 
 
 class ChordDisplayApp(App):
