@@ -18,6 +18,8 @@ from music_constants import major_chord_shapes, minor_chord_shapes, \
     dom_chord_shapes, sus_chord_shapes, dim_chord_shapes, aug_chord_shapes, \
     chrom_scale, standard_tuning
 from chord_finder import get_chord_voicings_for_tuning
+from chord_voicing_generator import get_chord_num_master_voicings
+
 
 Builder.load_file('chorddiagram.kv')
 
@@ -43,7 +45,7 @@ class ChordDisplay(ScrollView):
     instrument_rack = ObjectProperty(None)
 
     def __init__(self, **kwargs):
-        self.chords_to_voicings = get_chord_voicings_for_tuning(standard_tuning)
+        # self.chords_to_voicings = get_chord_voicings_for_tuning(standard_tuning)
         super().__init__(**kwargs)
         self.is_shown = False
         # No text in some groups and fold_buttons are tiny initially without this.
@@ -135,7 +137,7 @@ class ChordGroup(StencilView, BackGroundColorWidget):
         for chord_name, bin_chord_shape in chord_group_list.items():
             chord_row = ChordRow()
             chord_row.label.text = chord_name
-            chord_row.bin_chord_shape = bin_chord_shape
+            chord_row.chord_num = bin_chord_shape
             self.bind(note_idxs=chord_row.setter('note_idxs'))
             self.bind(display=chord_row.setter('display'))
             self.bind(mode_filter=chord_row.setter('mode_filter'))
@@ -172,7 +174,7 @@ class ChordTitleBar(BoxLayout):
 
 
 class ChordRow(BoxLayout):
-    bin_chord_shape = NumericProperty(0b000000000000)
+    chord_num = NumericProperty(0b000000000000)
     note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
     display = ObjectProperty(None)
     voicings = ListProperty()
@@ -181,15 +183,12 @@ class ChordRow(BoxLayout):
 
     label = ObjectProperty(None)
 
-    def on_display(self, row, display):
-        # Once display becomes available, look up voicings for this row.
-        self.voicings = self.display.chords_to_voicings.get(bin(self.bin_chord_shape), [])
+    # def on_display(self, row, display):
+    #     # Once display becomes available, look up voicings for this row.
+    #     self.voicings = self.display.chords_to_voicings.get(bin(self.chord_num), [])
 
-
-
-
-
-
+    def on_chord_num(self, *args):
+        self.voicings = get_chord_num_master_voicings(standard_tuning, self.chord_num)
 
 
 class ChordDisplayApp(App):

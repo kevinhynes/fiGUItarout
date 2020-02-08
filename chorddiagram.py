@@ -11,6 +11,10 @@ from kivy.properties import ListProperty, NumericProperty, ReferenceListProperty
 from kivy.metrics import dp
 from kivy.graphics import Color, Rectangle
 
+# from kivy.lang import Builder
+# Builder.load_file('chorddiagram.kv')
+
+
 import json
 
 from music_constants import chrom_scale
@@ -49,7 +53,7 @@ class ChordDiagram(FloatLayout):
     note_idx = NumericProperty(0)
     root_note_idx = NumericProperty(0)
     chord_name = StringProperty('')
-    bin_chord_shape = NumericProperty()
+    chord_num = NumericProperty()
     mode_filter = NumericProperty(0b101011010101)
     display = ObjectProperty(None)
     chord_in_key = BooleanProperty(False)
@@ -117,7 +121,7 @@ class ChordDiagram(FloatLayout):
         self.selected = False
         self.disabled = False
 
-    def on_bin_chord_shape(self, *args):
+    def on_chord_num(self, *args):
         self.update_diagram()
 
     def on_note_idx(self, *args):
@@ -180,7 +184,7 @@ class ChordDiagram(FloatLayout):
         else:
             num_shifts = 12 - (self.root_note_idx - self.note_idx)
         rotated_mode = do_circular_bit_rotation(num_shifts, self.mode_filter)
-        chord_mask = int(self.bin_chord_shape)
+        chord_mask = int(self.chord_num)
         # Are all the notes that make this chord also in this mode/key?
         chord_in_key = rotated_mode & chord_mask == chord_mask
         return chord_in_key
@@ -300,7 +304,7 @@ class ChordDiagram(FloatLayout):
 class ChordDiagramMain(FloatLayout):
     note_idx = NumericProperty(0)
     root_note_idx = NumericProperty(0)
-    bin_chord_shape = NumericProperty(0)
+    chord_num = NumericProperty(0)
     mode_filter = NumericProperty(0b101011010101)
     chord_diagram = ObjectProperty(None)
     display = ObjectProperty(None)
@@ -322,7 +326,7 @@ class ChordDiagramMain(FloatLayout):
                 title = full_chord_name + " Alternative Voicings"
                 content = ChordDiagramPopupContent(note_idx=self.note_idx,
                                                    root_note_idx=self.root_note_idx,
-                                                   bin_chord_shape=self.bin_chord_shape,
+                                                   chord_num=self.chord_num,
                                                    mode_filter=self.mode_filter,
                                                    chord_name=self.chord_name,
                                                    voicings=self.voicings)
@@ -354,7 +358,7 @@ class ChordDiagramPopup(Popup):
 class ChordDiagramPopupContent(ScrollView):
     voicing = ListProperty()
 
-    def __init__(self, note_idx, root_note_idx, bin_chord_shape,
+    def __init__(self, note_idx, root_note_idx, chord_num,
                  mode_filter, chord_name, voicings, **kwargs):
         super().__init__(**kwargs)
         self.pos_hint = {'center_x': 0.5}
@@ -365,7 +369,7 @@ class ChordDiagramPopupContent(ScrollView):
                                      pos_hint={'center_x': 0.5})
         self.add_columns()
         self.build_title_bar()
-        self.build_columns(note_idx, root_note_idx, bin_chord_shape, mode_filter, chord_name, voicings)
+        self.build_columns(note_idx, root_note_idx, chord_num, mode_filter, chord_name, voicings)
         # Child widgets are displayed right to left in horizontal BoxLayout; reverse this.
         self.scroll_grid.children = self.scroll_grid.children[::-1]
         self.width = self.scroll_grid.width
@@ -387,7 +391,7 @@ class ChordDiagramPopupContent(ScrollView):
             column = self.scroll_grid.children[6 - i]
             column.add_widget(label)
 
-    def build_columns(self, note_idx, root_note_idx, bin_chord_shape, mode_filter, chord_name, voicings):
+    def build_columns(self, note_idx, root_note_idx, chord_num, mode_filter, chord_name, voicings):
         def get_col_idx(voicing):
             for i, fret_num in enumerate(voicing):
                 if fret_num is not None:
@@ -400,7 +404,7 @@ class ChordDiagramPopupContent(ScrollView):
             cd.popup = self
             cd.note_idx = note_idx
             cd.root_note_idx = root_note_idx
-            cd.bin_chord_shape = bin_chord_shape
+            cd.chord_num = chord_num
             cd.mode_filter = mode_filter
             cd.chord_name = chord_name
             cd.voicing = voicing

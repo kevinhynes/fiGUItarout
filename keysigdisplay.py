@@ -113,6 +113,7 @@ class KeySigDisplay(FloatLayout):
     def on_notes_or_octaves(self, *args):
         self.update_markers()
 
+
 class KeySigDisplayApp(App):
     def build(self):
         return KeySigDisplay()

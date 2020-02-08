@@ -1,19 +1,34 @@
 <BackGroundColorWidget>:
     background: (0, 0, 0, 0)
-    canvas.before:
+    canvas:
         Color:
             rgba: self.background
         Rectangle:
             size: self.size
             pos: self.pos
 
+
 <ChordPalette>:
+    background: (0, 1, 0, 0.5)
     box: box
     BoxLayout:
         id: box
         orientation: 'vertical'
         size_hint_y: None
+        top: root.top
+        canvas:
+            Color:
+                rgba: (0, 0, 1, 0.5)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+
+<ChordPaletteTitleBar>:
+    background: (1, 0, 0, 0.5)
+
 
 <ChordPaletteRow>:
     orientation: 'horizontal'
     size_hint: [None, None]
+    background: (0, 1, 1, 0.5)
