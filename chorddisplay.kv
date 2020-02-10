@@ -110,12 +110,12 @@
     height: ROW_HEIGHT
     canvas.before:
         Color:
-            rgba: (0.5, 0.5, 0.5, 0.9)
+            rgba: (0.4, 0.4, 0.4, 1)
         Rectangle:
             size: self.size
             pos: self.pos
         Color:
-            rgba: (1, 0, 0, 1)
+            rgba: (0, 0, 0, 1)
         Line:
             points:
                 (self.x, self.y, self.x + self.width,
@@ -182,16 +182,6 @@
     size_hint_x: None
     width: sum(child.width for child in self.children)
     label: label
-    canvas:
-        Color:
-            rgba: (0, 1, 1, 1)
-        Line:
-            points:
-                (self.x, self.y, self.x + self.width,
-                self.y, self.x + self.width,
-                self.y + self.height, self.x,
-                self.y + self.height)
-            close: True
     Label:
         id: label
     ChordDiagramMain:

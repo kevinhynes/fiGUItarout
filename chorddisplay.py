@@ -10,24 +10,16 @@ from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.lang import Builder
 
-from kivy.graphics import Rectangle, Color
-
-import json
-
-from music_constants import major_chord_shapes, minor_chord_shapes, \
-    dom_chord_shapes, sus_chord_shapes, dim_chord_shapes, aug_chord_shapes, \
-    chrom_scale, standard_tuning
-from chord_finder import get_chord_voicings_for_tuning
+from music_constants import major_chord_shapes, minor_chord_shapes, dom_chord_shapes, \
+    sus_chord_shapes, dim_chord_shapes, aug_chord_shapes, chrom_scale, standard_tuning
 from chord_voicing_generator import get_chord_num_master_voicings
 
 chord_groups = {
-    'Major': major_chord_shapes, 'Minor': minor_chord_shapes,
-    'Dominant': dom_chord_shapes, 'Suspended': sus_chord_shapes,
-    'Diminished': dim_chord_shapes, 'Augmented': aug_chord_shapes
+    'Major'    : major_chord_shapes, 'Minor': minor_chord_shapes, 'Dominant': dom_chord_shapes,
+    'Suspended': sus_chord_shapes, 'Diminished': dim_chord_shapes, 'Augmented': aug_chord_shapes
     }
 
 Builder.load_file('chorddiagram.kv')
-
 
 ROW_HEIGHT = dp(95)
 
@@ -111,23 +103,14 @@ class ChordGroup(StencilView, BackGroundColorWidget):
     mode_filter = NumericProperty(0)
     tuning = ListProperty(standard_tuning)
 
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.box = BoxLayout(orientation='vertical', size_hint_x=None)
-        with self.box.canvas:
-            Color(1, 1, 0, 0.5)
-            self.rect = Rectangle(size=self.box.size, pos=self.box.pos)
-        self.box.bind(pos=self.update_box_rect, size=self.update_box_rect)
         self.fold_button = Button()
         self.fold_button.bind(on_press=self.fold)
         self.add_widget(self.fold_button)
         self.add_widget(self.box)
         self.bind(pos=self.top_justify, size=self.top_justify)
-
-    def update_box_rect(self, *args):
-        self.rect.pos = self.box.pos
-        self.rect.size = self.box.size
 
     def on_kv_post(self, base_widget):
         self.box.children[0].label.bind(width=self.fold_button.setter('width'))

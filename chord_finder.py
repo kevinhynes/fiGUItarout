@@ -1,6 +1,7 @@
 import collections, itertools, json
 from typing import List
-from music_constants import chrom_scale, chrom_scale_no_acc, chord_shapes, standard_tuning
+from music_constants import chrom_scale, chrom_scale_no_acc, chord_names_to_nums, standard_tuning
+
 
 # FINDING CHORDS IN A GIVEN KEY
 # All chords are defined by the distance between their notes (ignoring inversions for now).
@@ -20,10 +21,13 @@ from music_constants import chrom_scale, chrom_scale_no_acc, chord_shapes, stand
 # Dominant 7 Chord Shape:    1     0     0     0     1     0     0     1     0     0     1     0
 # A Dominant 7 = A-C#-E-G    A                       C#                E                 G
 
+
 def list_chords_in_key(root_note_idx: int, mode: int) -> List[str]:
-    '''Given a root note and mode, collect all chords that naturally fall into this key.
-    Chords are defined as binary numbers in the chord_shapes dict.
     '''
+    Given a root note and mode, collect all chords that naturally fall into this key.
+    Chords are defined as binary numbers in the chord_names_to_nums dict.
+    '''
+
     def do_circular_bit_rotation(note_idx, dummy_mode):
         rotate_bit = 0b100000000000 & dummy_mode
         if rotate_bit:
@@ -40,12 +44,11 @@ def list_chords_in_key(root_note_idx: int, mode: int) -> List[str]:
         dummy_mode |= rotate_bit
         return note_idx, dummy_mode
 
-
     def list_chords_in_key_at_this_root(note_idx, dummy_mode):
         root_note = chrom_scale[note_idx]
         chord_list = []
-        for chord_name, chord_shape in chord_shapes.items():
-            if dummy_mode & chord_shape == chord_shape:
+        for chord_name, chord_num in chord_names_to_nums.items():
+            if dummy_mode & chord_num == chord_num:
                 chord_list.append(root_note + " " + chord_name)
         return chord_list
 
@@ -56,6 +59,7 @@ def list_chords_in_key(root_note_idx: int, mode: int) -> List[str]:
         chord_list.extend(chords_this_root)
         note_idx, mode = do_circular_bit_rotation(note_idx, mode)
     return chord_list
+
 
 # For testing:
 # root_note_idx = 9
@@ -111,8 +115,8 @@ def list_chords_in_key(root_note_idx: int, mode: int) -> List[str]:
 
 
 def build_chord_voicings_for_tuning(tuning):
-    def chord_voicing_dfs(string_idx: int, bin_chord_shape: int, is_triad: bool,
-                          voicing: List[int], min_fret: int, max_fret: int) -> None:
+    def chord_voicing_dfs(string_idx: int, bin_chord_shape: int, is_triad: bool, voicing: List[int],
+                          min_fret: int, max_fret: int) -> None:
         '''
         Explore the fretboard from the original string_idx,  creating ALL possible chords
         and save the voicing to a dictionary based on chord quality (major, minor, etc).
@@ -125,11 +129,11 @@ def build_chord_voicings_for_tuning(tuning):
 
         # Search for the C note on this string and start recursion - only happens once.
         if all(note is None for note in voicing):
-            fret_num = 3  #  If C note is lower than fret 3, chords will be missed.
+            fret_num = 3  # If C note is lower than fret 3, chords will be missed.
             while string[fret_num] % 12 != 0:
                 fret_num += 1
             voicing[string_idx] = fret_num
-            chord_voicing_dfs(string_idx-1, 0b100000000000, False, voicing, fret_num, fret_num)
+            chord_voicing_dfs(string_idx - 1, 0b100000000000, False, voicing, fret_num, fret_num)
             return
 
         # Skip this string (the string at original string_idx will never be skipped).
@@ -137,17 +141,17 @@ def build_chord_voicings_for_tuning(tuning):
 
         # I'm restricting a guitar chord to a span of 4 frets (inclusive).
         # This range will target between 4 to 8 frets - 8 at first, 4 later in recursion.
-        for fret_num in range(max(max_fret-3, 0), min(min_fret+4, 24)):
+        for fret_num in range(max(max_fret - 3, 0), min(min_fret + 4, 24)):
             octave, note_idx = divmod(string[fret_num], 12)
-            bin_note = 2**(11 - note_idx)
-            voicing = voicing[:string_idx] + [fret_num] + voicing[string_idx+1:]
+            bin_note = 2 ** (11 - note_idx)
+            voicing = voicing[:string_idx] + [fret_num] + voicing[string_idx + 1:]
             if not is_triad:
                 is_triad = bin(bin_chord_shape | bin_note).count('1') >= 3
             if is_triad:
                 chords_to_voicings[bin(bin_chord_shape | bin_note)].append(voicing[::-1])
 
-            chord_voicing_dfs(string_idx - 1, bin_chord_shape | bin_note, is_triad,
-                              voicing, min(min_fret, fret_num), max(max_fret, fret_num))
+            chord_voicing_dfs(string_idx - 1, bin_chord_shape | bin_note, is_triad, voicing,
+                              min(min_fret, fret_num), max(max_fret, fret_num))
 
     def chord_voicing_sort(voicing):
         '''
@@ -172,8 +176,8 @@ def build_chord_voicings_for_tuning(tuning):
                  tuning][::-1]
     chords_to_voicings = collections.defaultdict(list)
     for string_idx in range(2, 6):
-        chord_voicing_dfs(string_idx, 0b000000000000, False,
-                          [None, None, None, None, None, None], 0, 24)
+        chord_voicing_dfs(string_idx, 0b000000000000, False, [None, None, None, None, None, None],
+                          0, 24)
 
     for bin_chord_shape, chord_voicings in chords_to_voicings.items():
         chord_voicings.sort(key=chord_voicing_sort)

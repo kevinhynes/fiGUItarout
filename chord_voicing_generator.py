@@ -203,9 +203,18 @@ def get_chord_num_master_voicings(tuning: List, chord_num: int) -> List:
         voicings = [ast.literal_eval(tup[0]) for tup in rows]
         return voicings
 
+def get_chord_voicings_from_query(tuning: List, query: str, params: List) -> List:
+    check_table_data_exists(tuning)
+    with sqlite3.connect("chord_voicing_DB.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        voicings = [ast.literal_eval(tup[0]) for tup in rows]
+        return voicings
+
 
 if __name__ == "__main__":
     # Some testing:
     # rows = get_all_voicings(standard_tuning)
-    rows = get_chord_num_master_voicings(standard_tuning, 2192)
+    rows = get_chord_num_master_voicings(standard_tuning, 2192)  # 2192 is the Major chord_num.
     print(*rows, sep="\n")

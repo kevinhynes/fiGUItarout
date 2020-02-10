@@ -1,4 +1,4 @@
-#: import cdm chorddiagram
+##: import cdm chorddiagram
 
 
 <ChordDiagramBubble>:
@@ -41,7 +41,9 @@
             Color:
                 rgba: (0, 0, 0, 1)
             Line:
-                rectangle: (*self.pos, *self.size)
+                rectangle:
+                    (self.x + self.width * 0.0095, self.y + self.height * 0.0095,
+                    self.width - self.width * 0.0095, self.height - self.height * 0.0095)
                 width: root.line_weight
 
             # Strings.
@@ -266,7 +268,7 @@
         canvas.after:
             # Disabled overlay.
             Color:
-                rgba: (0.5, 0.5, 0.5, root.disable_opac)
+                rgba: (0.6, 0.6, 0.6, root.disable_opac)
             Rectangle:
                 size: self.size
                 pos: self.pos

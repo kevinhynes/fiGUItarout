@@ -6,35 +6,32 @@ sharp = u'\u266F'
 
 standard_tuning = (28, 33, 38, 43, 47, 52)
 
-chord_shapes = {
-    'Major': 0b100010010000,
-    'Major 6': 0b100010010100,
-    'Major 7': 0b100010010001,
-    'Major 9': 0b101010010001,
-    'Major 11': 0b101011010001,
+chord_names_to_nums = {
+    'Major'     : 0b100010010000, 'Major 6': 0b100010010100, 'Major 7': 0b100010010001,
+    'Major 9'   : 0b101010010001, 'Major 11': 0b101011010001,
 
-    'Minor': 0b100100010000,
-    'Minor 6': 0b100100010100,
-    'Minor 7': 0b100100010010,
-    'Minor 9': 0b101100010010,
-    'Minor 11': 0b101101010010,
-    'Minor Major 7': 0b100100010001,
+    'Minor'     : 0b100100010000, 'Minor 6': 0b100100010100, 'Minor 7': 0b100100010010,
+    'Minor 9'   : 0b101100010010, 'Minor 11': 0b101101010010, 'Minor Major 7': 0b100100010001,
 
-    'Dominant 7': 0b100010010010,
-    'Dominant 9': 0b101010010010,
-    'Dominant 11': 0b101011010010,
+    'Dominant 7': 0b100010010010, 'Dominant 9': 0b101010010010, 'Dominant 11': 0b101011010010,
 
-    'Sus 2': 0b101000010000,
-    'Sus 4': 0b100001010000,
+    'Sus 2'     : 0b101000010000, 'Sus 4': 0b100001010000,
 
-    'Diminished': 0b100100100000,
-    'Diminished 7': 0b100100100100,
+    'Diminished': 0b100100100000, 'Diminished 7': 0b100100100100,
 
-    'Augmented': 0b100010001000,
-    'Augmented 7': 0b100010001010,
+    'Augmented' : 0b100010001000, 'Augmented 7': 0b100010001010,
     }
 
-major_chord_shapes= {
+basic_chord_names_to_nums = {
+    'Major': 0b100010010000,
+    'Minor': 0b100100010000,
+    'Diminished': 0b100100100000,
+    'Augmented': 0b100010001000,
+    'Dominant 7': 0b100010010010,
+    'Sus 2': 0b101000010000,
+    }
+
+major_chord_shapes = {
     'Major'  : 0b100010010000, 'Major 6': 0b100010010100, 'Major 7': 0b100010010001,
     'Major 9': 0b101010010001, 'Major 11': 0b101011010001,
     }
@@ -45,7 +42,7 @@ minor_chord_shapes = {
     }
 
 dom_chord_shapes = {
-    'Dominant 7' : 0b100010010010, 'Dominant 9': 0b101010010010, 'Dominant 11': 0b101011010010,
+    'Dominant 7': 0b100010010010, 'Dominant 9': 0b101010010010, 'Dominant 11': 0b101011010010,
     }
 
 sus_chord_shapes = {

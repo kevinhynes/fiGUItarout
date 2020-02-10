@@ -8,8 +8,18 @@
             pos: self.pos
 
 
+<ChordPaletteDisplay>:
+    ChordPalette:
+        id: chord_palette
+        root_string_option: options_bar.root_string_option
+        voicing_option: options_bar.voicing_option
+    ChordPaletteOptionsBar:
+        id: options_bar
+        chord_palette: chord_palette
+
+
 <ChordPalette>:
-    background: (0, 1, 0, 0.5)
+    background: (0, 1, 0, 0)
     box: box
     BoxLayout:
         id: box
@@ -31,4 +41,101 @@
 <ChordPaletteRow>:
     orientation: 'horizontal'
     size_hint: [None, None]
-    background: (0, 1, 1, 0.5)
+#    background: (0, 1, 1, 0.5)
+
+
+<ChordPaletteOptionsBar>:
+    Button:
+        id: new_row_btn
+        size_hint: [None, None]
+        size: [100, 50]
+        text: "Add Row"
+        on_press: root.chord_palette.add_row()
+    Button:
+        id: basic_chords_btn
+        size_hint: [None, None]
+        size: [100, 50]
+        x: new_row_btn.right
+        text: "Basic Chords"
+        on_press: root.chord_palette.build_basic_chord_row()
+    BoxLayout:
+        id: root_string_options
+        orientation: 'vertical'
+        size_hint: [None, None]
+        size: [200, 100]
+        x: basic_chords_btn.right
+        Label:
+            size_hint_y: 1/3
+            text: 'Chord Root String'
+        GridLayout:
+            size_hint_y: 2/3
+            cols: 5
+            canvas:
+                Color:
+                    rgba: (0, 0, 1, 0)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            Label:
+                text: '6'
+            Label:
+                text: '5'
+            Label:
+                text: '4'
+            Label:
+                text: '3'
+            Label:
+                text: 'All'
+            CheckBox:
+                group: 'root_string'
+                on_state: root.update_root_string_option(self, '6')
+                allow_no_selection: False
+            CheckBox:
+                group: 'root_string'
+                on_state: root.update_root_string_option(self, '5')
+                allow_no_selection: False
+            CheckBox:
+                group: 'root_string'
+                on_state: root.update_root_string_option(self, '4')
+                allow_no_selection: False
+            CheckBox:
+                group: 'root_string'
+                on_state: root.update_root_string_option(self, '3')
+                allow_no_selection: False
+            CheckBox:
+                group: 'root_string'
+                on_state: root.update_root_string_option(self, 'All')
+                allow_no_selection: False
+                state: 'down'
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: [None, None]
+        size: [200, 100]
+        x: root_string_options.right
+        Label:
+            size_hint_y: 1/3
+            text: 'Voicing Options'
+        GridLayout:
+            size_hint_y: 2/3
+            cols: 2
+            canvas:
+                Color:
+                    rgba: (0, 0, 1, 0)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            Label:
+                text: 'Full Chord Voicings'
+                text_size: [self.width, None]
+                size: self.texture_size
+            Label:
+                text: 'All Chord Voicings'
+            CheckBox:
+                group: 'voicing_option'
+                on_state: root.update_voicing_option(self, 'Master')
+                allow_no_selection: False
+            CheckBox:
+                group: 'voicing_option'
+                on_state: root.update_voicing_option(self, 'All')
+                allow_no_selection: False
+                state: 'down'

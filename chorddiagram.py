@@ -49,14 +49,14 @@ class ChordDiagramBubble(Bubble):
 
 class ChordDiagram(FloatLayout):
     chrom_scale = chrom_scale
-    voicing = ListProperty([None, None, None, None, None])
+    voicing = ListProperty([None, None, None, None, None, None])
     note_idx = NumericProperty(0)
     root_note_idx = NumericProperty(0)
     chord_name = StringProperty('')
     chord_num = NumericProperty()
     mode_filter = NumericProperty(0b101011010101)
     display = ObjectProperty(None)
-    chord_in_key = BooleanProperty(False)
+    # chord_in_key = BooleanProperty(False)
     diagram = ObjectProperty(None)
 
     draw_x = NumericProperty(0)
@@ -186,10 +186,13 @@ class ChordDiagram(FloatLayout):
         chord_mask = int(self.chord_num)
         # Are all the notes that make this chord also in this mode/key?
         chord_in_key = rotated_mode & chord_mask == chord_mask
+        # print(chrom_scale[self.note_idx], " ", self.chord_name, chord_in_key)
         return chord_in_key
 
     def draw_diagram(self):
         if not self.voicing or not any(fret_num for fret_num in self.voicing):
+            self.disable_opac = 0
+            self.disabled = False
             return
         slid_voicing = self.slide_voicing(self.voicing)
         min_fret = min(fret_num for fret_num in slid_voicing if fret_num is not None)
