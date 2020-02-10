@@ -87,19 +87,20 @@ class ChordPalette(ScrollView, BackGroundColorWidget):
                 cd.chord_name = chord_name
                 cd.chord_num = chord_num
                 if cd.is_chord_in_key():
-                    cd.voicing = self.get_chord_diagram_voicing()
+                    cd.voicing = self.get_chord_diagram_voicing(chord_num)
                     break
 
-    def get_chord_diagram_voicing(self):
-        sql = "SELECT voicing FROM ChordVoicings WHERE tuning = ?"
-        sql_params = [str(self.tuning)]
+    def get_chord_diagram_voicing(self, chord_num):
+        sql = """SELECT voicing FROM ChordVoicings WHERE tuning = ?
+                 AND chord_num = ?"""
+        sql_params = [str(self.tuning), chord_num]
         if self.voicing_option != "All":
             sql += " AND master_voicing = voicing"
         if self.root_string_option != "All":
             sql += " AND root_string = ?"
             sql_params.append(int(self.root_string_option))
         voicings = get_chord_voicings_from_query(self.tuning, sql, sql_params)
-        # print(voicings)
+        print(len(voicings))
         default = [None, 3, 2, 0, 1, 0]
         return voicings[0] if voicings else default
 
