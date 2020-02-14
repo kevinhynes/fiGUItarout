@@ -431,5 +431,3 @@ class ChordDiagramApp(App):
 
 if __name__ == "__main__":
     ChordDiagramApp().run()
-
-
