@@ -88,10 +88,8 @@ class TabViewer(ScrollView):
 
     def flatten_track(self, gp_track):
         '''
-        Dev Notes:
-            - Different Voices in the same Measure may have different start/end times.
-            - PyGuitarPro does not appear to be parsing measure.header.repeatAlternative correctly.
-            - When Beat is a quarter note, beat.duration.time == 960.  No idea why.
+        - PyGuitarPro does not appear to be parsing measure.header.repeatAlternative correctly.
+        - When Beat is a quarter note, beat.duration.time == 960.  No idea why.
         '''
         flat_track = []
         repeat_group = []
@@ -162,8 +160,16 @@ class TabWidget(Widget):
         self.measure_start = 64
         self.tab_width = 1024
         super().__init__(**kwargs)
-        self.note_glyphs = InstructionGroup()
+        self.glyphs = InstructionGroup()
         self.backgrounds = InstructionGroup()
+        self.tuplet_count = 0
+        self.canvas.add(Color(1, 0, 0, 0.5))
+        self.canvas.add(self.backgrounds)
+        self.canvas.add(black)
+        self.canvas.add(self.glyphs)
+
+    def get_next_beat_idx(self):
+        return self.next_beat_idx
 
     def build_measure(self, gp_measure, start_idx):
         self.add_timesig(gp_measure)
@@ -180,10 +186,6 @@ class TabWidget(Widget):
                     break
         self.next_beat_idx = beat_idx + 1
         self.xpos_end = xpos
-        self.canvas.add(Color(1, 0, 0, 0.5))
-        self.canvas.add(self.backgrounds)
-        self.canvas.add(black)
-        self.canvas.add(self.note_glyphs)
 
     def add_timesig(self, gp_measure):
         num, den = gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value
@@ -195,28 +197,119 @@ class TabWidget(Widget):
         den_glyph.refresh()
         num_instr.texture = num_glyph.texture
         den_instr.texture = den_glyph.texture
-        self.note_glyphs.add(num_instr)
-        self.note_glyphs.add(den_instr)
+        self.glyphs.add(num_instr)
+        self.glyphs.add(den_instr)
 
-
-    def get_next_beat_idx(self):
-        return self.next_beat_idx
-
-    def add_beat(self, gp_beat, x_pos):
+    def add_beat(self, gp_beat, xpos):
+        self.add_note_duration_glyph(gp_beat.duration, xpos)
         for gp_note in gp_beat.notes:
-            fret_num = gp_note.value
-            y_pos = self.y + self.step_y * (8 - (gp_note.string-1)) - self.step_y / 2
-            background = Rectangle(pos=(x_pos, y_pos), size=(self.get_fret_num_size(fret_num)))
-            fret_num_instr = Rectangle(pos=(x_pos, y_pos), size=self.get_fret_num_size(fret_num))
-            fret_num_glyph = CoreLabel(text=str(fret_num))
+            fret_text = str(gp_note.value)
+            if gp_note.effect.isHarmonic:
+                fret_text = '<' + fret_text + '>'
+            ypos = self.y + self.step_y * (8 - (gp_note.string-1)) - self.step_y / 2
+            background = Rectangle(pos=(xpos, ypos), size=(self.get_fret_num_size(fret_text)))
+            fret_num_instr = Rectangle(pos=(xpos, ypos), size=self.get_fret_num_size(fret_text))
+            fret_num_glyph = CoreLabel(text=fret_text)
             fret_num_glyph.refresh()
             fret_num_instr.texture = fret_num_glyph.texture
             self.backgrounds.add(background)
-            self.note_glyphs.add(fret_num_instr)
+            self.glyphs.add(fret_num_instr)
 
     def get_fret_num_size(self, fret_num):
         mult = len(str(fret_num))
         return 8 * mult, self.step_y
+
+    def add_note_duration_glyph(self, duration, xpos):
+        normal = {1: self.add_whole_note,
+                  2: self.add_half_note,
+                  4: self.add_quarter_note,
+                  8: self.add_eight_note,
+                  16: self.add_sixteenth_note}
+        tuplet = {8: self.add_eighth_note_tuplet,
+                  16: self.add_sixteenth_note_tuplet}
+        if duration.tuplet.times == 1:
+            func = normal[duration.value]
+            func(xpos)
+        elif self.tuplet_count == 0:
+            func = tuplet[duration.value]
+            func(xpos, duration)
+            self.tuplet_count = 1
+        else:
+            self.tuplet_count += 1
+            if self.tuplet_count == duration.tuplet.enters:
+                self.tuplet_count = 0
+
+    def add_sixteenth_note(self, xpos):
+        pass
+
+    def add_eight_note(self, xpos):
+        pass
+
+    def add_quarter_note(self, xpos):
+        glyph = Line(points=(xpos + 4, self.y + self.step_y * 1.5,
+                            xpos + 4, self.y + self.step_y * 2.5))
+        self.glyphs.add(glyph)
+
+    def add_half_note(self, xpos):
+        pass
+
+    def add_whole_note(self, xpos):
+        pass
+
+    def add_eighth_note_tuplet(self, xpos, duration):
+        step = (1 / duration.value) * (duration.tuplet.times / duration.tuplet.enters) * self.tab_width
+        xmin, xmax = float('inf'), float('-inf')
+        # Vertical bars.
+        for i in range(duration.tuplet.enters):
+            xpos *= i * step
+            xmin, xmax = min(xmin, xpos), max(xmax, xpos)
+            glyph = Line(points=(xpos + 4, self.y + self.step_y * 1.5,
+                            xpos + 4, self.y + self.step_y * 2.5))
+            self.glyphs.add(glyph)
+        # Horizontal bars.
+        lowbar = Line(points=(xmin, self.y + self.step_y * 1.5,
+                             xmax, self.y + self.step_y * 1.5),
+                     width=1.05)
+        self.glyphs.add(lowbar)
+        # Tuplet text.
+        xmid = (xmin + xmax) / 2
+        text_width, text_height = self.get_fret_num_size(duration.tuplet.times)
+        text_instr = Rectangle(pos=(xmid - text_width / 2, self.y + self.step_y * 1.25),
+                               size=(text_width, text_height))
+        text_glyph = CoreLabel(text=str(duration.tuplet.enters))
+        text_glyph.refresh()
+        text_instr.texture = text_glyph.texture
+        self.glyphs.add(text_instr)
+
+    def add_sixteenth_note_tuplet(self, xpos, duration):
+        step = (1 / duration.value) * (duration.tuplet.times / duration.tuplet.enters) * self.tab_width
+        xmin, xmax = float('inf'), float('-inf')
+        # Vertical bars.
+        for i in range(duration.tuplet.enters):
+            glyph_x = xpos + i * step
+            print(i, xpos)
+            xmin, xmax = min(xmin, glyph_x), max(xmax, glyph_x)
+            glyph = Line(points=(glyph_x + 4, self.y + self.step_y * 1.5,
+                            glyph_x + 4, self.y + self.step_y * 2.5))
+            self.glyphs.add(glyph)
+        # Horizontal bars.
+        lowbar = Line(points=(xmin, self.y + self.step_y * 1.5,
+                              xmax, self.y + self.step_y * 1.5),
+                      width=1.05)
+        highbar = Line(points=(xmin, self.y + self.step_y * 1.75,
+                               xmax, self.y + self.step_y * 1.75),
+                      width=1.05)
+        self.glyphs.add(lowbar)
+        self.glyphs.add(highbar)
+        # Tuplet text.
+        xmid = (xmin + xmax) / 2
+        text_width, text_height = self.get_fret_num_size(duration.tuplet.times)
+        text_instr = Rectangle(pos=(xmid - text_width / 2, self.y + self.step_y * 0.5),
+                               size=(text_width, text_height))
+        text_glyph = CoreLabel(text=str(duration.tuplet.enters))
+        text_glyph.refresh()
+        text_instr.texture = text_glyph.texture
+        self.glyphs.add(text_instr)
 
 
 class SongBuilderApp(App):

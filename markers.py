@@ -41,7 +41,7 @@ class Marker(InstructionGroup):
         self.text1_label = CoreLabel()
         self.text1_instr = Rectangle()
         self.text2_color = Color()
-        self.text2_label = CoreLabel(font_name="./fonts/Lucida Sans Unicode Regular")
+        self.text2_label = CoreLabel()
         self.text2_instr = Rectangle()
         self.background_color.hsv = white.hsv
         self.split_line_color.hsv = white.hsv
