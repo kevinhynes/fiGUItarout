@@ -35,7 +35,6 @@ class TabViewer(ScrollView):
         self.song_data = song_data
         self.box = BoxLayout(orientation='vertical', size_hint_y=None, spacing=10)
 
-
         # Testing the TabViewer build.
         # for measure in self.song_data:
         #     tab = TabWidget(measure)
@@ -178,7 +177,7 @@ class TabWidget(Widget):
             xpos = self.measure_start
             for beat_idx, gp_beat in enumerate(gp_voice.beats[start_idx:]):
                 beat_width = (1 / gp_beat.duration.value) * (
-                            gp_beat.duration.tuplet.times / gp_beat.duration.tuplet.enters) * self.tab_width
+                        gp_beat.duration.tuplet.times / gp_beat.duration.tuplet.enters) * self.tab_width
                 self.add_beat(gp_beat, xpos)
                 xpos += beat_width
                 if xpos >= self.tab_width + self.measure_start:
@@ -189,12 +188,14 @@ class TabWidget(Widget):
 
     def add_timesig(self, gp_measure):
         num, den = gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value
-        num_instr = Rectangle(pos=(self.x, self.y + self.step_y * 6), size=(self.step_y, self.step_y*2))
-        den_instr = Rectangle(pos=(self.x, self.y + self.step_y * 4), size=(self.step_y, self.step_y*2))
-        num_glyph = CoreLabel(text=str(num))
-        den_glyph = CoreLabel(text=str(den))
+        num_glyph = CoreLabel(text=str(num), font_size=50, font_name='./fonts/PatuaOne-Regular')
+        den_glyph = CoreLabel(text=str(den), font_size=50, font_name='./fonts/PatuaOne-Regular')
         num_glyph.refresh()
         den_glyph.refresh()
+        num_x = self.x + (self.measure_start / 2) - (num_glyph.texture.width / 2)
+        den_x = self.x + (self.measure_start / 2) - (den_glyph.texture.width / 2)
+        num_instr = Rectangle(pos=(num_x, self.y + self.step_y * 5), size=(num_glyph.texture.size))
+        den_instr = Rectangle(pos=(den_x, self.y + self.step_y * 3), size=(den_glyph.texture.size))
         num_instr.texture = num_glyph.texture
         den_instr.texture = den_glyph.texture
         self.glyphs.add(num_instr)
@@ -206,27 +207,23 @@ class TabWidget(Widget):
             fret_text = str(gp_note.value)
             if gp_note.effect.isHarmonic:
                 fret_text = '<' + fret_text + '>'
-            ypos = self.y + self.step_y * (8 - (gp_note.string-1)) - self.step_y / 2
-            background = Rectangle(pos=(xpos, ypos), size=(self.get_fret_num_size(fret_text)))
-            fret_num_instr = Rectangle(pos=(xpos, ypos), size=self.get_fret_num_size(fret_text))
-            fret_num_glyph = CoreLabel(text=fret_text)
+            fret_num_glyph = CoreLabel(text=fret_text, font_size=14, font_name='./fonts/Arial')
             fret_num_glyph.refresh()
+            ypos = self.y + self.step_y * (8 - (gp_note.string - 1)) - fret_num_glyph.height / 2
+            background = Rectangle(pos=(xpos, ypos), size=fret_num_glyph.texture.size)
+            fret_num_instr = Rectangle(pos=(xpos, ypos), size=fret_num_glyph.texture.size)
             fret_num_instr.texture = fret_num_glyph.texture
             self.backgrounds.add(background)
             self.glyphs.add(fret_num_instr)
 
-    def get_fret_num_size(self, fret_num):
-        mult = len(str(fret_num))
-        return 8 * mult, self.step_y
-
     def add_note_duration_glyph(self, duration, xpos):
-        normal = {1: self.add_whole_note,
-                  2: self.add_half_note,
-                  4: self.add_quarter_note,
-                  8: self.add_eight_note,
-                  16: self.add_sixteenth_note}
-        tuplet = {8: self.add_eighth_note_tuplet,
-                  16: self.add_sixteenth_note_tuplet}
+        normal = {
+            1: self.add_whole_note, 2: self.add_half_note, 4: self.add_quarter_note,
+            8: self.add_eight_note, 16: self.add_sixteenth_note
+        }
+        tuplet = {
+            8: self.add_eighth_note_tuplet, 16: self.add_sixteenth_note_tuplet
+        }
         if duration.tuplet.times == 1:
             func = normal[duration.value]
             func(xpos)
@@ -246,8 +243,8 @@ class TabWidget(Widget):
         pass
 
     def add_quarter_note(self, xpos):
-        glyph = Line(points=(xpos + 4, self.y + self.step_y * 1.5,
-                            xpos + 4, self.y + self.step_y * 2.5))
+        glyph = Line(
+            points=(xpos + 4, self.y + self.step_y * 1.5, xpos + 4, self.y + self.step_y * 2.5))
         self.glyphs.add(glyph)
 
     def add_half_note(self, xpos):
@@ -257,57 +254,58 @@ class TabWidget(Widget):
         pass
 
     def add_eighth_note_tuplet(self, xpos, duration):
-        step = (1 / duration.value) * (duration.tuplet.times / duration.tuplet.enters) * self.tab_width
-        xmin, xmax = float('inf'), float('-inf')
-        # Vertical bars.
-        for i in range(duration.tuplet.enters):
-            xpos *= i * step
-            xmin, xmax = min(xmin, xpos), max(xmax, xpos)
-            glyph = Line(points=(xpos + 4, self.y + self.step_y * 1.5,
-                            xpos + 4, self.y + self.step_y * 2.5))
-            self.glyphs.add(glyph)
-        # Horizontal bars.
-        lowbar = Line(points=(xmin, self.y + self.step_y * 1.5,
-                             xmax, self.y + self.step_y * 1.5),
-                     width=1.05)
-        self.glyphs.add(lowbar)
-        # Tuplet text.
-        xmid = (xmin + xmax) / 2
-        text_width, text_height = self.get_fret_num_size(duration.tuplet.times)
-        text_instr = Rectangle(pos=(xmid - text_width / 2, self.y + self.step_y * 1.25),
-                               size=(text_width, text_height))
-        text_glyph = CoreLabel(text=str(duration.tuplet.enters))
-        text_glyph.refresh()
-        text_instr.texture = text_glyph.texture
-        self.glyphs.add(text_instr)
-
-    def add_sixteenth_note_tuplet(self, xpos, duration):
-        step = (1 / duration.value) * (duration.tuplet.times / duration.tuplet.enters) * self.tab_width
+        step = (1 / duration.value) * (
+                    duration.tuplet.times / duration.tuplet.enters) * self.tab_width
         xmin, xmax = float('inf'), float('-inf')
         # Vertical bars.
         for i in range(duration.tuplet.enters):
             glyph_x = xpos + i * step
-            print(i, xpos)
             xmin, xmax = min(xmin, glyph_x), max(xmax, glyph_x)
-            glyph = Line(points=(glyph_x + 4, self.y + self.step_y * 1.5,
-                            glyph_x + 4, self.y + self.step_y * 2.5))
+            glyph = Line(points=(glyph_x, self.y + self.step_y * 1.5,
+                                 glyph_x, self.y + self.step_y * 2.5))
             self.glyphs.add(glyph)
         # Horizontal bars.
-        lowbar = Line(points=(xmin, self.y + self.step_y * 1.5,
-                              xmax, self.y + self.step_y * 1.5),
+        lowbar = Line(points=(xmin, self.y + self.step_y * 1.5, xmax, self.y + self.step_y * 1.5),
                       width=1.05)
-        highbar = Line(points=(xmin, self.y + self.step_y * 1.75,
-                               xmax, self.y + self.step_y * 1.75),
+        self.glyphs.add(lowbar)
+        # Tuplet text.
+        xmid = (xmin + xmax) / 2
+        text_glyph = CoreLabel(text=str(duration.tuplet.enters), font_size=14,
+                               font_name='./fonts/Arial')
+        text_glyph.refresh()
+        text_instr = Rectangle(
+            pos=(xmid - text_glyph.texture.width / 2, self.y + self.step_y * 0.5),
+            size=text_glyph.texture.size)
+        text_instr.texture = text_glyph.texture
+        self.glyphs.add(text_instr)
+
+    def add_sixteenth_note_tuplet(self, xpos, duration):
+        step = (1 / duration.value) * (
+                    duration.tuplet.times / duration.tuplet.enters) * self.tab_width
+        xmin, xmax = float('inf'), float('-inf')
+        # Vertical bars.
+        for i in range(duration.tuplet.enters):
+            glyph_x = xpos + i * step
+            xmin, xmax = min(xmin, glyph_x), max(xmax, glyph_x)
+            glyph = Line(points=(glyph_x, self.y + self.step_y * 1.5,
+                                 glyph_x, self.y + self.step_y * 2.5))
+            self.glyphs.add(glyph)
+        # Horizontal bars.
+        lowbar = Line(points=(xmin, self.y + self.step_y * 1.5, xmax, self.y + self.step_y * 1.5),
                       width=1.05)
+        highbar = Line(
+            points=(xmin, self.y + self.step_y * 1.75, xmax, self.y + self.step_y * 1.75),
+            width=1.05)
         self.glyphs.add(lowbar)
         self.glyphs.add(highbar)
         # Tuplet text.
         xmid = (xmin + xmax) / 2
-        text_width, text_height = self.get_fret_num_size(duration.tuplet.times)
-        text_instr = Rectangle(pos=(xmid - text_width / 2, self.y + self.step_y * 0.5),
-                               size=(text_width, text_height))
-        text_glyph = CoreLabel(text=str(duration.tuplet.enters))
+        text_glyph = CoreLabel(text=str(duration.tuplet.enters), font_size=14,
+                               font_name='./fonts/Arial')
         text_glyph.refresh()
+        text_instr = Rectangle(
+            pos=(xmid - text_glyph.texture.width / 2, self.y + self.step_y * 0.5),
+            size=text_glyph.texture.size)
         text_instr.texture = text_glyph.texture
         self.glyphs.add(text_instr)
 
