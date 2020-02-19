@@ -47,7 +47,11 @@
             points:
                 (self.x, self.y + self.step_y * 8,
                 self.measure_start + self.tab_width, self.y + self.step_y * 8)
-
+        # Measure end line.
+        Line:
+            points:
+                (self.measure_end, self.y + self.step_y * 8,
+                self.measure_end, self.y + self.step_y * 3)
 
 FloatLayout:
     TabViewer:

@@ -12,19 +12,9 @@ from kivy.clock import Clock
 from kivy.metrics import dp
 
 import guitarpro
-
-from song_data import song_data
-from music_constants import chrom_scale
+from typing import List
 
 black = Color(0, 0, 0, 1)
-
-
-class KivyBeat:
-    def __init__(self, seconds: float, frets: list, notes: list = None, duration: object = None):
-        self.seconds = seconds
-        self.frets = frets
-        self.notes = notes
-        self.duration = duration
 
 
 class TabViewer(ScrollView):
@@ -32,24 +22,12 @@ class TabViewer(ScrollView):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.song_data = song_data
-        self.box = BoxLayout(orientation='vertical', size_hint_y=None, spacing=10)
-
-        # Testing the TabViewer build.
-        # for measure in self.song_data:
-        #     tab = TabWidget(measure)
-        #     self.box.height += tab.height
-        #     self.box.add_widget(tab)
-        # print(tab.width)
-        # self.add_widget(self.box)
-
         self.gp_song = guitarpro.parse('./tgr-nm-01.gp5')
         self.flat_song = self.flatten_song()
         float_height = self.calc_float_height()
         self.floatlayout = FloatLayout(size_hint_y=None, height=float_height)
         tab_widget = TabWidget()
         self.child_y = float_height - tab_widget.height
-
         # self.print_flattened_track(self.flat_song[0])
         self.build_track(self.flat_song[0])
 
@@ -72,7 +50,7 @@ class TabViewer(ScrollView):
                                             Notes: List[Note]
                                                 Note
 
-        Tracks list represents each guitar.
+        Tracks list represents each guitar (guitar1, guitar2, ...).
         Voicings list is of length 2, and represents left and right hand on piano.
             So far, 2nd Voicing is empty and can be ignored.
 
@@ -133,7 +111,7 @@ class TabViewer(ScrollView):
 
     def add_measure(self, gp_measure):
         # In order to keep scrolling bar moving at same speed for all measures at the same tempo,
-        # some measures (7/4, 9/8...) will need an extra line
+        # some measures (7/4, 9/8...) will need an extra line.
         timesig_ratio = gp_measure.timeSignature.numerator / gp_measure.timeSignature.denominator.value
         spacing = 10
 
@@ -144,7 +122,6 @@ class TabViewer(ScrollView):
         self.child_y -= tab_widget.height + spacing
 
         if timesig_ratio > 1:
-            print(f'\t  {next_beat_idx} / {len(gp_measure.voices[0].beats)}')
             tab_widget = TabWidget(pos=(0, self.child_y))
             tab_widget.build_measure(gp_measure, next_beat_idx)
             self.floatlayout.add_widget(tab_widget)
@@ -152,6 +129,7 @@ class TabViewer(ScrollView):
 
 
 class TabWidget(Widget):
+    measure_end = NumericProperty(0)
 
     def __init__(self, **kwargs):
         self.step_y = 20
@@ -161,32 +139,26 @@ class TabWidget(Widget):
         super().__init__(**kwargs)
         self.glyphs = InstructionGroup()
         self.backgrounds = InstructionGroup()
+        self.note_glyphs = InstructionGroup()
+        self.num_glyphs = InstructionGroup()
         self.tuplet_count = 0
         self.canvas.add(Color(1, 0, 0, 0.5))
         self.canvas.add(self.backgrounds)
         self.canvas.add(black)
         self.canvas.add(self.glyphs)
+        self.canvas.add(self.note_glyphs)
+        self.canvas.add(self.num_glyphs)
 
     def get_next_beat_idx(self):
         return self.next_beat_idx
 
-    def build_measure(self, gp_measure, start_idx):
+    def build_measure(self, gp_measure: guitarpro.models.Measure, start_idx: int):
         self.add_timesig(gp_measure)
-        for gp_voice in gp_measure.voices[:-1]:
-            print(f'Header Number {gp_measure.header.number}')
-            xpos = self.measure_start
-            for beat_idx, gp_beat in enumerate(gp_voice.beats[start_idx:]):
-                beat_width = (1 / gp_beat.duration.value) * (
-                        gp_beat.duration.tuplet.times / gp_beat.duration.tuplet.enters) * self.tab_width
-                self.add_beat(gp_beat, xpos)
-                xpos += beat_width
-                if xpos >= self.tab_width + self.measure_start:
-                    print(f'Breaking for second line of tab')
-                    break
-        self.next_beat_idx = beat_idx + 1
-        self.xpos_end = xpos
+        gp_beats, xmids = self.add_fretnums(gp_measure, start_idx)
+        gp_beat_groups = self.gp_beat_groupby(gp_beats)
+        self.add_note_glyphs(gp_beat_groups, xmids)
 
-    def add_timesig(self, gp_measure):
+    def add_timesig(self, gp_measure: guitarpro.models.Measure):
         num, den = gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value
         num_glyph = CoreLabel(text=str(num), font_size=50, font_name='./fonts/PatuaOne-Regular')
         den_glyph = CoreLabel(text=str(den), font_size=50, font_name='./fonts/PatuaOne-Regular')
@@ -201,10 +173,39 @@ class TabWidget(Widget):
         self.glyphs.add(num_instr)
         self.glyphs.add(den_instr)
 
-    def add_beat(self, gp_beat, xpos):
-        self.add_note_duration_glyph(gp_beat.duration, xpos)
+    def add_fretnums(self, gp_measure: guitarpro.models.Measure, start_idx: int):
+        gp_beats, xmids = [], []
+        for gp_voice in gp_measure.voices[:-1]:
+            xpos = self.measure_start
+            for beat_idx, gp_beat in enumerate(gp_voice.beats[start_idx:]):
+                note_dur = 1 / gp_beat.duration.value
+                tuplet_mult = gp_beat.duration.tuplet.times / gp_beat.duration.tuplet.enters
+                beat_width = note_dur * tuplet_mult * self.tab_width
+                if gp_beat.duration.isDotted:
+                    beat_width *= 3/2
+                elif gp_beat.duration.isDoubleDotted:
+                    beat_width *= 7/4
+                beat_mid, beat_dur = self.add_beat(gp_beat, xpos)
+                xmids += [beat_mid]
+                gp_beats += [gp_beat]
+                xpos += beat_width
+                if xpos >= self.tab_width + self.measure_start:
+                    break
+        # if gp_measure.header.number == 21 or gp_measure.header.number == 22:
+        #     print(gp_beats)
+        self.next_beat_idx = beat_idx + 1  # move to init?
+        self.measure_end = xpos            # move to init?
+        return gp_beats, xmids
+
+    def add_beat(self, gp_beat: guitarpro.models.Beat, xpos: float):
+        # self.add_note_duration_glyph(xpos, gp_beat.duration)
+        # If notes list is empty, rest for gp_beat.duration.value.
+        if not gp_beat.notes:
+            return xpos, -1
         for gp_note in gp_beat.notes:
             fret_text = str(gp_note.value)
+            if hasattr(gp_note, 'type') and gp_note.type.name == 'dead':
+                fret_text = 'X'
             if gp_note.effect.isHarmonic:
                 fret_text = '<' + fret_text + '>'
             fret_num_glyph = CoreLabel(text=fret_text, font_size=14, font_name='./fonts/Arial')
@@ -216,98 +217,245 @@ class TabWidget(Widget):
             self.backgrounds.add(background)
             self.glyphs.add(fret_num_instr)
 
-    def add_note_duration_glyph(self, duration, xpos):
-        normal = {
-            1: self.add_whole_note, 2: self.add_half_note, 4: self.add_quarter_note,
-            8: self.add_eight_note, 16: self.add_sixteenth_note
-        }
-        tuplet = {
-            8: self.add_eighth_note_tuplet, 16: self.add_sixteenth_note_tuplet
-        }
-        if duration.tuplet.times == 1:
-            func = normal[duration.value]
-            func(xpos)
-        elif self.tuplet_count == 0:
-            func = tuplet[duration.value]
-            func(xpos, duration)
-            self.tuplet_count = 1
+        xmid = xpos + (fret_num_glyph.texture.width / 2)
+        if gp_beat.duration.tuplet.enters == 1:
+            dur = gp_beat.duration.value
         else:
-            self.tuplet_count += 1
-            if self.tuplet_count == duration.tuplet.enters:
-                self.tuplet_count = 0
+            dur = -1
+        return xmid, dur
 
-    def add_sixteenth_note(self, xpos):
-        pass
+    # def add_note_duration_glyph(self, xpos: float, duration: guitarpro.models.Duration):
+    #     normal = {
+    #         1: self.add_whole_note, 2: self.add_half_note, 4: self.add_quarter_note,
+    #         8: self.add_eight_note, 16: self.add_sixteenth_note
+    #     }
+    #     tuplet = {8: self.add_eighth_note_tuplet,
+    #               16: self.add_sixteenth_note_tuplet}
+    #     if duration.tuplet.times == 1:
+    #         func = normal[duration.value]
+    #         func(xpos)
+    #     elif self.tuplet_count == 0:
+    #         func = tuplet[duration.value]
+    #         func(xpos, duration)
+    #         self.tuplet_count = 1
+    #     else:
+    #         self.tuplet_count += 1
+    #         if self.tuplet_count == duration.tuplet.enters:
+    #             self.tuplet_count = 0
 
-    def add_eight_note(self, xpos):
-        pass
+    # def add_sixteenth_note(self, xpos: float):
+    #     pass
+    #
+    # def add_eight_note(self, xpos: float):
+    #     pass
+    #
+    # def add_quarter_note(self, xpos: float):
+    #     glyph = Line(points=(xpos + 4, self.y + self.step_y * 1.5,
+    #                          xpos + 4,self.y + self.step_y * 2.5))
+    #     self.glyphs.add(glyph)
+    #
+    # def add_half_note(self, xpos: float):
+    #     pass
+    #
+    # def add_whole_note(self, xpos: float):
+    #     pass
+    #
+    # def add_eighth_note_tuplet(self, xpos: float, duration: guitarpro.models.Duration):
+    #     step = (1 / duration.value) * (
+    #                 duration.tuplet.times / duration.tuplet.enters) * self.tab_width
+    #     xmin, xmax = float('inf'), float('-inf')
+    #     # Vertical bars.
+    #     for i in range(duration.tuplet.enters):
+    #         glyph_x = xpos + i * step
+    #         xmin, xmax = min(xmin, glyph_x), max(xmax, glyph_x)
+    #         glyph = Line(points=(glyph_x, self.y + self.step_y * 1.5,
+    #                              glyph_x, self.y + self.step_y * 2.5))
+    #         self.glyphs.add(glyph)
+    #     # Horizontal bars.
+    #     lowbar = Line(points=(xmin, self.y + self.step_y * 1.5,
+    #                           xmax, self.y + self.step_y * 1.5),
+    #                   width=1.05)
+    #     self.glyphs.add(lowbar)
+    #     # Tuplet text.
+    #     xmid = (xmin + xmax) / 2
+    #     text_glyph = CoreLabel(text=str(duration.tuplet.enters),
+    #                            font_size=14,
+    #                            font_name='./fonts/Arial')
+    #     text_glyph.refresh()
+    #     text_instr = Rectangle(
+    #         pos=(xmid - text_glyph.texture.width / 2, self.y + self.step_y * 0.5),
+    #         size=text_glyph.texture.size)
+    #     text_instr.texture = text_glyph.texture
+    #     self.glyphs.add(text_instr)
+    #
+    # def add_sixteenth_note_tuplet(self, xpos: float, duration: guitarpro.models.Duration):
+    #     step = (1 / duration.value) * (
+    #                 duration.tuplet.times / duration.tuplet.enters) * self.tab_width
+    #     xmin, xmax = float('inf'), float('-inf')
+    #     # Vertical bars.
+    #     for i in range(duration.tuplet.enters):
+    #         glyph_x = xpos + i * step
+    #         xmin, xmax = min(xmin, glyph_x), max(xmax, glyph_x)
+    #         glyph = Line(points=(glyph_x, self.y + self.step_y * 1.5,
+    #                              glyph_x, self.y + self.step_y * 2.5))
+    #         self.glyphs.add(glyph)
+    #     # Horizontal bars.
+    #     lowbar = Line(points=(xmin, self.y + self.step_y * 1.5, xmax, self.y + self.step_y * 1.5),
+    #                   width=1.05)
+    #     highbar = Line(
+    #         points=(xmin, self.y + self.step_y * 1.75, xmax, self.y + self.step_y * 1.75),
+    #         width=1.05)
+    #     self.glyphs.add(lowbar)
+    #     self.glyphs.add(highbar)
+    #     # Tuplet text.
+    #     xmid = (xmin + xmax) / 2
+    #     text_glyph = CoreLabel(text=str(duration.tuplet.enters), font_size=14,
+    #                            font_name='./fonts/Arial')
+    #     text_glyph.refresh()
+    #     text_instr = Rectangle(
+    #         pos=(xmid - text_glyph.texture.width / 2, self.y + self.step_y * 0.5),
+    #         size=text_glyph.texture.size)
+    #     text_instr.texture = text_glyph.texture
+    #     self.glyphs.add(text_instr)
 
-    def add_quarter_note(self, xpos):
-        glyph = Line(
-            points=(xpos + 4, self.y + self.step_y * 1.5, xpos + 4, self.y + self.step_y * 2.5))
-        self.glyphs.add(glyph)
+    def gp_beat_groupby(self, gp_beats: List[guitarpro.models.Beat]):
+        beat_groups, cur_group = [], []
+        prev_dur = None
+        i = 0
+        # print("start groupby")
+        # if len(gp_beats) == 1 and gp_beats[0].voice.measure.header.number == 21 or gp_beats[0].voice.measure.header.number == 22:
+        #     print(gp_beats)
+        while i < len(gp_beats):
+            gp_beat = gp_beats[i]
+            # Add rests by themselves.
+            if not gp_beat.notes:
+                if cur_group:
+                    beat_groups.append(cur_group[:])
+                    cur_group = []
+                beat_groups.append([gp_beat])
+                prev_dur = None
+                i += 1
+            # Add notes within a tuplet together.
+            elif gp_beat.duration.tuplet.enters != 1:
+                if cur_group:
+                    beat_groups.append(cur_group[:])
+                    cur_group = []
+                tuplet_num = gp_beat.duration.tuplet.enters
+                beat_groups.append(gp_beats[i:i+tuplet_num])
+                prev_dur = None
+                i += tuplet_num
+            # Group this single note with a previously existing group.
+            elif gp_beat.duration.value == prev_dur:
+                cur_group += [gp_beat]
+                i += 1
+            # End the previous group and start a new one.
+            else:
+                if cur_group:
+                    beat_groups += [cur_group[:]]
+                    cur_group = []
+                cur_group = [gp_beat]
+                prev_dur = gp_beat.duration.value
+                i += 1
+        if cur_group:
+            beat_groups += [cur_group[:]]
+        # print(gp_beats)
+        # print(*beat_groups, sep="\n")
+        # print("end groupby")
+        # if len(gp_beats) == 1 and gp_beats[0].voice.measure.header.number == 21 or gp_beats[0].voice.measure.header.number == 22:
+        #     print(beat_groups)
+        return beat_groups
 
-    def add_half_note(self, xpos):
-        pass
+    def add_note_glyphs(self, gp_beat_groups: List[guitarpro.models.Beat], xmids: List[float]):
+        bg = x = 0
+        # if len(gp_beat_groups) == 1 and isinstance(gp_beat_groups[0], guitarpro.models.Beat):
+        #     print(gp_beat_groups[0].voice.measure.header.number)
+        # print(*gp_beat_groups, sep='\n')
+        # print()
+        while bg < len(gp_beat_groups):
+            group = gp_beat_groups[bg]
+            gp_beat = group[0]
+            # Rest or single note.
+            if len(group) == 1:
+                if gp_beat.notes:
+                    self.draw_stem(gp_beat, xmids[x])
+                x += 1
+            # Tuplet.
+            elif gp_beat.duration.tuplet.enters != 1:
+                num_tuplet = gp_beat.duration.tuplet.enters
+                tuplet_mids = xmids[x:x+num_tuplet]
+                self.draw_tuplet(gp_beat, tuplet_mids)
+                x += num_tuplet
+            # Beamed note.
+            elif len(group) % 2 == 0:
+                num_notes = len(group)
+                self.draw_beamed_notes(gp_beat, xmids[x:x+num_notes])
+                x += num_notes
+            # Mix of beamed note and single note.
+            else:
+                num_notes = len(group) // 2
+                self.draw_beamed_notes(gp_beat, xmids[x:x+num_notes])
+                x += num_notes
+                self.draw_stem(gp_beat, xmids[x])
+                x += 1
+            bg += 1
 
-    def add_whole_note(self, xpos):
-        pass
+    def draw_stem(self, gp_beat: guitarpro.models.Beat, xpos: float):
+        lower = (xpos, self.y + self.step_y * 1.5)
+        if gp_beat.duration.value == 1:
+            return
+        if gp_beat.duration.value == 2:
+            upper = (xpos, self.y + self.step_y * 2)
+        else:
+            upper = (xpos, self.y + self.step_y * 2.5)
+        stem = Line(points=(*lower, *upper), width=1, cap='none')
+        self.canvas.add(stem)
 
-    def add_eighth_note_tuplet(self, xpos, duration):
-        step = (1 / duration.value) * (
-                    duration.tuplet.times / duration.tuplet.enters) * self.tab_width
-        xmin, xmax = float('inf'), float('-inf')
-        # Vertical bars.
-        for i in range(duration.tuplet.enters):
-            glyph_x = xpos + i * step
-            xmin, xmax = min(xmin, glyph_x), max(xmax, glyph_x)
-            glyph = Line(points=(glyph_x, self.y + self.step_y * 1.5,
-                                 glyph_x, self.y + self.step_y * 2.5))
-            self.glyphs.add(glyph)
-        # Horizontal bars.
-        lowbar = Line(points=(xmin, self.y + self.step_y * 1.5, xmax, self.y + self.step_y * 1.5),
-                      width=1.05)
-        self.glyphs.add(lowbar)
-        # Tuplet text.
+    def draw_tuplet(self, gp_beat: guitarpro.models.Beat, xmids: List[float]):
+        xmin, xmax = xmids[0], xmids[-1]
+        for xpos in xmids:
+            self.draw_stem(gp_beat, xpos)
+        if gp_beat.duration.value == 8:
+            self.draw_eightnote_beam(xmin, xmax)
+        if gp_beat.duration.value == 16:
+            self.draw_eightnote_beam(xmin, xmax)
+            self.draw_sixteenthnote_beam(xmin, xmax)
+
         xmid = (xmin + xmax) / 2
-        text_glyph = CoreLabel(text=str(duration.tuplet.enters), font_size=14,
+        text_glyph = CoreLabel(text=str(gp_beat.duration.tuplet.enters),
+                               font_size=14,
                                font_name='./fonts/Arial')
         text_glyph.refresh()
-        text_instr = Rectangle(
-            pos=(xmid - text_glyph.texture.width / 2, self.y + self.step_y * 0.5),
-            size=text_glyph.texture.size)
+        text_instr = Rectangle(pos=(xmid - text_glyph.texture.width / 2, self.y + self.step_y * 0.5),
+                               size=text_glyph.texture.size)
         text_instr.texture = text_glyph.texture
-        self.glyphs.add(text_instr)
+        self.note_glyphs.add(text_instr)
 
-    def add_sixteenth_note_tuplet(self, xpos, duration):
-        step = (1 / duration.value) * (
-                    duration.tuplet.times / duration.tuplet.enters) * self.tab_width
-        xmin, xmax = float('inf'), float('-inf')
-        # Vertical bars.
-        for i in range(duration.tuplet.enters):
-            glyph_x = xpos + i * step
-            xmin, xmax = min(xmin, glyph_x), max(xmax, glyph_x)
-            glyph = Line(points=(glyph_x, self.y + self.step_y * 1.5,
-                                 glyph_x, self.y + self.step_y * 2.5))
-            self.glyphs.add(glyph)
-        # Horizontal bars.
-        lowbar = Line(points=(xmin, self.y + self.step_y * 1.5, xmax, self.y + self.step_y * 1.5),
-                      width=1.05)
-        highbar = Line(
-            points=(xmin, self.y + self.step_y * 1.75, xmax, self.y + self.step_y * 1.75),
-            width=1.05)
-        self.glyphs.add(lowbar)
-        self.glyphs.add(highbar)
-        # Tuplet text.
-        xmid = (xmin + xmax) / 2
-        text_glyph = CoreLabel(text=str(duration.tuplet.enters), font_size=14,
-                               font_name='./fonts/Arial')
-        text_glyph.refresh()
-        text_instr = Rectangle(
-            pos=(xmid - text_glyph.texture.width / 2, self.y + self.step_y * 0.5),
-            size=text_glyph.texture.size)
-        text_instr.texture = text_glyph.texture
-        self.glyphs.add(text_instr)
+    def draw_beamed_notes(self, gp_beat: guitarpro.models.Beat, xmids: List[float]):
+        xmin, xmax = xmids[0], xmids[-1]
+        for xpos in xmids:
+            self.draw_stem(gp_beat, xpos)
+        if gp_beat.duration.value == 8:
+            self.draw_eightnote_beam(xmin, xmax)
+        if gp_beat.duration.value == 16:
+            self.draw_eightnote_beam(xmin, xmax)
+            self.draw_sixteenthnote_beam(xmin, xmax)
+
+    def draw_eightnote_beam(self, xmin: float, xmax: float):
+        lowbeam = Line(points=(xmin, self.y + self.step_y * 1.5,
+                               xmax, self.y + self.step_y * 1.5),
+                       width=1.4,
+                       cap='none')
+        self.note_glyphs.add(lowbeam)
+
+    def draw_sixteenthnote_beam(self, xmin: float, xmax: float):
+        highbeam = Line(points=(xmin, self.y + self.step_y * 1.75,
+                                xmax, self.y + self.step_y * 1.75),
+                        width=1.1,
+                        cap='none')
+        self.note_glyphs.add(highbeam)
+
+
+
 
 
 class SongBuilderApp(App):
