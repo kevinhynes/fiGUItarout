@@ -201,7 +201,9 @@ class TabWidget(Widget):
             return xpos, -1
         for gp_note in gp_beat.notes:
             fret_text = str(gp_note.value)
-            if hasattr(gp_note, 'type') and gp_note.type.name == 'dead':
+            if gp_note.type.name == 'tie':
+                fret_text = '  '
+            if gp_note.type.name == 'dead':
                 fret_text = 'X'
             if gp_note.effect.isHarmonic:
                 fret_text = '<' + fret_text + '>'
