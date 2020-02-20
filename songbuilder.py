@@ -105,24 +105,25 @@ class TabViewer(ScrollView):
         return height
 
     def build_track(self, flat_track):
-        for gp_measure in flat_track:
-            self.add_measure(gp_measure)
+        total_measures = len(flat_track)
+        for i, gp_measure in enumerate(flat_track):
+            self.add_measure(gp_measure, i, total_measures)
         self.add_widget(self.floatlayout)
 
-    def add_measure(self, gp_measure):
+    def add_measure(self, gp_measure, idx, total_measures):
         # In order to keep scrolling bar moving at same speed for all measures at the same tempo,
         # some measures (7/4, 9/8...) will need an extra line.
         timesig_ratio = gp_measure.timeSignature.numerator / gp_measure.timeSignature.denominator.value
         spacing = 10
 
-        tab_widget = TabWidget(pos=(0, self.child_y))
+        tab_widget = TabWidget(idx, total_measures, pos=(0, self.child_y))
         tab_widget.build_measure(gp_measure, 0)
         next_beat_idx = tab_widget.get_next_beat_idx()
         self.floatlayout.add_widget(tab_widget)
         self.child_y -= tab_widget.height + spacing
 
         if timesig_ratio > 1:
-            tab_widget = TabWidget(pos=(0, self.child_y))
+            tab_widget = TabWidget(idx, total_measures, pos=(0, self.child_y))
             tab_widget.build_measure(gp_measure, next_beat_idx)
             self.floatlayout.add_widget(tab_widget)
             self.child_y -= tab_widget.height + spacing
@@ -131,9 +132,11 @@ class TabViewer(ScrollView):
 class TabWidget(Widget):
     measure_end = NumericProperty(0)
 
-    def __init__(self, **kwargs):
+    def __init__(self, idx=0, total_measures=0, **kwargs):
+        print(idx)
+        self.idx = idx
+        self.total_measures = total_measures
         self.step_y = 20
-        # self.step_x = 8
         self.measure_start = 64
         self.tab_width = 1024
         super().__init__(**kwargs)
@@ -153,10 +156,32 @@ class TabWidget(Widget):
         return self.next_beat_idx
 
     def build_measure(self, gp_measure: guitarpro.models.Measure, start_idx: int):
+        self.add_measure_number(gp_measure)
+        self.add_measure_count()
         self.add_timesig(gp_measure)
         gp_beats, xmids = self.add_fretnums(gp_measure, start_idx)
         gp_beat_groups = self.gp_beat_groupby(gp_beats)
         self.add_note_glyphs(gp_beat_groups, xmids)
+
+    def add_measure_number(self, gp_measure: guitarpro.models.Measure):
+        num = gp_measure.header.number
+        num_glyph = CoreLabel(text=str(num), font_size=14,font_name='./fonts/Arial')
+        num_glyph.refresh()
+        num_x = self.measure_start - num_glyph.width
+        num_y = self.y + self.step_y * 8
+        num_instr = Rectangle(pos=(num_x, num_y), size=num_glyph.texture.size)
+        num_instr.texture = num_glyph.texture
+        self.glyphs.add(num_instr)
+
+    def add_measure_count(self):
+        measure_count = str(self.idx) + ' / ' + str(self.total_measures)
+        count_glyph = CoreLabel(text=measure_count, font_size=14, font_name='./fonts/Arial')
+        count_glyph.refresh()
+        count_x = self.measure_start + self.tab_width - (count_glyph.width + 5)
+        count_y = self.y
+        count_instr = Rectangle(pos=(count_x, count_y), size=count_glyph.size)
+        count_instr.texture = count_glyph.texture
+        self.glyphs.add(count_instr)
 
     def add_timesig(self, gp_measure: guitarpro.models.Measure):
         num, den = gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value
@@ -202,6 +227,7 @@ class TabWidget(Widget):
         for gp_note in gp_beat.notes:
             fret_text = str(gp_note.value)
             if gp_note.type.name == 'tie':
+                print(gp_note.beat.voice.measure.header.number, gp_note.string, gp_note.value)
                 fret_text = '  '
             if gp_note.type.name == 'dead':
                 fret_text = 'X'
@@ -254,7 +280,6 @@ class TabWidget(Widget):
             else:
                 if cur_group:
                     beat_groups += [cur_group[:]]
-                    cur_group = []
                 cur_group = [gp_beat]
                 prev_dur = gp_beat.duration.value
                 i += 1
@@ -301,7 +326,7 @@ class TabWidget(Widget):
         else:
             upper = (xpos, self.y + self.step_y * 2.5)
         stem = Line(points=(*lower, *upper), width=1, cap='none')
-        self.canvas.add(stem)
+        self.note_glyphs.add(stem)
 
     def draw_tuplet(self, gp_beat: guitarpro.models.Beat, xmids: List[float]):
         xmin, xmax = xmids[0], xmids[-1]
@@ -346,8 +371,6 @@ class TabWidget(Widget):
                         width=1.1,
                         cap='none')
         self.note_glyphs.add(highbeam)
-
-
 
 
 
