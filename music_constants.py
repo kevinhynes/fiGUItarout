@@ -4,6 +4,8 @@ scale_degrees = ["1", "♭2", "2", "♭3", "3", "4", "♯4/♭5", "5", "♯5/♭
 flat = u'\u266D'
 sharp = u'\u266F'
 
+rest = u'\u1D13x'
+
 standard_tuning = (28, 33, 38, 43, 47, 52)
 
 chord_names_to_nums = {
