@@ -6,7 +6,7 @@ from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty, ObjectProperty
 from kivy.uix.label import Label
 from kivy.core.text import Label as CoreLabel
-from kivy.graphics import Color, Line, Rectangle, InstructionGroup
+from kivy.graphics import Color, Line, Rectangle, Ellipse, InstructionGroup
 from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.metrics import dp
@@ -192,19 +192,18 @@ class TabWidget(Widget):
         return 0
 
     def build_measure(self, gp_measure: guitarpro.models.Measure, start_idx: int, start_x: float):
-        self.add_measure_number(gp_measure)
-        self.add_measure_count()
+        self.draw_measure_number(gp_measure)
+        self.draw_measure_count()
         if self.x == 0:
-            self.add_timesig(gp_measure)
-        gp_beats, xmids = self.add_fretnums(gp_measure, start_idx, start_x)
+            self.draw_timesig(gp_measure)
+        gp_beats, xmids = self.add_staff_glyphs(gp_measure, start_idx, start_x)
+        self.draw_note_effects(gp_beats, xmids)
         gp_beat_groups = self.gp_beat_groupby(gp_beats)
-        print('\n', self.idx)
         for group in gp_beat_groups:
             beat_durs = [gp_beat.duration.value for gp_beat in group]
-            print(beat_durs)
         self.add_note_glyphs(gp_beat_groups, xmids)
 
-    def add_measure_number(self, gp_measure: guitarpro.models.Measure):
+    def draw_measure_number(self, gp_measure: guitarpro.models.Measure):
         num = gp_measure.header.number
         num_glyph = CoreLabel(text=str(num), font_size=14, font_name='./fonts/Arial')
         num_glyph.refresh()
@@ -214,7 +213,7 @@ class TabWidget(Widget):
         num_instr.texture = num_glyph.texture
         self.glyphs.add(num_instr)
 
-    def add_measure_count(self):
+    def draw_measure_count(self):
         # TODO: Once copy/delete buttons are added, update measure counts.
         measure_count = str(self.idx) + ' / ' + str(self.total_measures)
         count_glyph = CoreLabel(text=measure_count, font_size=14, font_name='./fonts/Arial')
@@ -225,7 +224,7 @@ class TabWidget(Widget):
         count_instr.texture = count_glyph.texture
         self.glyphs.add(count_instr)
 
-    def add_timesig(self, gp_measure: guitarpro.models.Measure):
+    def draw_timesig(self, gp_measure: guitarpro.models.Measure):
         num, den = gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value
         num_glyph = CoreLabel(text=str(num), font_size=50, font_name='./fonts/PatuaOne-Regular')
         den_glyph = CoreLabel(text=str(den), font_size=50, font_name='./fonts/PatuaOne-Regular')
@@ -240,7 +239,8 @@ class TabWidget(Widget):
         self.glyphs.add(num_instr)
         self.glyphs.add(den_instr)
 
-    def add_fretnums(self, gp_measure: guitarpro.models.Measure, start_idx: int, start_x: float):
+    def add_staff_glyphs(self, gp_measure: guitarpro.models.Measure, start_idx: int, start_x: float):
+        # TabWidget may not take up entire measure. Keep track of gp_beats for this TabWidget.
         gp_beats, xmids = [], []
         for gp_voice in gp_measure.voices[:-1]:
             xpos = self.x + self.measure_start + start_x
@@ -252,59 +252,52 @@ class TabWidget(Widget):
                     beat_width *= 3 / 2
                 elif gp_beat.duration.isDoubleDotted:
                     beat_width *= 7 / 4
-                beat_mid, beat_dur = self.add_beat(gp_beat, xpos)
+                beat_mid = self.add_beat_glyph(gp_beat, xpos)
                 xmids += [beat_mid]
                 gp_beats += [gp_beat]
                 xpos += beat_width
                 if xpos >= self.x + self.tab_width + self.measure_start:
                     break
+
+                if any(gp_note.type.name == "tie" for gp_note in gp_beat.notes):
+                    print(f'{gp_beat.voice.measure.header.number}  {int(0 < self.x)}\n')
+                    tied_notes = [gp_note for gp_note in gp_beat.notes if gp_note.type.name == "tie"]
+                    for gp_note in tied_notes:
+                        print(f'\ti: {beat_idx},  string: {gp_note.string}, fret: {gp_note.value}')
+
         self.next_beat_idx = beat_idx + 1  # move to init?
         self.measure_end = xpos  # move to init?
         return gp_beats, xmids
 
-    def add_beat(self, gp_beat: guitarpro.models.Beat, xpos: float):
+    def add_beat_glyph(self, gp_beat: guitarpro.models.Beat, xpos: float):
         # If notes list is empty, rest for gp_beat.duration.value.
         if not gp_beat.notes:
-            self.add_rest(gp_beat, xpos)
+            self.draw_rest(gp_beat, xpos)
             return xpos, -1
         for gp_note in gp_beat.notes:
-            fret_text = str(gp_note.value)
-            if gp_note.type.name == 'tie':
-                fret_text = '  '
-            if gp_note.type.name == 'dead':
-                fret_text = 'X'
-            if gp_note.effect.isHarmonic:
-                fret_text = '<' + fret_text + '>'
-            fret_num_glyph = CoreLabel(text=fret_text, font_size=14, font_name='./fonts/Arial')
-            fret_num_glyph.refresh()
-            ypos = self.y + self.step_y * (8 - (gp_note.string - 1)) - fret_num_glyph.height / 2
-            background = Rectangle(pos=(xpos, ypos), size=fret_num_glyph.texture.size)
-            fret_num_instr = Rectangle(pos=(xpos, ypos), size=fret_num_glyph.texture.size)
-            fret_num_instr.texture = fret_num_glyph.texture
-            self.backgrounds.add(background)
-            self.glyphs.add(fret_num_instr)
+            xmid = self.draw_fretnum(gp_note, xpos)
+        return xmid
+
+    def draw_fretnum(self, gp_note: guitarpro.models.Note, xpos: float):
+        fret_text = str(gp_note.value)
+        if gp_note.type.name == 'tie':
+            fret_text = '  '
+        if gp_note.type.name == 'dead':
+            fret_text = 'X'
+        if gp_note.effect.isHarmonic:
+            fret_text = '<' + fret_text + '>'
+        fret_num_glyph = CoreLabel(text=fret_text, font_size=14, font_name='./fonts/Arial')
+        fret_num_glyph.refresh()
+        ypos = self.y + self.step_y * (8 - (gp_note.string - 1)) - fret_num_glyph.height / 2
+        background = Rectangle(pos=(xpos, ypos), size=fret_num_glyph.texture.size)
+        fret_num_instr = Rectangle(pos=(xpos, ypos), size=fret_num_glyph.texture.size)
+        fret_num_instr.texture = fret_num_glyph.texture
+        self.backgrounds.add(background)
+        self.glyphs.add(fret_num_instr)
 
         xmid = xpos + (fret_num_glyph.texture.width / 2)
-        if gp_beat.duration.tuplet.enters == 1:
-            dur = gp_beat.duration.value
-        else:
-            dur = -1
-        return xmid, dur
+        return xmid
 
-    def add_rest(self, gp_beat: guitarpro.models.Beat, xpos: float):
-        # The only font I can find for rests doesn't follow the unicode standard.
-        step_y = self.step_y
-        unicode_rests = {1: u'\u1D13B', 2: u'\u1D13C', 4: u'\u1D13D', 8: u'\u1D13E', 16: u'\u1D13F'}
-        rests = {1: u'\uE102', 2: u'\uE103', 4: u'\uE107', 8: u'\uE109', 16: u'\uE110'}
-        rest_ys = {1: step_y * 4, 2: step_y * 3, 4: step_y * 2.5, 8: step_y * 3, 16: step_y * 3}
-        rest, rest_y = rests[gp_beat.duration.value], rest_ys[gp_beat.duration.value]
-        rest_glyph = CoreLabel(text=rest, font_size=32, font_name='./fonts/mscore-20')
-        rest_glyph.refresh()
-        rest_instr = Rectangle(pos=(xpos, self.y + rest_y), size=rest_glyph.texture.size)
-        rest_instr.texture = rest_glyph.texture
-        background = Rectangle(pos=(xpos, self.y + rest_y), size=rest_glyph.texture.size)
-        self.backgrounds.add(background)
-        self.glyphs.add(rest_instr)
 
     def gp_beat_groupby(self, gp_beats: List[guitarpro.models.Beat]):
         beat_groups, cur_group = [], []
@@ -374,9 +367,26 @@ class TabWidget(Widget):
                 x += num_notes
                 self.draw_stem(gp_beat, xmids[x])
                 self.draw_flags(gp_beat, xmids[x])
-
                 x += 1
             bg += 1
+
+    def draw_rest(self, gp_beat: guitarpro.models.Beat, xpos: float):
+        # The only font I can find for rests doesn't follow the unicode standard.
+        step_y = self.step_y
+        unicode_rests = {1: u'\u1D13B', 2: u'\u1D13C', 4: u'\u1D13D', 8: u'\u1D13E', 16: u'\u1D13F'}
+        rests = {1: u'\uE102', 2: u'\uE103', 4: u'\uE107', 8: u'\uE109', 16: u'\uE110'}
+        rest_ys = {1: step_y * 4, 2: step_y * 3, 4: step_y * 2.5, 8: step_y * 3, 16: step_y * 3}
+        rest, rest_y = rests[gp_beat.duration.value], rest_ys[gp_beat.duration.value]
+        rest_glyph = CoreLabel(text=rest, font_size=32, font_name='./fonts/mscore-20')
+        rest_glyph.refresh()
+        rest_instr = Rectangle(pos=(xpos, self.y + rest_y), size=rest_glyph.texture.size)
+        rest_instr.texture = rest_glyph.texture
+        background = Rectangle(pos=(xpos, self.y + rest_y), size=rest_glyph.texture.size)
+        self.backgrounds.add(background)
+        self.glyphs.add(rest_instr)
+        if gp_beat.duration.isDotted or gp_beat.duration.isDoubleDotted:
+            ypos = rest_y + rest_glyph.texture.height * 0.75
+            self.draw_dots(gp_beat, xpos, ypos)
 
     def draw_stem(self, gp_beat: guitarpro.models.Beat, xpos: float):
         lower = (xpos, self.y + self.step_y * 1.5)
@@ -387,6 +397,10 @@ class TabWidget(Widget):
         else:
             upper = (xpos, self.y + self.step_y * 2.5)
         stem = Line(points=(*lower, *upper), width=1, cap='square')
+        if gp_beat.duration.isDotted or gp_beat.duration.isDoubleDotted:
+            xpos, ypos = lower
+            ypos += 2
+            self.draw_dots(gp_beat, xpos, ypos)
         self.glyphs.add(stem)
 
     def draw_flags(self, gp_beat: guitarpro.models.Beat, xpos: float):
@@ -443,6 +457,29 @@ class TabWidget(Widget):
                         width=1.1,
                         cap='square')
         self.glyphs.add(highbeam)
+
+    def draw_dots(self, gp_beat: guitarpro.models.Beat, xpos: float, ypos: float):
+        xpos += 4
+        dot_size = (3, 3)
+        if gp_beat.duration.isDotted:
+            dot = Ellipse(pos=(xpos, ypos), size=dot_size)
+            self.glyphs.add(dot)
+        elif gp_beat.duration.isDoubleDotted:
+            dot1 = Ellipse(pos=(xpos, ypos), size=dot_size)
+            dot2 = Ellipse(pos=(xpos + 4, ypos), size=dot_size)
+            self.glyphs.add(dot1)
+            self.glyphs.add(dot2)
+
+    def draw_note_effects(self, gp_beats: List[guitarpro.models.Beat], xmids: List[float]):
+        prev_gp_note = None
+        for i, (gp_beat, xmid) in enumerate(zip(gp_beats, xmids)):
+            for gp_note in gp_beat.notes:
+                if gp_note.type.name == "tie":
+                    ypos = self.y + self.step_y
+                    if prev_gp_note is not None:
+                        points = (xmids[i-1], )
+                        # tie_line = Line(bezier)
+
 
 
 class SongBuilderApp(App):
