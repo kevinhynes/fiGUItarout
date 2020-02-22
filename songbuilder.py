@@ -103,7 +103,7 @@ class TabViewer(ScrollView):
             height += tab_widget.height + spacing
             if gp_measure.timeSignature.numerator / gp_measure.timeSignature.denominator.value > 1:
                 height += tab_widget.height + spacing
-        return height
+        return (height + tab_widget.height)/ 2
 
     def build_track(self, flat_track):
         total_measures = len(flat_track)
@@ -120,7 +120,11 @@ class TabViewer(ScrollView):
         spacing = 10
 
         tab_widget = TabWidget(idx, total_measures)
-        if self.child_parity == 0 or self.prev_timesig != timesig:
+        if self.child_parity == 0:
+            tab_widget.pos = (0, self.child_y)
+            self.child_parity = 1
+        elif self.prev_timesig != timesig:
+            self.child_y -= tab_widget.height + spacing
             tab_widget.pos = (0, self.child_y)
             self.child_parity = 1
         else:
@@ -128,12 +132,12 @@ class TabViewer(ScrollView):
             tab_widget.measure_start = 0
             self.child_y -= tab_widget.height + spacing
             self.child_parity = 0
-            self.child_y -= tab_widget.height + spacing
 
         tab_widget.build_measure(gp_measure, 0, 0)
         next_beat_idx = tab_widget.get_next_beat_idx()
         start_x = tab_widget.get_next_staff_line_x()
         self.floatlayout.add_widget(tab_widget)
+        self.prev_timesig = timesig
 
         if timesig_ratio > 1:
             tab_widget = TabWidget(idx, total_measures)
@@ -143,16 +147,16 @@ class TabViewer(ScrollView):
             elif self.prev_timesig != timesig:
                 self.child_y -= tab_widget.height + spacing
                 tab_widget.pos = (0, self.child_y)
+                self.child_parity = 1
             else:
-                self.tab_widget.pos = (self.measure_start + self.tab_width, self.child_y)
+                tab_widget.pos = (tab_widget.measure_start + tab_widget.tab_width, self.child_y)
+                tab_widget.measure_start = 0
                 self.child_y -= tab_widget.height + spacing
                 self.child_parity = 0
-                self.child_y -= tab_widget.height + spacing
 
             tab_widget.build_measure(gp_measure, next_beat_idx, start_x)
             self.floatlayout.add_widget(tab_widget)
-
-        self.prev_timesig = timesig
+            self.prev_timesig = timesig
 
 
 class TabWidget(Widget):
