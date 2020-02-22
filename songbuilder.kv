@@ -20,38 +20,38 @@
         # Measure start line.
         Line:
             points:
-                (self.measure_start, self.y + self.step_y * 8,
-                self.measure_start, self.y + self.step_y * 3)
+                (self.x+ self.measure_start, self.y + self.step_y * 8,
+                self.x + self.measure_start, self.y + self.step_y * 3)
         # Staff lines.
         Line:
             points:
                 (self.x, self.y + self.step_y * 3,
-                self.measure_start + self.tab_width, self.y + self.step_y * 3)
+                self.x + self.measure_start + self.tab_width, self.y + self.step_y * 3)
         Line:
             points:
                 (self.x, self.y + self.step_y* 4,
-                self.measure_start + self.tab_width, self.y + self.step_y * 4)
+                self.x + self.measure_start + self.tab_width, self.y + self.step_y * 4)
         Line:
             points:
                 (self.x, self.y + self.step_y * 5,
-                self.measure_start + self.tab_width, self.y + self.step_y * 5)
+                self.x + self.measure_start + self.tab_width, self.y + self.step_y * 5)
         Line:
             points:
                 (self.x, self.y + self.step_y * 6,
-                self.measure_start + self.tab_width, self.y + self.step_y * 6)
+                self.x + self.measure_start + self.tab_width, self.y + self.step_y * 6)
         Line:
             points:
                 (self.x, self.y + self.step_y * 7,
-                self.measure_start + self.tab_width, self.y + self.step_y * 7)
+                self.x + self.measure_start + self.tab_width, self.y + self.step_y * 7)
         Line:
             points:
                 (self.x, self.y + self.step_y * 8,
-                self.measure_start + self.tab_width, self.y + self.step_y * 8)
+                self.x + self.measure_start + self.tab_width, self.y + self.step_y * 8)
         # Measure end line.
         Line:
             points:
-                (self.measure_end, self.y + self.step_y * 8,
-                self.measure_end, self.y + self.step_y * 3)
+                (self.x + self.measure_end, self.y + self.step_y * 8,
+                self.x + self.measure_end, self.y + self.step_y * 3)
 
 FloatLayout:
     TabViewer:
