@@ -6,7 +6,7 @@ from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty, ObjectProperty
 from kivy.uix.label import Label
 from kivy.core.text import Label as CoreLabel
-from kivy.graphics import Color, Line, Rectangle, Ellipse, InstructionGroup
+from kivy.graphics import Color, Line, Rectangle, Ellipse, InstructionGroup, Bezier
 from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.metrics import dp
@@ -471,14 +471,18 @@ class TabWidget(Widget):
             self.glyphs.add(dot2)
 
     def draw_note_effects(self, gp_beats: List[guitarpro.models.Beat], xmids: List[float]):
-        prev_gp_note = None
         for i, (gp_beat, xmid) in enumerate(zip(gp_beats, xmids)):
             for gp_note in gp_beat.notes:
                 if gp_note.type.name == "tie":
-                    ypos = self.y + self.step_y
-                    if prev_gp_note is not None:
-                        points = (xmids[i-1], )
-                        # tie_line = Line(bezier)
+                    string_y = self.y + self.step_y * (8 - (gp_note.string - 1))
+                    step_y = self.step_y
+                    if i != 0:
+                        line_mid = (xmids[i-1] + xmid) / 2
+                        points = (xmids[i-1], string_y - step_y / 3,
+                                  line_mid, string_y - step_y,
+                                  xmid, string_y - step_y / 3)
+                        tie_line = Bezier(points=points)
+                        self.glyphs.add(tie_line)
 
 
 
