@@ -21,12 +21,12 @@ class TabViewer(ScrollView):
     file = ObjectProperty(None)
 
     def __init__(self, **kwargs):
-        self.child_parity = 0
+        # self.child_parity = 0
         self.prev_timesig = None
-        self.prev_tab_widget = None
+        # self.prev_tab_widget = None
         self.prev_tabwidget = None
         super().__init__(**kwargs)
-        self.gp_song = guitarpro.parse('./tgr-nm-01.gp5')
+        self.gp_song = guitarpro.parse('./tgr-nm-05.gp5')
         self.flat_song = self.flatten_song()
         floatlayout_height = self.calc_floatlayout_height()
         self.floatlayout = FloatLayout(size_hint_y=None, height=floatlayout_height)
@@ -79,12 +79,20 @@ class TabViewer(ScrollView):
                 repeat_group += [gp_measure]
                 # Close the repeat group.
                 if gp_measure.repeatClose > 0:
+                    # print(f'{gp_measure.header.number}  {gp_measure.repeatClose}')
                     repeat_group *= gp_measure.repeatClose
                     flat_track += repeat_group
                     repeat_group = []
             # Start a new repeat group.
             elif gp_measure.isRepeatOpen:
                 repeat_group = [gp_measure]
+                # Single measures may be repeated by themselves.
+                if gp_measure.repeatClose > 0:
+                    print(f'{gp_measure.header.number}  {gp_measure.repeatClose}')
+
+                    repeat_group *= gp_measure.repeatClose
+                    flat_track += repeat_group
+                    repeat_group = []
             # Add normal measure.
             else:
                 flat_track += [gp_measure]
@@ -114,8 +122,6 @@ class TabViewer(ScrollView):
         self.add_widget(self.floatlayout)
 
     def add_measure(self, gp_measure, idx, total_measures):
-        if idx == 72:
-            return
         timesig = (gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value)
         prev_tabwidget = self.prev_tabwidget
         prev_timesig = self.prev_timesig
