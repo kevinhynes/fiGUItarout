@@ -110,65 +110,10 @@ class TabViewer(ScrollView):
     def build_track(self, flat_track):
         total_measures = len(flat_track)
         for i, gp_measure in enumerate(flat_track, 1):
-            self.add_measure2(gp_measure, i, total_measures)
+            self.add_measure(gp_measure, i, total_measures)
         self.add_widget(self.floatlayout)
 
-    # def add_measure(self, gp_measure, idx, total_measures):
-    #     # Place two TabWidgets of the same time signature side by side.
-    #     # In order to keep scrolling bar moving at same speed for all measures at the same tempo,
-    #     # some measures (7/4, 9/8...) will need an extra TabWidget.
-    #     timesig = (gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value)
-    #     timesig_ratio = gp_measure.timeSignature.numerator / \
-    #                     gp_measure.timeSignature.denominator.value
-    #     spacing = 10
-    #
-    #     tab_widget = TabWidget(idx, total_measures)
-    #     if self.child_parity == 0:
-    #         tab_widget.pos = (0, self.child_y)
-    #         self.child_parity = 1
-    #     elif self.prev_timesig != timesig:
-    #         self.child_y -= tab_widget.height + spacing
-    #         tab_widget.pos = (0, self.child_y)
-    #         self.child_parity = 1
-    #     else:
-    #         tab_widget.pos = (tab_widget.measure_start + tab_widget.tab_width, self.child_y)
-    #         tab_widget.measure_start = 0
-    #         self.child_y -= tab_widget.height + spacing
-    #         self.child_parity = 0
-    #
-    #     tab_widget.build_measure(gp_measure, 0, 0)
-    #     next_beat_idx = tab_widget.get_next_beat_idx()
-    #     start_x = tab_widget.get_next_staff_line_x()
-    #     if tab_widget.starts_with_tie:
-    #         if tab_widget.x == 0:
-    #             tab_widget.draw_tie_across_widgets(self.prev_tab_widget)
-    #     self.floatlayout.add_widget(tab_widget)
-    #     self.prev_timesig = timesig
-    #     self.prev_tab_widget = tab_widget
-    #     if timesig_ratio > 1:
-    #         tab_widget = TabWidget(idx, total_measures)
-    #         if self.child_parity == 0:
-    #             tab_widget.pos = (0, self.child_y)
-    #             self.child_parity = 1
-    #         elif self.prev_timesig != timesig:
-    #             self.child_y -= tab_widget.height + spacing
-    #             tab_widget.pos = (0, self.child_y)
-    #             self.child_parity = 1
-    #         else:
-    #             tab_widget.pos = (tab_widget.measure_start + tab_widget.tab_width, self.child_y)
-    #             tab_widget.measure_start = 0
-    #             self.child_y -= tab_widget.height + spacing
-    #             self.child_parity = 0
-    #
-    #         tab_widget.build_measure(gp_measure, next_beat_idx, start_x)
-    #         if tab_widget.starts_with_tie:
-    #             if tab_widget.x == 0:
-    #                 tab_widget.draw_tie_across_widgets(self.prev_tab_widget)
-    #         self.floatlayout.add_widget(tab_widget)
-    #         self.prev_timesig = timesig
-    #         self.prev_tab_widget = tab_widget
-
-    def add_measure2(self, gp_measure, idx, total_measures):
+    def add_measure(self, gp_measure, idx, total_measures):
         if idx == 72:
             return
         timesig = (gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value)
@@ -210,8 +155,9 @@ class TabWidget(Widget):
         self.measure_start = 64
         self.tab_width = 512
         self.measure_end = self.measure_start + self.tab_width
-        self.next_beat_idx = 0
+        # self.next_beat_idx = 0
         self.starts_with_tie = False
+        self.ends_with_slide = False
         super().__init__(**kwargs)
         self.glyphs = InstructionGroup()
         self.backgrounds = InstructionGroup()
@@ -223,18 +169,8 @@ class TabWidget(Widget):
         self.canvas.add(black)
         self.canvas.add(self.glyphs)
 
-    def get_next_beat_idx(self):
-        return self.next_beat_idx
-
-    def get_next_staff_line_x(self):
-        if self.measure_end > self.measure_start + self.tab_width:
-            leftover = self.measure_end - (self.measure_start + self.tab_width)
-            self.measure_end = self.measure_start + self.tab_width
-            return leftover
-        return 0
-
     def build_measure(self, gp_measure: guitarpro.models.Measure):
-        self.gp_beats, self.xmids = self.add_staff_glyphs2(gp_measure)
+        self.gp_beats, self.xmids = self.add_staff_glyphs(gp_measure)
         self.draw_measure_number(gp_measure)
         self.draw_measure_count()
         if self.x == 0:
@@ -279,37 +215,7 @@ class TabWidget(Widget):
         self.glyphs.add(num_instr)
         self.glyphs.add(den_instr)
 
-    # def add_staff_glyphs(self, gp_measure: guitarpro.models.Measure, start_idx: int, start_x: float):
-    #     # TabWidget may not take up entire measure. Keep track of gp_beats for this TabWidget.
-    #     gp_beats, xmids = [], []
-    #     for gp_voice in gp_measure.voices[:-1]:
-    #         xpos = self.x + self.measure_start + start_x
-    #         for beat_idx, gp_beat in enumerate(gp_voice.beats[start_idx:]):
-    #             note_dur = 1 / gp_beat.duration.value
-    #             tuplet_mult = gp_beat.duration.tuplet.times / gp_beat.duration.tuplet.enters
-    #             beat_width = note_dur * tuplet_mult * self.tab_width
-    #             if gp_beat.duration.isDotted:
-    #                 beat_width *= 3 / 2
-    #             elif gp_beat.duration.isDoubleDotted:
-    #                 beat_width *= 7 / 4
-    #             beat_mid = self.add_beat_glyph(gp_beat, xpos)
-    #             xmids += [beat_mid]
-    #             gp_beats += [gp_beat]
-    #             xpos += beat_width
-    #             if xpos >= self.x + self.tab_width + self.measure_start:
-    #                 break
-    #
-    #             if any(gp_note.type.name == "tie" for gp_note in gp_beat.notes):
-    #                 print(f'{gp_beat.voice.measure.header.number}  {int(0 < self.x)}\n')
-    #                 tied_notes = [gp_note for gp_note in gp_beat.notes if gp_note.type.name == "tie"]
-    #                 for gp_note in tied_notes:
-    #                     print(f'\ti: {beat_idx},  string: {gp_note.string}, fret: {gp_note.value}')
-    #
-    #     self.next_beat_idx = beat_idx + 1
-    #     self.measure_end = xpos
-    #     return gp_beats, xmids
-
-    def add_staff_glyphs2(self, gp_measure: guitarpro.models.Measure):
+    def add_staff_glyphs(self, gp_measure: guitarpro.models.Measure):
         gp_beats, xmids = [], []
         for gp_voice in gp_measure.voices[:-1]:
             xpos = self.x + self.measure_start
@@ -388,7 +294,8 @@ class TabWidget(Widget):
                 i += tuplet_num
             # Group this single note with a previously existing group.
             elif gp_beat.duration.value == prev_dur and not (
-                    gp_beat.duration.isDotted or gp_beat.duration.isDoubleDotted):
+                    gp_beat.duration.isDotted or gp_beat.duration.isDoubleDotted
+                    or any(gp_note.effect.slides for gp_note in gp_beat.notes)):
                 cur_group += [gp_beat]
                 i += 1
             # End the previous group and start a new one.
@@ -542,22 +449,35 @@ class TabWidget(Widget):
                         self.draw_tie(gp_note, xmids[i-1], xmids[i])
                     else:
                         self.starts_with_tie = True
+                elif gp_note.effect.slides:
+                    if i != len(xmids) - 1:
+                        self.draw_slide(gp_note, xmids[i], xmids[i+1])
+                    else:
+                        self.ends_with_slide = True
 
     def draw_tie(self, gp_note: guitarpro.models.Note, start: float, end: float):
         string_y = self.y + self.step_y * (8 - (gp_note.string - 1))
-        step_y = self.step_y
         line_mid = (start + end) / 2
-        points = (start, string_y - step_y / 3,
-                  line_mid, string_y - step_y,
-                  end, string_y - step_y / 3)
+        points = (start, string_y - self.step_y / 3,
+                  line_mid, string_y - self.step_y,
+                  end, string_y - self.step_y / 3)
         tie_line = Bezier(points=points)
         self.glyphs.add(tie_line)
 
     def draw_tie_across_measures(self, gp_beat: guitarpro.models.Beat, start: float, end: float):
-        print(f'{gp_beat.voice.measure.header.number}  {start}  {end}')
         for gp_note in gp_beat.notes:
             if gp_note.type.name == "tie":
                 self.draw_tie(gp_note, start, end)
+
+    def draw_slide(self, gp_note: guitarpro.models.Note, start, end):
+        # There are 7 guitarpro.models.SlideTypes. So far only shiftSlideto, value == 1.
+        string_y = self.y + self.step_y * (8 - (gp_note.string - 1))
+        padding = 10
+        start += padding
+        end -= padding
+        points = (start, string_y + self.step_y / 4, end,  string_y - self.step_y / 4)
+        slide_line = Line(points=points)
+        self.glyphs.add(slide_line)
 
 
 class SongBuilderApp(App):
