@@ -17,6 +17,10 @@ from typing import List
 black = Color(0, 0, 0, 1)
 
 
+class SongBuilder(FloatLayout):
+    pass
+
+
 class TabViewer(ScrollView):
     file = ObjectProperty(None)
 
@@ -30,8 +34,8 @@ class TabViewer(ScrollView):
         self.flat_song = self.flatten_song()
         floatlayout_height = self.calc_floatlayout_height()
         self.floatlayout = FloatLayout(size_hint_y=None, height=floatlayout_height)
-        tab_widget = TabWidget()
-        self.child_y = floatlayout_height - tab_widget.height
+        self.add_widget(self.floatlayout)
+        self.set_child_y()
         self.build_track(self.flat_song[0])
 
     def on_file(self, *args):
@@ -115,11 +119,14 @@ class TabViewer(ScrollView):
                 height += tab_widget.height + spacing
         return (height + tab_widget.height)/ 2
 
+    def set_child_y(self):
+        tabwidget = TabWidget()
+        self.child_y = self.floatlayout.height - tabwidget.height
+
     def build_track(self, flat_track):
         total_measures = len(flat_track)
         for i, gp_measure in enumerate(flat_track, 1):
             self.add_measure(gp_measure, i, total_measures)
-        self.add_widget(self.floatlayout)
 
     def add_measure(self, gp_measure, idx, total_measures):
         timesig = (gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value)
@@ -150,8 +157,28 @@ class TabViewer(ScrollView):
         self.prev_timesig = timesig
         self.floatlayout.add_widget(tabwidget)
 
+    def rebuild(self, *args):
+        self.set_child_y()
+        self.prev_tabwidget = self.prev_timesig = None
+        for child in self.floatlayout.children:
+            self.floatlayout.remove_widget(child)
+        self.build_track(self.flat_song[0])
+
+    def delete(self, *args):
+        to_delete = []
+        for child in self.floatlayout.children:
+            if child.is_selected:
+                to_delete.append(child.idx)
+                self.floatlayout.remove_widget(child)
+        for idx in sorted(to_delete, reverse=True):
+            del self.flat_song[0][idx]
+            self.floatlayout.remove_widget()
+
 
 class TabWidget(Widget):
+    open_repeat_opac = NumericProperty(0)
+    close_repeat_opac = NumericProperty(0)
+    selected_opac = NumericProperty(0)
     measure_end = NumericProperty(0)
 
     def __init__(self, idx=0, total_measures=0, **kwargs):
@@ -161,9 +188,9 @@ class TabWidget(Widget):
         self.measure_start = 64
         self.tab_width = 512
         self.measure_end = self.measure_start + self.tab_width
-        # self.next_beat_idx = 0
         self.starts_with_tie = False
         self.ends_with_slide = False
+        self.is_selected = False
         super().__init__(**kwargs)
         self.glyphs = InstructionGroup()
         self.backgrounds = InstructionGroup()
@@ -485,9 +512,33 @@ class TabWidget(Widget):
         slide_line = Line(points=points)
         self.glyphs.add(slide_line)
 
+    def on_touch_down(self, touch):
+        if self.collide_point(touch.x, touch.y):
+            print(self.idx)
+            print(self.get_children_idx())
+            if self.is_selected:
+                self.is_selected = False
+                self.selected_opac = 0
+            else:
+                self.is_selected = True
+                self.selected_opac = 0.5
+            return True
+        return super().on_touch_down(touch)
+
+    def get_children_idx(self):
+        for i, child in enumerate(self.parent.children):
+            if child == self:
+                return (self.total_measures - i)
+        return None
+
+
+class EditToolbar(FloatLayout):
+    tabviewer = ObjectProperty()
+
 
 class SongBuilderApp(App):
-    pass
+    def build(self):
+        return SongBuilder()
 
 
 if __name__ == "__main__":

@@ -3,6 +3,14 @@
     scroll_type: ['bars', 'content']
 
 
+<SongBuilder>:
+    TabViewer:
+        id: tabviewer
+        pos_hint: {'center_y': 0.5}
+    EditToolbar:
+        tabviewer: tabviewer
+        size_hint: [1, 0]
+
 <TabWidget>:
     size_hint: [None, None]
     height: self.step_y * 10
@@ -13,14 +21,19 @@
         Rectangle:
             size: (self.measure_end - self.x, self.height)
             pos: self.pos
-
+        # Selected overlay.
+        Color:
+            rgba: (1, 1, 0, self.selected_opac)
+        Rectangle:
+            size: (self.measure_end - self.x, self.height)
+            pos: self.pos
         # Add lines.
         Color:
             rgba: (0, 0, 0, 1)
         # Measure start line.
         Line:
             points:
-                (self.x+ self.measure_start, self.y + self.step_y * 8,
+                (self.x + self.measure_start, self.y + self.step_y * 8,
                 self.x + self.measure_start, self.y + self.step_y * 3)
         # Staff lines.
         Line:
@@ -52,7 +65,51 @@
             points:
                 (self.x + self.measure_end, self.y + self.step_y * 8,
                 self.x + self.measure_end, self.y + self.step_y * 3)
+        # Open repeat lines.
+        Color:
+            rgba: (0, 0, 0, self.open_repeat_opac)
+        Rectangle:
+            pos: (self.x + self.measure_start, self.y + self.step_y * 3)
+            size: (5, self.step_y * 5)
+        Ellipse:
+            pos: (self.x + self.measure_start + 10, self.y + self.step_y * 4.25)
+            size: (6, 6)
+        Ellipse:
+            pos: (self.x + self.measure_start + 10, self.y + self.step_y * 6.25)
+            size: (6, 6)
+        # Close repeat lines.
+        Color:
+            rgba: (0, 0, 0, self.close_repeat_opac)
+        Rectangle:
+            pos: (self.measure_end - 5 , self.y + self.step_y * 3)
+            size: (5, self.step_y * 5)
+        Ellipse:
+            pos: (self.measure_end - 16, self.y +  self.step_y * 4.25)
+            size: (6, 6)
+        Ellipse:
+            pos: (self.measure_end - 16, self.y + self.step_y * 6.25)
+            size: (6, 6)
 
-FloatLayout:
-    TabViewer:
-        pos_hint: {'center_y': 0.5}
+
+<EditToolbarButton@Button>:
+    size_hint: [None, None]
+    size: [150, 50]
+
+
+<EditToolbar>:
+    EditToolbarButton:
+        id: copy_btn
+        text: "Copy"
+    EditToolbarButton:
+        id: paste_btn
+        text: "Paste"
+        x: copy_btn.right
+    EditToolbarButton:
+        id: delete_btn
+        text: "Delete"
+        x: paste_btn.right
+    EditToolbarButton:
+        id: rebuild_btn
+        text: "Rebuild"
+        x: delete_btn.right
+        on_press: root.tabviewer.rebuild()
