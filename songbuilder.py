@@ -4,6 +4,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty, ObjectProperty
+from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.core.text import Label as CoreLabel
 from kivy.graphics import Color, Line, Rectangle, Ellipse, InstructionGroup, Bezier
@@ -25,10 +26,9 @@ class TabViewer(ScrollView):
     file = ObjectProperty(None)
 
     def __init__(self, **kwargs):
-        # self.child_parity = 0
         self.prev_timesig = None
-        # self.prev_tab_widget = None
         self.prev_tabwidget = None
+        self.clipboard = []
         super().__init__(**kwargs)
         self.gp_song = guitarpro.parse('./tgr-nm-05.gp5')
         self.flat_song = self.flatten_song()
@@ -83,7 +83,6 @@ class TabViewer(ScrollView):
                 repeat_group += [gp_measure]
                 # Close the repeat group.
                 if gp_measure.repeatClose > 0:
-                    # print(f'{gp_measure.header.number}  {gp_measure.repeatClose}')
                     repeat_group *= gp_measure.repeatClose
                     flat_track += repeat_group
                     repeat_group = []
@@ -92,8 +91,6 @@ class TabViewer(ScrollView):
                 repeat_group = [gp_measure]
                 # Single measures may be repeated by themselves.
                 if gp_measure.repeatClose > 0:
-                    print(f'{gp_measure.header.number}  {gp_measure.repeatClose}')
-
                     repeat_group *= gp_measure.repeatClose
                     flat_track += repeat_group
                     repeat_group = []
@@ -125,7 +122,7 @@ class TabViewer(ScrollView):
 
     def build_track(self, flat_track):
         total_measures = len(flat_track)
-        for i, gp_measure in enumerate(flat_track, 1):
+        for i, gp_measure in enumerate(flat_track):
             self.add_measure(gp_measure, i, total_measures)
 
     def add_measure(self, gp_measure, idx, total_measures):
@@ -157,22 +154,36 @@ class TabViewer(ScrollView):
         self.prev_timesig = timesig
         self.floatlayout.add_widget(tabwidget)
 
+    def copy(self, *args):
+        self.clipboard = [child for child in self.floatlayout.children if child.is_selected]
+        self.show_copy_notification()
+
+    def show_copy_notification(self):
+        popup = CopyPopup()
+        popup.open()
+        Clock.schedule_once(popup.dismiss, 2)
+
+    def delete(self, *args):
+        def tabwidget_sort(tabwidget):
+            return -tabwidget.idx
+        tabwidgets_to_delete = [child for child in self.floatlayout.children if child.is_selected]
+        tabwidgets_to_delete.sort(key=tabwidget_sort)
+        for child in tabwidgets_to_delete:
+            self.floatlayout.remove_widget(child)
+            print(child.idx)
+            del self.flat_song[0][child.idx]
+        self.reindex_children()
+
+    def reindex_children(self):
+        '''TabWidget.idx should point to the relavent gp_measure in self.flat_song[0].'''
+        for i, child in enumerate(self.floatlayout.children[::-1]):
+            child.idx = i
+
     def rebuild(self, *args):
         self.set_child_y()
         self.prev_tabwidget = self.prev_timesig = None
-        for child in self.floatlayout.children:
-            self.floatlayout.remove_widget(child)
+        self.floatlayout.clear_widgets()
         self.build_track(self.flat_song[0])
-
-    def delete(self, *args):
-        to_delete = []
-        for child in self.floatlayout.children:
-            if child.is_selected:
-                to_delete.append(child.idx)
-                self.floatlayout.remove_widget(child)
-        for idx in sorted(to_delete, reverse=True):
-            del self.flat_song[0][idx]
-            self.floatlayout.remove_widget()
 
 
 class TabWidget(Widget):
@@ -224,7 +235,7 @@ class TabWidget(Widget):
 
     def draw_measure_count(self):
         # TODO: Once copy/delete buttons are added, update measure counts.
-        measure_count = str(self.idx) + ' / ' + str(self.total_measures)
+        measure_count = str(self.idx + 1) + ' / ' + str(self.total_measures)
         count_glyph = CoreLabel(text=measure_count, font_size=14, font_name='./fonts/Arial')
         count_glyph.refresh()
         count_x = self.measure_end - (count_glyph.width + 5)
@@ -298,7 +309,6 @@ class TabWidget(Widget):
         fret_num_instr.texture = fret_num_glyph.texture
         self.backgrounds.add(background)
         self.glyphs.add(fret_num_instr)
-
         xmid = xpos + (fret_num_glyph.texture.width / 2)
         return xmid
 
@@ -489,6 +499,7 @@ class TabWidget(Widget):
                         self.ends_with_slide = True
 
     def draw_tie(self, gp_note: guitarpro.models.Note, start: float, end: float):
+        # print(start, end)
         string_y = self.y + self.step_y * (8 - (gp_note.string - 1))
         line_mid = (start + end) / 2
         points = (start, string_y - self.step_y / 3,
@@ -528,12 +539,16 @@ class TabWidget(Widget):
     def get_children_idx(self):
         for i, child in enumerate(self.parent.children):
             if child == self:
-                return (self.total_measures - i)
+                return i, len(self.parent.children)
         return None
 
 
 class EditToolbar(FloatLayout):
     tabviewer = ObjectProperty()
+
+
+class CopyPopup(Popup):
+    pass
 
 
 class SongBuilderApp(App):

@@ -91,15 +91,11 @@
             size: (6, 6)
 
 
-<EditToolbarButton@Button>:
-    size_hint: [None, None]
-    size: [150, 50]
-
-
 <EditToolbar>:
     EditToolbarButton:
         id: copy_btn
         text: "Copy"
+        on_press: root.tabviewer.copy()
     EditToolbarButton:
         id: paste_btn
         text: "Paste"
@@ -108,8 +104,23 @@
         id: delete_btn
         text: "Delete"
         x: paste_btn.right
+        on_press: root.tabviewer.delete()
+
     EditToolbarButton:
         id: rebuild_btn
         text: "Rebuild"
         x: delete_btn.right
         on_press: root.tabviewer.rebuild()
+<EditToolbarButton@Button>:
+    size_hint: [None, None]
+    size: [150, 50]
+
+
+<CopyPopup>:
+    size_hint: [None, None]
+    size: [200, 50]
+    pos_hint: {'center': [0.5, 0.5]}
+    separator_color: (0,0,0,0)
+    title: 'Measures copied.'
+    title_align: 'center'
+    font_size: 18
