@@ -161,7 +161,7 @@ class TabViewer(ScrollView):
     def show_copy_notification(self):
         popup = CopyPopup()
         popup.open()
-        Clock.schedule_once(popup.dismiss, 2)
+        Clock.schedule_once(popup.dismiss, 1.5)
 
     def delete(self, *args):
         def tabwidget_sort(tabwidget):
