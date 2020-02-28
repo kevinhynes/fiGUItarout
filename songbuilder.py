@@ -10,7 +10,7 @@ from kivy.core.text import Label as CoreLabel
 from kivy.graphics import Color, Line, Rectangle, Ellipse, InstructionGroup, Bezier
 from kivy.animation import Animation
 from kivy.clock import Clock
-from kivy.metrics import dp
+from kivy.core.window import Window
 
 import guitarpro
 from typing import List
@@ -29,6 +29,12 @@ class TabViewer(ScrollView):
         self.prev_timesig = None
         self.prev_tabwidget = None
         self.clipboard = []
+        self.keyboard = Window.request_keyboard(self.close_keyboard, self)
+        self.keyboard.bind(on_key_down=self.on_key_down)
+        self.keyboard.bind(on_key_up=self.on_key_up)
+        self.shift_pressed = False
+        self.ctrl_pressed = False
+        self.selected_children = []
         super().__init__(**kwargs)
         self.gp_song = guitarpro.parse('./tgr-nm-05.gp5')
         self.flat_song = self.flatten_song()
@@ -40,6 +46,31 @@ class TabViewer(ScrollView):
 
     def on_file(self, *args):
         self.gp_song = guitarpro.parse(self.file)
+
+    def close_keyboard(self, *args):
+        self.keyboard.unbind(on_key_down=self.on_key_down)
+        self.keyboard = None
+
+    def on_key_down(self, keyboard, keycode, text, modifiers):
+        keynum, keytext = keycode
+        if keytext == 'shift':
+            self.shift_pressed = True
+            self.ctrl_pressed = False
+        elif 'ctrl' in keytext:
+            self.shift_pressed= False
+            self.ctrl_pressed= True
+        else:
+            self.shift_pressed = False
+            self.ctrl_pressed = False
+        # print(self.shift_pressed, self.ctrl_pressed)
+
+    def on_key_up(self, keyboard, keycode):
+        keynum, keytext = keycode
+        if keytext == 'shift':
+            self.shift_pressed = False
+        elif 'ctrl' in keytext:
+            self.ctrl_pressed = False
+        # print(self.shift_pressed, self.ctrl_pressed)
 
     def flatten_song(self):
         '''
@@ -130,7 +161,7 @@ class TabViewer(ScrollView):
         prev_tabwidget = self.prev_tabwidget
         prev_timesig = self.prev_timesig
         spacing = 10
-        tabwidget = TabWidget(idx, total_measures)
+        tabwidget = TabWidget(self, idx, total_measures)
         # Place first measure all the way at the top left.
         if prev_tabwidget is None:
             tabwidget.pos = (0, self.child_y)
@@ -154,14 +185,63 @@ class TabViewer(ScrollView):
         self.prev_timesig = timesig
         self.floatlayout.add_widget(tabwidget)
 
+    def select(self, tabwidget):
+        # If no other tabwigets are selected, shift, ctrl and normal select do the same thing.
+        if not self.selected_children:
+            tabwidget.select()
+            self.selected_children[:] = [tabwidget]
+            return
+        if self.shift_pressed:
+            self.shift_select(tabwidget)
+            return
+        if self.ctrl_pressed:
+            self.ctrl_select(tabwidget)
+            return
+        for selectedwidget in self.selected_children:
+            selectedwidget.unselect()
+        tabwidget.select()
+        self.selected_children = [tabwidget]
+
+    def shift_select(self, tabwidget):
+        to_select = []
+        # Selected TabWidget is above the existing group.
+        if tabwidget.idx < self.selected_children[0].idx:
+            i = self.tabwidget_to_child_idx(self.selected_children[0])
+            j = self.tabwidget_to_child_idx(tabwidget)
+            to_select = self.floatlayout.children[i+1:j+1]  # Don't include i, include j.
+            self.selected_children[:] = to_select[::-1] + self.selected_children
+        # Selected TabWidget is below the existing selected group.
+        elif tabwidget.idx > self.selected_children[-1].idx:
+            i = self.tabwidget_to_child_idx(tabwidget)
+            j = self.tabwidget_to_child_idx(self.selected_children[-1])
+            to_select = self.floatlayout.children[i:j]
+            self.selected_children[:] = self.selected_children + to_select[::-1]
+        # Selected TabWidget is within existing selected group.
+        # else:
+        #     i = self.tabwidget_to_child_idx(self.selected_children[-1])
+        #     j = self.tabwidget_to_child_idx(tabwidget)
+        #     to_unselect = self.floatlayout.children[i:j+1]
+        #     for selectedwidget in to_unselect:
+        #         selectedwidget.unselect()
+        #     self.selected_children[:] = self.selected_children[:i]
+        for tabwidget in to_select:
+            tabwidget.select()
+
+        print([selectedwidget.idx for selectedwidget in self.selected_children])
+
+    def ctrl_select(self, tabwidget):
+        pass
+
     def copy(self, *args):
         self.clipboard = [child for child in self.floatlayout.children if child.is_selected]
         self.show_copy_notification()
+        for child in self.clipboard:
+            child.is_selected = False
 
     def show_copy_notification(self):
         popup = CopyPopup()
         popup.open()
-        Clock.schedule_once(popup.dismiss, 1.5)
+        Clock.schedule_once(popup.dismiss, 0.75)
 
     def delete(self, *args):
         def tabwidget_sort(tabwidget):
@@ -175,9 +255,14 @@ class TabViewer(ScrollView):
         self.reindex_children()
 
     def reindex_children(self):
-        '''TabWidget.idx should point to the relavent gp_measure in self.flat_song[0].'''
+        '''TabWidget.idx should point to the relevant gp_measure in self.flat_song[0].'''
         for i, child in enumerate(self.floatlayout.children[::-1]):
             child.idx = i
+
+    def tabwidget_to_child_idx(self, tabwidget):
+        '''First TabWidget (TabWidget.idx == 0) in floatlayout is last in floatlayout.children.'''
+        last_index = len(self.floatlayout.children) - 1
+        return last_index - tabwidget.idx
 
     def rebuild(self, *args):
         self.set_child_y()
@@ -192,7 +277,8 @@ class TabWidget(Widget):
     selected_opac = NumericProperty(0)
     measure_end = NumericProperty(0)
 
-    def __init__(self, idx=0, total_measures=0, **kwargs):
+    def __init__(self, tabviewer=None, idx=0, total_measures=0, **kwargs):
+        self.tabviewer = tabviewer
         self.idx = idx
         self.total_measures = total_measures
         self.step_y = 20
@@ -525,16 +611,17 @@ class TabWidget(Widget):
 
     def on_touch_down(self, touch):
         if self.collide_point(touch.x, touch.y):
-            print(self.idx)
-            print(self.get_children_idx())
-            if self.is_selected:
-                self.is_selected = False
-                self.selected_opac = 0
-            else:
-                self.is_selected = True
-                self.selected_opac = 0.5
+            self.tabviewer.select(self)
             return True
         return super().on_touch_down(touch)
+
+    def select(self):
+        self.is_selected = True
+        self.selected_opac = 0.5
+
+    def unselect(self):
+        self.is_selected = False
+        self.selected_opac = 0
 
     def get_children_idx(self):
         for i, child in enumerate(self.parent.children):
