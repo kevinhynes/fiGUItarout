@@ -3,7 +3,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
-from kivy.properties import NumericProperty, ObjectProperty
+from kivy.properties import NumericProperty, ObjectProperty, AliasProperty
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.core.text import Label as CoreLabel
@@ -33,7 +33,6 @@ class TabViewer(ScrollView):
         self.keyboard.bind(on_key_down=self.on_key_down)
         self.keyboard.bind(on_key_up=self.on_key_up)
         self.shift_pressed = False
-        self.ctrl_pressed = False
         self.selected_children = []
         super().__init__(**kwargs)
         self.gp_song = guitarpro.parse('./tgr-nm-05.gp5')
@@ -55,22 +54,15 @@ class TabViewer(ScrollView):
         keynum, keytext = keycode
         if keytext == 'shift':
             self.shift_pressed = True
-            self.ctrl_pressed = False
         elif 'ctrl' in keytext:
             self.shift_pressed= False
-            self.ctrl_pressed= True
         else:
             self.shift_pressed = False
-            self.ctrl_pressed = False
-        # print(self.shift_pressed, self.ctrl_pressed)
 
     def on_key_up(self, keyboard, keycode):
         keynum, keytext = keycode
         if keytext == 'shift':
             self.shift_pressed = False
-        elif 'ctrl' in keytext:
-            self.ctrl_pressed = False
-        # print(self.shift_pressed, self.ctrl_pressed)
 
     def flatten_song(self):
         '''
@@ -166,17 +158,17 @@ class TabViewer(ScrollView):
         if prev_tabwidget is None:
             tabwidget.pos = (0, self.child_y)
         # Place the next measure on a new line below.
-        elif (prev_tabwidget.measure_end > tabwidget.measure_start + tabwidget.tab_width
+        elif (prev_tabwidget.right > tabwidget.measure_start + tabwidget.measure_width
               or prev_timesig != timesig):
             self.child_y -= tabwidget.height + spacing
             tabwidget.pos = (0, self.child_y)
         # Place the next measure to the right of the last measure of the same time signature.
         else:
-            tabwidget.measure_start = 0
-            tabwidget.pos = (prev_tabwidget.measure_end, self.child_y)
+            tabwidget.timesig_width = 0
+            tabwidget.pos = (prev_tabwidget.right, self.child_y)
 
         tabwidget.build_measure(gp_measure)
-        tabwidget.width = tabwidget.measure_end - tabwidget.x
+        # tabwidget.width = tabwidget.right - tabwidget.x
         if tabwidget.starts_with_tie:
             start = self.prev_tabwidget.xmids[-1]
             end = tabwidget.xmids[0]
@@ -193,9 +185,6 @@ class TabViewer(ScrollView):
             return
         if self.shift_pressed:
             self.shift_select(tabwidget)
-            return
-        if self.ctrl_pressed:
-            self.ctrl_select(tabwidget)
             return
         for selectedwidget in self.selected_children:
             selectedwidget.unselect()
@@ -216,21 +205,9 @@ class TabViewer(ScrollView):
             j = self.tabwidget_to_child_idx(self.selected_children[-1])
             to_select = self.floatlayout.children[i:j]
             self.selected_children[:] = self.selected_children + to_select[::-1]
-        # Selected TabWidget is within existing selected group.
-        # else:
-        #     i = self.tabwidget_to_child_idx(self.selected_children[-1])
-        #     j = self.tabwidget_to_child_idx(tabwidget)
-        #     to_unselect = self.floatlayout.children[i:j+1]
-        #     for selectedwidget in to_unselect:
-        #         selectedwidget.unselect()
-        #     self.selected_children[:] = self.selected_children[:i]
         for tabwidget in to_select:
             tabwidget.select()
-
         print([selectedwidget.idx for selectedwidget in self.selected_children])
-
-    def ctrl_select(self, tabwidget):
-        pass
 
     def copy(self, *args):
         self.clipboard = [child for child in self.floatlayout.children if child.is_selected]
@@ -275,16 +252,22 @@ class TabWidget(Widget):
     open_repeat_opac = NumericProperty(0)
     close_repeat_opac = NumericProperty(0)
     selected_opac = NumericProperty(0)
-    measure_end = NumericProperty(0)
+    timesig_width = NumericProperty(64)
+    open_repeat_width = NumericProperty(0)
+    # measure_end = NumericProperty(0)
+
+    def get_measure_start(self):
+        return self.x + self.timesig_width + self.open_repeat_width
+    measure_start = AliasProperty(get_measure_start, None,
+                                  bind=['x', 'timesig_width', 'open_repeat_width'], cache=True)
 
     def __init__(self, tabviewer=None, idx=0, total_measures=0, **kwargs):
         self.tabviewer = tabviewer
         self.idx = idx
         self.total_measures = total_measures
         self.step_y = 20
-        self.measure_start = 64
-        self.tab_width = 512
-        self.measure_end = self.measure_start + self.tab_width
+        self.measure_width = 512
+        # self.measure_end = self.measure_start + self.measure_width
         self.starts_with_tie = False
         self.ends_with_slide = False
         self.is_selected = False
@@ -302,6 +285,7 @@ class TabWidget(Widget):
     def build_measure(self, gp_measure: guitarpro.models.Measure):
         self.gp_beats, self.xmids = self.add_staff_glyphs(gp_measure)
         self.draw_measure_number(gp_measure)
+        self.draw_repeat_lines(gp_measure)
         self.draw_measure_count()
         if self.x == 0:
             self.draw_timesig(gp_measure)
@@ -313,7 +297,7 @@ class TabWidget(Widget):
         num = gp_measure.header.number
         num_glyph = CoreLabel(text=str(num), font_size=14, font_name='./fonts/Arial')
         num_glyph.refresh()
-        num_x = self.x + self.measure_start - num_glyph.width
+        num_x = self.measure_start - num_glyph.width
         num_y = self.y + self.step_y * 8
         num_instr = Rectangle(pos=(num_x, num_y), size=num_glyph.texture.size)
         num_instr.texture = num_glyph.texture
@@ -324,11 +308,14 @@ class TabWidget(Widget):
         measure_count = str(self.idx + 1) + ' / ' + str(self.total_measures)
         count_glyph = CoreLabel(text=measure_count, font_size=14, font_name='./fonts/Arial')
         count_glyph.refresh()
-        count_x = self.measure_end - (count_glyph.width + 5)
+        count_x = self.right - (count_glyph.width + 5)
         count_y = self.y
         count_instr = Rectangle(pos=(count_x, count_y), size=count_glyph.size)
         count_instr.texture = count_glyph.texture
         self.glyphs.add(count_instr)
+
+    def draw_repeat_lines(self, gp_measure: guitarpro.models.Measure):
+        pass
 
     def draw_timesig(self, gp_measure: guitarpro.models.Measure):
         num, den = gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value
@@ -336,8 +323,8 @@ class TabWidget(Widget):
         den_glyph = CoreLabel(text=str(den), font_size=50, font_name='./fonts/PatuaOne-Regular')
         num_glyph.refresh()
         den_glyph.refresh()
-        num_x = self.x + (self.measure_start / 2) - (num_glyph.texture.width / 2)
-        den_x = self.x + (self.measure_start / 2) - (den_glyph.texture.width / 2)
+        num_x = (self.measure_start / 2) - (num_glyph.texture.width / 2)
+        den_x = (self.measure_start / 2) - (den_glyph.texture.width / 2)
         num_instr = Rectangle(pos=(num_x, self.y + self.step_y * 5), size=(num_glyph.texture.size))
         den_instr = Rectangle(pos=(den_x, self.y + self.step_y * 3), size=(den_glyph.texture.size))
         num_instr.texture = num_glyph.texture
@@ -348,11 +335,11 @@ class TabWidget(Widget):
     def add_staff_glyphs(self, gp_measure: guitarpro.models.Measure):
         gp_beats, xmids = [], []
         for gp_voice in gp_measure.voices[:-1]:
-            xpos = self.x + self.measure_start
+            xpos = self.measure_start
             for beat_idx, gp_beat in enumerate(gp_voice.beats):
                 note_dur = 1 / gp_beat.duration.value
                 tuplet_mult = gp_beat.duration.tuplet.times / gp_beat.duration.tuplet.enters
-                beat_width = note_dur * tuplet_mult * self.tab_width
+                beat_width = note_dur * tuplet_mult * self.measure_width
                 if gp_beat.duration.isDotted:
                     beat_width *= 3 / 2
                 elif gp_beat.duration.isDoubleDotted:
@@ -361,13 +348,9 @@ class TabWidget(Widget):
                 xmids += [beat_mid]
                 gp_beats += [gp_beat]
                 xpos += beat_width
-                # if any(gp_note.type.name == "tie" for gp_note in gp_beat.notes):
-                #     print(f'{gp_beat.voice.measure.header.number}  {int(0 < self.x)}\n')
-                #     tied_notes = [gp_note for gp_note in gp_beat.notes if gp_note.type.name == "tie"]
-                #     for gp_note in tied_notes:
-                #         print(f'\ti: {beat_idx},  string: {gp_note.string}, fret: {gp_note.value}')
-        self.next_beat_idx = beat_idx + 1
-        self.measure_end = xpos
+        # self.next_beat_idx = beat_idx + 1
+        # self.measure_end = xpos
+        self.width = xpos - self.x
         return gp_beats, xmids
 
     def add_beat_glyph(self, gp_beat: guitarpro.models.Beat, xpos: float):
@@ -622,12 +605,6 @@ class TabWidget(Widget):
     def unselect(self):
         self.is_selected = False
         self.selected_opac = 0
-
-    def get_children_idx(self):
-        for i, child in enumerate(self.parent.children):
-            if child == self:
-                return i, len(self.parent.children)
-        return None
 
 
 class EditToolbar(FloatLayout):

@@ -19,13 +19,13 @@
         Color:
             rgba: (1, 1, 1, 1)
         Rectangle:
-            size: (self.measure_end - self.x, self.height)
+            size: (self.width, self.height)
             pos: self.pos
         # Selected overlay.
         Color:
             rgba: (1, 1, 0, self.selected_opac)
         Rectangle:
-            size: (self.measure_end - self.x, self.height)
+            size: (self.width, self.height)
             pos: self.pos
         # Add lines.
         Color:
@@ -33,62 +33,62 @@
         # Measure start line.
         Line:
             points:
-                (self.x + self.measure_start, self.y + self.step_y * 8,
-                self.x + self.measure_start, self.y + self.step_y * 3)
+                (self.measure_start, self.y + self.step_y * 8,
+                self.measure_start, self.y + self.step_y * 3)
         # Staff lines.
         Line:
             points:
                 (self.x, self.y + self.step_y * 3,
-                self.x + self.measure_end, self.y + self.step_y * 3)
+                self.right, self.y + self.step_y * 3)
         Line:
             points:
                 (self.x, self.y + self.step_y* 4,
-                self.x + self.measure_end, self.y + self.step_y * 4)
+                self.right, self.y + self.step_y * 4)
         Line:
             points:
                 (self.x, self.y + self.step_y * 5,
-                self.x + self.measure_end, self.y + self.step_y * 5)
+                self.right, self.y + self.step_y * 5)
         Line:
             points:
                 (self.x, self.y + self.step_y * 6,
-                self.x + self.measure_end, self.y + self.step_y * 6)
+                self.right, self.y + self.step_y * 6)
         Line:
             points:
                 (self.x, self.y + self.step_y * 7,
-                self.x + self.measure_end, self.y + self.step_y * 7)
+                self.right, self.y + self.step_y * 7)
         Line:
             points:
                 (self.x, self.y + self.step_y * 8,
-                self.x + self.measure_end, self.y + self.step_y * 8)
+                self.right, self.y + self.step_y * 8)
         # Measure end line.
         Line:
             points:
-                (self.x + self.measure_end, self.y + self.step_y * 8,
-                self.x + self.measure_end, self.y + self.step_y * 3)
+                (self.right, self.y + self.step_y * 8,
+                self.right, self.y + self.step_y * 3)
         # Open repeat lines.
-        Color:
-            rgba: (0, 0, 0, self.open_repeat_opac)
-        Rectangle:
-            pos: (self.x + self.measure_start, self.y + self.step_y * 3)
-            size: (5, self.step_y * 5)
-        Ellipse:
-            pos: (self.x + self.measure_start + 10, self.y + self.step_y * 4.25)
-            size: (6, 6)
-        Ellipse:
-            pos: (self.x + self.measure_start + 10, self.y + self.step_y * 6.25)
-            size: (6, 6)
-        # Close repeat lines.
-        Color:
-            rgba: (0, 0, 0, self.close_repeat_opac)
-        Rectangle:
-            pos: (self.measure_end - 5 , self.y + self.step_y * 3)
-            size: (5, self.step_y * 5)
-        Ellipse:
-            pos: (self.measure_end - 16, self.y +  self.step_y * 4.25)
-            size: (6, 6)
-        Ellipse:
-            pos: (self.measure_end - 16, self.y + self.step_y * 6.25)
-            size: (6, 6)
+#        Color:
+#            rgba: (0, 0, 0, self.open_repeat_opac)
+#        Rectangle:
+#            pos: (self.x + self.measure_start, self.y + self.step_y * 3)
+#            size: (5, self.step_y * 5)
+#        Ellipse:
+#            pos: (self.x + self.measure_start + 10, self.y + self.step_y * 4.25)
+#            size: (6, 6)
+#        Ellipse:
+#            pos: (self.x + self.measure_start + 10, self.y + self.step_y * 6.25)
+#            size: (6, 6)
+#        # Close repeat lines.
+#        Color:
+#            rgba: (0, 0, 0, self.close_repeat_opac)
+#        Rectangle:
+#            pos: (self.measure_end - 5 , self.y + self.step_y * 3)
+#            size: (5, self.step_y * 5)
+#        Ellipse:
+#            pos: (self.measure_end - 16, self.y +  self.step_y * 4.25)
+#            size: (6, 6)
+#        Ellipse:
+#            pos: (self.measure_end - 16, self.y + self.step_y * 6.25)
+#            size: (6, 6)
 
 
 <EditToolbar>:
