@@ -252,9 +252,16 @@ class TabWidget(Widget):
     open_repeat_opac = NumericProperty(0)
     close_repeat_opac = NumericProperty(0)
     selected_opac = NumericProperty(0)
+
     timesig_width = NumericProperty(64)
     open_repeat_width = NumericProperty(0)
-    # measure_end = NumericProperty(0)
+    close_repeat_width = NumericProperty(0)
+    measure_end = NumericProperty(0)
+
+    def get_barline_x(self):
+        return self.x + self.timesig_width
+    barline_x = AliasProperty(get_barline_x, None,
+                                  bind=['x', 'timesig_width'], cache=True)
 
     def get_measure_start(self):
         return self.x + self.timesig_width + self.open_repeat_width
@@ -267,7 +274,6 @@ class TabWidget(Widget):
         self.total_measures = total_measures
         self.step_y = 20
         self.measure_width = 512
-        # self.measure_end = self.measure_start + self.measure_width
         self.starts_with_tie = False
         self.ends_with_slide = False
         self.is_selected = False
@@ -283,21 +289,37 @@ class TabWidget(Widget):
         self.canvas.add(self.glyphs)
 
     def build_measure(self, gp_measure: guitarpro.models.Measure):
-        self.gp_beats, self.xmids = self.add_staff_glyphs(gp_measure)
-        self.draw_measure_number(gp_measure)
-        self.draw_repeat_lines(gp_measure)
-        self.draw_measure_count()
         if self.x == 0:
             self.draw_timesig(gp_measure)
+        self.draw_measure_number(gp_measure)
+        self.draw_open_repeat(gp_measure)
+        self.gp_beats, self.xmids = self.add_staff_glyphs(gp_measure)
+        self.draw_measure_count()
         self.draw_note_effects(self.gp_beats, self.xmids)
         gp_beat_groups = self.gp_beat_groupby(self.gp_beats)
         self.add_note_glyphs(gp_beat_groups, self.xmids)
+        self.draw_close_repeat(gp_measure)
+
+    def draw_timesig(self, gp_measure: guitarpro.models.Measure):
+        num, den = gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value
+        num_glyph = CoreLabel(text=str(num), font_size=50, font_name='./fonts/PatuaOne-Regular')
+        den_glyph = CoreLabel(text=str(den), font_size=50, font_name='./fonts/PatuaOne-Regular')
+        num_glyph.refresh()
+        den_glyph.refresh()
+        num_x = (self.barline_x / 2) - (num_glyph.texture.width / 2)
+        den_x = (self.barline_x / 2) - (den_glyph.texture.width / 2)
+        num_instr = Rectangle(pos=(num_x, self.y + self.step_y * 5), size=(num_glyph.texture.size))
+        den_instr = Rectangle(pos=(den_x, self.y + self.step_y * 3), size=(den_glyph.texture.size))
+        num_instr.texture = num_glyph.texture
+        den_instr.texture = den_glyph.texture
+        self.glyphs.add(num_instr)
+        self.glyphs.add(den_instr)
 
     def draw_measure_number(self, gp_measure: guitarpro.models.Measure):
         num = gp_measure.header.number
         num_glyph = CoreLabel(text=str(num), font_size=14, font_name='./fonts/Arial')
         num_glyph.refresh()
-        num_x = self.measure_start - num_glyph.width
+        num_x = self.barline_x - num_glyph.width
         num_y = self.y + self.step_y * 8
         num_instr = Rectangle(pos=(num_x, num_y), size=num_glyph.texture.size)
         num_instr.texture = num_glyph.texture
@@ -314,23 +336,15 @@ class TabWidget(Widget):
         count_instr.texture = count_glyph.texture
         self.glyphs.add(count_instr)
 
-    def draw_repeat_lines(self, gp_measure: guitarpro.models.Measure):
-        pass
+    def draw_open_repeat(self, gp_measure: guitarpro.models.Measure):
+        if gp_measure.isRepeatOpen:
+            self.open_repeat_opac = 1
+            self.open_repeat_width = 20
 
-    def draw_timesig(self, gp_measure: guitarpro.models.Measure):
-        num, den = gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value
-        num_glyph = CoreLabel(text=str(num), font_size=50, font_name='./fonts/PatuaOne-Regular')
-        den_glyph = CoreLabel(text=str(den), font_size=50, font_name='./fonts/PatuaOne-Regular')
-        num_glyph.refresh()
-        den_glyph.refresh()
-        num_x = (self.measure_start / 2) - (num_glyph.texture.width / 2)
-        den_x = (self.measure_start / 2) - (den_glyph.texture.width / 2)
-        num_instr = Rectangle(pos=(num_x, self.y + self.step_y * 5), size=(num_glyph.texture.size))
-        den_instr = Rectangle(pos=(den_x, self.y + self.step_y * 3), size=(den_glyph.texture.size))
-        num_instr.texture = num_glyph.texture
-        den_instr.texture = den_glyph.texture
-        self.glyphs.add(num_instr)
-        self.glyphs.add(den_instr)
+    def draw_close_repeat(self, gp_measure: guitarpro.models.Measure):
+        if gp_measure.repeatClose > 0:
+            self.close_repeat_opac = 1
+            self.close_repeat_width = 20
 
     def add_staff_glyphs(self, gp_measure: guitarpro.models.Measure):
         gp_beats, xmids = [], []
@@ -348,9 +362,8 @@ class TabWidget(Widget):
                 xmids += [beat_mid]
                 gp_beats += [gp_beat]
                 xpos += beat_width
-        # self.next_beat_idx = beat_idx + 1
-        # self.measure_end = xpos
-        self.width = xpos - self.x
+        self.measure_end = xpos
+        # self.width = xpos - self.x
         return gp_beats, xmids
 
     def add_beat_glyph(self, gp_beat: guitarpro.models.Beat, xpos: float):
