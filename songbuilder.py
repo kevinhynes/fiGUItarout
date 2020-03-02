@@ -54,8 +54,6 @@ class TabViewer(ScrollView):
         keynum, keytext = keycode
         if keytext == 'shift':
             self.shift_pressed = True
-        elif 'ctrl' in keytext:
-            self.shift_pressed= False
         else:
             self.shift_pressed = False
 
@@ -95,8 +93,9 @@ class TabViewer(ScrollView):
 
     def flatten_track(self, gp_track):
         '''
-        - PyGuitarPro does not appear to be parsing measure.header.repeatAlternative correctly.
-        - When Beat is a quarter note, beat.duration.time == 960.  No idea why.
+        PyGuitarPro does not appear to be parsing measure.header.repeatAlternative correctly.
+        Also, no info on Da Capo or Dal Segno type of repeats. Requires user to copy/paste/delete
+        in order to make corrections.
         '''
         flat_track = []
         repeat_group = []
@@ -132,12 +131,31 @@ class TabViewer(ScrollView):
     def calc_floatlayout_height(self):
         height = 0
         spacing = 10
-        tab_widget = TabWidget()
+        tabwidget = TabWidget()
+        prev_timesig = None
+        prev_measure = None
+        child_parity = 'left'
         for gp_measure in self.flat_song[0]:
-            height += tab_widget.height + spacing
-            if gp_measure.timeSignature.numerator / gp_measure.timeSignature.denominator.value > 1:
-                height += tab_widget.height + spacing
-        return (height + tab_widget.height)/ 2
+            timesig = (gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value)
+            prev_timesig_ratio = prev_timesig[0] / prev_timesig[1] if prev_timesig else 0
+            # Place first measure all the way at the top left.
+            if prev_measure is None:
+                height += tabwidget.height + spacing
+                child_parity = 'right'
+            # Place the next measure on a new line below.
+            elif (prev_timesig_ratio > 1
+                  or prev_timesig != timesig
+                  or prev_measure.repeatClose > 0
+                  or gp_measure.isRepeatOpen
+                  or child_parity == 'left'):
+                height += tabwidget.height + spacing
+                child_parity = 'right'
+            # Place the next measure to the right of the last measure of the same time signature.
+            else:
+                child_parity = 'left'
+            prev_measure = gp_measure
+            prev_timesig = timesig
+        return height
 
     def set_child_y(self):
         tabwidget = TabWidget()
