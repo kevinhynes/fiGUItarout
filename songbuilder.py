@@ -35,16 +35,8 @@ class TabViewer(ScrollView):
         self.shift_pressed = False
         self.selected_children = []
         super().__init__(**kwargs)
-        self.gp_song = guitarpro.parse('./tgr-nm-05.gp5')
-        self.flat_song = self.flatten_song()
-        floatlayout_height = self.calc_floatlayout_height()
-        self.floatlayout = FloatLayout(size_hint_y=None, height=floatlayout_height)
+        self.floatlayout = FloatLayout(size_hint_y=None)
         self.add_widget(self.floatlayout)
-        self.set_child_y()
-        self.build_track(self.flat_song[0])
-
-    def on_file(self, *args):
-        self.gp_song = guitarpro.parse(self.file)
 
     def close_keyboard(self, *args):
         self.keyboard.unbind(on_key_down=self.on_key_down)
@@ -128,7 +120,7 @@ class TabViewer(ScrollView):
                 for gp_beat in gp_voice.beats:
                     print(f'\t {gp_beat.notes}')
 
-    def calc_floatlayout_height(self):
+    def set_floatlayout_height(self):
         height = 0
         spacing = 10
         tabwidget = TabWidget()
@@ -155,7 +147,7 @@ class TabViewer(ScrollView):
                 child_parity = 'left'
             prev_measure = gp_measure
             prev_timesig = timesig
-        return height
+        self.floatlayout.height = height
 
     def set_child_y(self):
         tabwidget = TabWidget()
@@ -163,6 +155,7 @@ class TabViewer(ScrollView):
 
     def build_track(self, flat_track):
         total_measures = len(flat_track)
+        self.prev_timesig = self.prev_timesig_ratio = self.prev_tabwidget = None
         for i, gp_measure in enumerate(flat_track):
             self.add_measure(gp_measure, i, total_measures)
 
@@ -267,6 +260,28 @@ class TabViewer(ScrollView):
         self.floatlayout.clear_widgets()
         self.build_track(self.flat_song[0])
 
+    def show_fileloader(self, *args):
+        content = FileLoaderPopupContent(load_song=self.load_song, cancel=self.close_fileloader)
+        self.fileloader_popup = Popup(title="Load New Guitar Pro Song", content=content,
+                                     size_hint=(0.9, 0.9))
+        self.fileloader_popup.open()
+
+    def load_song(self, filepath):
+        self.fileloader_popup.dismiss()
+        self.file = filepath[0]
+        print("new song loaded")
+
+    def on_file(self, *args):
+        self.gp_song = guitarpro.parse(self.file)
+        self.flat_song = self.flatten_song()
+        self.floatlayout.clear_widgets()
+        self.set_floatlayout_height()
+        self.set_child_y()
+        self.build_track(self.flat_song[0])
+
+    def close_fileloader(self, *args):
+        self.fileloader_popup.dismiss()
+
 
 class TabWidget(Widget):
     open_repeat_opac = NumericProperty(0)
@@ -314,11 +329,12 @@ class TabWidget(Widget):
         self.draw_measure_number(gp_measure)
         self.draw_open_repeat(gp_measure)
         self.gp_beats, self.xmids = self.add_staff_glyphs(gp_measure)
-        self.draw_measure_count()
         self.draw_note_effects(self.gp_beats, self.xmids)
         gp_beat_groups = self.gp_beat_groupby(self.gp_beats)
         self.add_note_glyphs(gp_beat_groups, self.xmids)
         self.draw_close_repeat(gp_measure)
+        self.draw_measure_count()
+
 
     def draw_timesig(self, gp_measure: guitarpro.models.Measure):
         num, den = gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value
@@ -646,6 +662,11 @@ class EditToolbar(FloatLayout):
 
 class CopyPopup(Popup):
     pass
+
+
+class FileLoaderPopupContent(BoxLayout):
+    load_song = ObjectProperty()
+    cancel = ObjectProperty()
 
 
 class SongBuilderApp(App):

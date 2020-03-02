@@ -1,15 +1,21 @@
-<TabViewer>:
-    bar_width: 10
-    scroll_type: ['bars', 'content']
-
+#: import os os
 
 <SongBuilder>:
     TabViewer:
         id: tabviewer
-        pos_hint: {'center_y': 0.5}
+        pos_hint: {'center_x': 0.5}
+        size_hint: [1, None]
+        height: root.height - editbar.height
+        y: editbar.top
     EditToolbar:
+        id: editbar
         tabviewer: tabviewer
-        size_hint: [1, 0]
+
+
+<TabViewer>:
+    bar_width: 10
+    scroll_type: ['bars', 'content']
+
 
 <TabWidget>:
     size_hint: [None, None]
@@ -110,6 +116,8 @@
                 self.measure_end, self.y + self.step_y * 3)
 
 <EditToolbar>:
+    size_hint: [1, None]
+    height: copy_btn.height
     EditToolbarButton:
         id: copy_btn
         text: "Copy"
@@ -128,6 +136,11 @@
         text: "Rebuild"
         x: delete_btn.right
         on_press: root.tabviewer.rebuild()
+    EditToolbarButton:
+        id: load_btn
+        text: "Load File"
+        x: rebuild_btn.right
+        on_press: root.tabviewer.show_fileloader()
 <EditToolbarButton@Button>:
     size_hint: [None, None]
     size: [150, 50]
@@ -141,3 +154,18 @@
     title: 'Measures Copied'
     title_align: 'center'
     font_size: 18
+
+<FileLoaderPopupContent>:
+    orientation: "vertical"
+    FileChooserListView:
+        id: filechooser
+        path: os.getcwd()
+    BoxLayout:
+        size_hint_y: None
+        height: 30
+        Button:
+            text: "Cancel"
+            on_release: root.cancel()
+        Button:
+            text: "Load"
+            on_release: root.load_song(filechooser.selection)
