@@ -152,14 +152,17 @@ class TabViewer(ScrollView):
         timesig = (gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value)
         prev_tabwidget = self.prev_tabwidget
         prev_timesig = self.prev_timesig
+        prev_timesig_ratio = prev_timesig[0] / prev_timesig[1] if prev_timesig else 0
         spacing = 10
         tabwidget = TabWidget(self, idx, total_measures)
+
         # Place first measure all the way at the top left.
         if prev_tabwidget is None:
             tabwidget.pos = (0, self.child_y)
         # Place the next measure on a new line below.
-        elif (prev_tabwidget.right > tabwidget.measure_start + tabwidget.measure_width
-              or prev_timesig != timesig):
+        elif (prev_timesig_ratio > 1 or prev_timesig != timesig
+              or prev_tabwidget.close_repeat_width > 0 or prev_tabwidget.x != 0
+              or gp_measure.isRepeatOpen):
             self.child_y -= tabwidget.height + spacing
             tabwidget.pos = (0, self.child_y)
         # Place the next measure to the right of the last measure of the same time signature.
@@ -168,7 +171,6 @@ class TabViewer(ScrollView):
             tabwidget.pos = (prev_tabwidget.right, self.child_y)
 
         tabwidget.build_measure(gp_measure)
-        # tabwidget.width = tabwidget.right - tabwidget.x
         if tabwidget.starts_with_tie:
             start = self.prev_tabwidget.xmids[-1]
             end = tabwidget.xmids[0]
