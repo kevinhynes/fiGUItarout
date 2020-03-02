@@ -14,7 +14,7 @@
 <TabWidget>:
     size_hint: [None, None]
     height: self.step_y * 10
-    width: self.timesig_width + self.open_repeat_width + self.measure_width + self.close_repeat_width
+    width: self.timesig_width + self.open_repeat_width + (self.measure_end - self.measure_start) + self.close_repeat_width
     canvas.before:
         # White background.
         Color:
@@ -31,7 +31,7 @@
         # Add lines.
         Color:
             rgba: (0, 0, 0, 1)
-        # Measure start line.
+        # Left barline.
         Line:
             points:
                 (self.barline_x, self.y + self.step_y * 8,
@@ -71,31 +71,44 @@
             rgba: (0, 0, 0, self.open_repeat_opac)
         Rectangle:
             pos: (self.barline_x, self.y + self.step_y * 3)
-            size: (5, self.step_y * 5)
+            size: (6, self.step_y * 5)
+        Line:
+            points:
+                (self.barline_x + 12, self.y + self.step_y * 8,
+                self.barline_x + 12, self.y + self.step_y * 3)
         Ellipse:
-            pos: (self.barline_x + 10, self.y + self.step_y * 4.25)
-            size: (6, 6)
+            pos: (self.barline_x + 16, self.y + self.step_y * 4.5 - 3)
+            size: (6.5, 6.5)
         Ellipse:
-            pos: (self.barline_x + 10, self.y + self.step_y * 6.25)
-            size: (6, 6)
+            pos: (self.barline_x + 16, self.y + self.step_y * 6.5 - 3)
+            size: (6.5, 6.5)
+        # Measure start line.
+        Line:
+            points:
+                (self.measure_start, self.y + self.step_y * 8,
+                self.measure_start, self.y + self.step_y * 3)
 #        # Close repeat lines.
         Color:
-            rgba: (1, 0, 0, self.close_repeat_opac)
+            rgba: (0, 0, 0, self.close_repeat_opac)
         Rectangle:
-            pos: (self.right - 5 , self.y + self.step_y * 3)
-            size: (5, self.step_y * 5)
+            pos: (self.right - 6 , self.y + self.step_y * 3)
+            size: (6, self.step_y * 5)
+        Line:
+            points:
+                (self.right - 12, self.y + self.step_y * 8,
+                self.right - 12, self.y + self.step_y * 3)
         Ellipse:
-            pos: (self.right - 16, self.y +  self.step_y * 4.25)
+            pos: (self.right - 22, self.y +  self.step_y * 4.5 - 3)
             size: (6, 6)
         Ellipse:
-            pos: (self.right - 16, self.y + self.step_y * 6.25)
+            pos: (self.right - 22, self.y + self.step_y * 6.5 - 3)
             size: (6, 6)
-
         # Measure end line.
         Line:
             points:
                 (self.measure_end, self.y + self.step_y * 8,
                 self.measure_end, self.y + self.step_y * 3)
+
 <EditToolbar>:
     EditToolbarButton:
         id: copy_btn

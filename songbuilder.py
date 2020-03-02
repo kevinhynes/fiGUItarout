@@ -273,7 +273,7 @@ class TabWidget(Widget):
         self.idx = idx
         self.total_measures = total_measures
         self.step_y = 20
-        self.measure_width = 512
+        self.measure_width = 512  # width of a 4/4 measure only, sort of a step_x.
         self.starts_with_tie = False
         self.ends_with_slide = False
         self.is_selected = False
@@ -339,12 +339,12 @@ class TabWidget(Widget):
     def draw_open_repeat(self, gp_measure: guitarpro.models.Measure):
         if gp_measure.isRepeatOpen:
             self.open_repeat_opac = 1
-            self.open_repeat_width = 20
+            self.open_repeat_width = 25
 
     def draw_close_repeat(self, gp_measure: guitarpro.models.Measure):
         if gp_measure.repeatClose > 0:
             self.close_repeat_opac = 1
-            self.close_repeat_width = 20
+            self.close_repeat_width = 25
 
     def add_staff_glyphs(self, gp_measure: guitarpro.models.Measure):
         gp_beats, xmids = [], []
