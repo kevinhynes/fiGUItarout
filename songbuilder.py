@@ -3,7 +3,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
-from kivy.properties import NumericProperty, ObjectProperty, AliasProperty
+from kivy.properties import NumericProperty, ObjectProperty, AliasProperty, StringProperty
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.core.text import Label as CoreLabel
@@ -147,13 +147,24 @@ class TabViewer(ScrollView):
                 child_parity = 'left'
             prev_measure = gp_measure
             prev_timesig = timesig
-        self.floatlayout.height = height
+        # Add 1 extra tabwidget.height for songlabel
+        self.floatlayout.height = height + tabwidget.height
 
     def set_child_y(self):
         tabwidget = TabWidget()
         self.child_y = self.floatlayout.height - tabwidget.height
 
+    def add_song_label(self):
+        tabwidget = TabWidget()
+        song_name = (self.gp_song.artist + " - " + self.gp_song.title).upper()
+        song_label = Label(text=song_name, font_size=32, font_name='./fonts/Impact',
+                           halign='center', valign='center',
+                           size_hint=(1, None), height=(tabwidget.height), pos=(0, self.child_y))
+        self.floatlayout.add_widget(song_label)
+        self.child_y -= tabwidget.height
+
     def build_track(self, flat_track):
+        self.add_song_label()
         total_measures = len(flat_track)
         self.prev_timesig = self.prev_timesig_ratio = self.prev_tabwidget = None
         for i, gp_measure in enumerate(flat_track):
