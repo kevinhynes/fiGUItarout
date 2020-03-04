@@ -14,6 +14,7 @@ from kivy.core.window import Window
 
 import guitarpro
 from typing import List
+import song_lib_funcs as slf
 
 black = Color(0, 0, 0, 1)
 
@@ -292,6 +293,20 @@ class TabViewer(ScrollView):
 
     def close_fileloader(self, *args):
         self.fileloader_popup.dismiss()
+
+    def save(self, *args):
+        gp_song = self.gp_song
+        editted_gp_song = gp_song
+        for i in range(len(gp_song.tracks)):
+            flat_track = self.flat_song[i]
+            editted_gp_song.tracks[i].measures = flat_track
+
+        artist, album, title = gp_song.artist.title(), gp_song.album.title(), gp_song.title.title()
+        song_name = '-'.join([artist, album, title]).lower() + '.gp5'
+        filepath = './song-lib/' + song_name
+        guitarpro.write(editted_gp_song, filepath,
+                        version=(5, 1, 0), encoding='cp1252')
+        slf.save_song_to_library(artist, album, title, filepath)
 
 
 class TabWidget(Widget):

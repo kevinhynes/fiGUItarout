@@ -93,7 +93,7 @@
             points:
                 (self.measure_start, self.y + self.step_y * 8,
                 self.measure_start, self.y + self.step_y * 3)
-#        # Close repeat lines.
+        # Close repeat lines.
         Color:
             rgba: (0, 0, 0, self.close_repeat_opac)
         Rectangle:
@@ -115,12 +115,18 @@
                 (self.measure_end, self.y + self.step_y * 8,
                 self.measure_end, self.y + self.step_y * 3)
 
+
 <EditToolbar>:
     size_hint: [1, None]
-    height: copy_btn.height
+    height: load_btn.height
+    EditToolbarButton:
+        id: load_btn
+        text: "Load File"
+        on_press: root.tabviewer.show_fileloader()
     EditToolbarButton:
         id: copy_btn
         text: "Copy"
+        x: load_btn.right
         on_press: root.tabviewer.copy()
     EditToolbarButton:
         id: paste_btn
@@ -137,10 +143,10 @@
         x: delete_btn.right
         on_press: root.tabviewer.rebuild()
     EditToolbarButton:
-        id: load_btn
-        text: "Load File"
+        id: save_btn
+        text: "Save"
         x: rebuild_btn.right
-        on_press: root.tabviewer.show_fileloader()
+        on_press: root.tabviewer.save()
 <EditToolbarButton@Button>:
     size_hint: [None, None]
     size: [150, 50]
@@ -154,6 +160,7 @@
     title: 'Measures Copied'
     title_align: 'center'
     font_size: 18
+
 
 <FileLoaderPopupContent>:
     orientation: "vertical"
