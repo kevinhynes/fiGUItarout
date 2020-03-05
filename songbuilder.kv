@@ -147,9 +147,14 @@
         text: "Save"
         x: rebuild_btn.right
         on_press: root.tabviewer.save()
+    EditToolbarButton:
+        id: show_song_library_btn
+        text: "Show Song Library"
+        x: save_btn.right
+        on_press: root.tabviewer.show_song_library()
 <EditToolbarButton@Button>:
     size_hint: [None, None]
-    size: [150, 50]
+    size: [125, 50]
 
 
 <CopyPopup>:
@@ -176,3 +181,12 @@
         Button:
             text: "Load"
             on_release: root.load_song(filechooser.selection)
+
+
+<SongLibrary>:
+#    scroll_distance: 10000
+    direction: 'right'
+<SongLibraryHeader>:
+    size_hint: [1, None]
+    height: 50
+    pos_hint: {'top': 1}

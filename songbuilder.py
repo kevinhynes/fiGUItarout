@@ -2,7 +2,9 @@ from kivy.app import App
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.pagelayout import PageLayout
 from kivy.uix.widget import Widget
+from kivy.uix.carousel import Carousel
 from kivy.properties import NumericProperty, ObjectProperty, AliasProperty, StringProperty
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
@@ -14,7 +16,7 @@ from kivy.core.window import Window
 
 import guitarpro
 from typing import List
-import song_lib_funcs as slf
+import song_library_funcs as slf
 
 black = Color(0, 0, 0, 1)
 
@@ -275,7 +277,7 @@ class TabViewer(ScrollView):
     def show_fileloader(self, *args):
         content = FileLoaderPopupContent(load_song=self.load_song, cancel=self.close_fileloader)
         self.fileloader_popup = Popup(title="Load New Guitar Pro Song", content=content,
-                                     size_hint=(0.9, 0.9))
+                                      size_hint=(0.9, 0.9))
         self.fileloader_popup.open()
 
     def load_song(self, filepath):
@@ -300,13 +302,16 @@ class TabViewer(ScrollView):
         for i in range(len(gp_song.tracks)):
             flat_track = self.flat_song[i]
             editted_gp_song.tracks[i].measures = flat_track
-
         artist, album, title = gp_song.artist.title(), gp_song.album.title(), gp_song.title.title()
         song_name = '-'.join([artist, album, title]).lower() + '.gp5'
-        filepath = './song-lib/' + song_name
-        guitarpro.write(editted_gp_song, filepath,
-                        version=(5, 1, 0), encoding='cp1252')
+        filepath = './song-library/' + song_name
+        guitarpro.write(editted_gp_song, filepath, version=(5, 1, 0), encoding='cp1252')
         slf.save_song_to_library(artist, album, title, filepath)
+
+    def show_song_library(self, *args):
+        content = SongLibrary(size_hint=(0.9, 0.9))
+        song_library_popup = Popup(title="Song Library", content=content, size_hint=(0.9, 0.9))
+        song_library_popup.open()
 
 
 class TabWidget(Widget):
@@ -693,6 +698,27 @@ class CopyPopup(Popup):
 class FileLoaderPopupContent(BoxLayout):
     load_song = ObjectProperty()
     cancel = ObjectProperty()
+
+
+class SongLibrary(Carousel):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        for pagename in ('artist', 'album', 'songs'):
+            self.add_widget(SongLibraryPage(name=pagename))
+
+
+class SongLibraryPage(FloatLayout):
+
+    def __init__(self, name=None, **kwargs):
+        super().__init__(**kwargs)
+        self.add_widget(SongLibraryHeader(text=name.title()))
+        self.buttons = []
+
+
+
+class SongLibraryHeader(Label):
+    pass
 
 
 class SongBuilderApp(App):
