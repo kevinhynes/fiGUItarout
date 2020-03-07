@@ -367,7 +367,6 @@ class TabWidget(Widget):
         self.draw_close_repeat(gp_measure)
         self.draw_measure_count()
 
-
     def draw_timesig(self, gp_measure: guitarpro.models.Measure):
         num, den = gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value
         num_glyph = CoreLabel(text=str(num), font_size=50, font_name='./fonts/PatuaOne-Regular')
@@ -438,7 +437,8 @@ class TabWidget(Widget):
         # If notes list is empty, rest for gp_beat.duration.value.
         if not gp_beat.notes:
             self.draw_rest(gp_beat, xpos)
-            return xpos, -1
+            # return xpos, -1
+            return xpos
         for gp_note in gp_beat.notes:
             xmid = self.draw_fretnum(gp_note, xpos)
         return xmid
@@ -538,7 +538,7 @@ class TabWidget(Widget):
         # The only font I can find for rests doesn't follow the unicode standard.
         step_y = self.step_y
         unicode_rests = {1: u'\u1D13B', 2: u'\u1D13C', 4: u'\u1D13D', 8: u'\u1D13E', 16: u'\u1D13F'}
-        rests = {1: u'\uE102', 2: u'\uE103', 4: u'\uE107', 8: u'\uE109', 16: u'\uE110'}
+        rests = {1: u'\uE102', 2: u'\uE103', 4: u'\uE107', 8: u'\uE109', 16: u'\uE10A'}
         rest_ys = {1: step_y * 4, 2: step_y * 3, 4: step_y * 2.5, 8: step_y * 3, 16: step_y * 3}
         rest, rest_y = rests[gp_beat.duration.value], rest_ys[gp_beat.duration.value]
         rest_glyph = CoreLabel(text=rest, font_size=32, font_name='./fonts/mscore-20')
@@ -560,6 +560,7 @@ class TabWidget(Widget):
             upper = (xpos, self.y + self.step_y * 2)
         else:
             upper = (xpos, self.y + self.step_y * 2.5)
+        # print(gp_beat.voice.measure.header.number, lower, upper)
         stem = Line(points=(*lower, *upper), width=1, cap='square')
         if gp_beat.duration.isDotted or gp_beat.duration.isDoubleDotted:
             xpos, ypos = lower
@@ -720,11 +721,11 @@ class SongLibrary(Carousel):
             self.artist = button.text
             self.load_next(mode='next')
         elif self.current_slide.name == 'Albums':
-            self.artist = button.text
+            self.album = button.text
             self.load_next(mode='next')
         elif self.current_slide.name == 'Songs':
             self.song = button.text
-            self.parent.dismiss()
+            self.parent.parent.parent.dismiss()
 
     def on_artist(self, *args):
         print("SongLibrary.on_artist", *args, self.artist)
@@ -734,7 +735,7 @@ class SongLibrary(Carousel):
     def on_album(self, *args):
         print("SongLibrary.on_album", *args)
         songs = slf.get_songs_on_album(self.artist, self.album)
-        self.albums_page.update_list(songs)
+        self.songs_page.update_list(songs)
 
     def on_song(self, *args):
         print("SongLibrary.on_song", *args)
@@ -753,7 +754,7 @@ class SongLibraryPage(FloatLayout):
             self.update_list(artists)
 
     def update_list(self, str_list):
-        print(str_list)
+        print("SongLibraryPage.update_list", self.name, str_list)
         buttons = [child for child in self.children if isinstance(child, Button)]
         while len(*str_list) < len(buttons):
             self.remove_widget(self.children[-1])
@@ -762,13 +763,14 @@ class SongLibraryPage(FloatLayout):
         prev_widget = self.header
         while len(*str_list) > len(buttons):
             button = Button(size_hint=[None, None], size=[250, 50])
+            button.top = prev_widget.y
             prev_widget.bind(y=button.setter('top'))
             buttons.append(button)
             self.add_widget(button)
             button.bind(on_press=self.carousel.on_press)
             prev_widget = button
 
-        print(len(buttons), len(self.children))
+        print("\t", len(buttons), len(self.children))
         for child, text in zip(buttons, *str_list):
             child.text = text
 
