@@ -28,7 +28,7 @@ def get_all_songs() -> List:
 def get_songs_by_artist(artist: str) -> List:
     with sqlite3.connect("song_library_DB.db") as connection:
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM SongLibrary WHERE Artist = ?", artist)
+        cursor.execute("SELECT * FROM SongLibrary WHERE Artist = ?", (artist,))
         rows = cursor.fetchall()
         return rows
 
@@ -38,13 +38,14 @@ def get_artists():
         cursor = connection.cursor()
         cursor.execute("SELECT DISTINCT Artist FROM SongLibrary")
         rows = cursor.fetchall()
+        print(rows)
         return rows
 
 
 def get_albums_by_artist(artist: str) -> List:
     with sqlite3.connect("song_library_DB.db") as connection:
         cursor = connection.cursor()
-        cursor.execute("SELECT Album FROM SongLibrary WHERE Artist = ?", artist)
+        cursor.execute("SELECT Album FROM SongLibrary WHERE Artist = ?", (artist,))
         rows = cursor.fetchall()
         return rows
     
@@ -53,7 +54,7 @@ def get_songs_on_album(artist: str, album: str) -> List:
     with sqlite3.connect("song_library_DB.db") as connection:
         cursor = connection.cursor()
         cursor.execute("""SELECT Title FROM SongLibrary
-                       WHERE Artist = ? AND Album = ?""", [artist, album])
+                       WHERE Artist = ? AND Album = ?""", (artist, album))
         rows = cursor.fetchall()
         return rows
 
@@ -66,4 +67,5 @@ def save_song_to_library(artist: str, album: str, title: str, filepath: str) -> 
                           VALUES (?, ?, ?, ?)""", (artist, album, title, filepath))
         return
 
-create_song_lib_db()
+
+# create_song_lib_db()

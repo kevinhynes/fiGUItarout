@@ -4,6 +4,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.pagelayout import PageLayout
 from kivy.uix.widget import Widget
+from kivy.uix.button import Button
 from kivy.uix.carousel import Carousel
 from kivy.properties import NumericProperty, ObjectProperty, AliasProperty, StringProperty
 from kivy.uix.popup import Popup
@@ -701,20 +702,75 @@ class FileLoaderPopupContent(BoxLayout):
 
 
 class SongLibrary(Carousel):
+    artist = StringProperty('')
+    album = StringProperty('')
+    song = StringProperty('')
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        for pagename in ('artist', 'album', 'songs'):
-            self.add_widget(SongLibraryPage(name=pagename))
+        self.artists_page = SongLibraryPage(name='Artists', carousel=self)
+        self.albums_page = SongLibraryPage(name='Albums', carousel=self)
+        self.songs_page = SongLibraryPage(name='Songs', carousel=self)
+        for page in (self.artists_page, self.albums_page, self.songs_page):
+            self.add_widget(page)
+
+    def on_press(self, button):
+        print('from carousel', button, self.current_slide.name)
+        if self.current_slide.name == 'Artists':
+            self.artist = button.text
+            self.load_next(mode='next')
+        elif self.current_slide.name == 'Albums':
+            self.artist = button.text
+            self.load_next(mode='next')
+        elif self.current_slide.name == 'Songs':
+            self.song = button.text
+            self.parent.dismiss()
+
+    def on_artist(self, *args):
+        print("SongLibrary.on_artist", *args, self.artist)
+        albums = slf.get_albums_by_artist(self.artist)
+        self.albums_page.update_list(albums)
+
+    def on_album(self, *args):
+        print("SongLibrary.on_album", *args)
+        songs = slf.get_songs_on_album(self.artist, self.album)
+        self.albums_page.update_list(songs)
+
+    def on_song(self, *args):
+        print("SongLibrary.on_song", *args)
 
 
 class SongLibraryPage(FloatLayout):
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name=None, carousel=None, **kwargs):
         super().__init__(**kwargs)
-        self.add_widget(SongLibraryHeader(text=name.title()))
-        self.buttons = []
+        self.name = name
+        self.carousel = carousel
+        self.header = SongLibraryHeader(text=name.title())
+        self.add_widget(self.header)
+        if name == 'Artists':
+            artists = slf.get_artists()
+            self.update_list(artists)
 
+    def update_list(self, str_list):
+        print(str_list)
+        buttons = [child for child in self.children if isinstance(child, Button)]
+        while len(*str_list) < len(buttons):
+            self.remove_widget(self.children[-1])
+            buttons.pop()
+
+        prev_widget = self.header
+        while len(*str_list) > len(buttons):
+            button = Button(size_hint=[None, None], size=[250, 50])
+            prev_widget.bind(y=button.setter('top'))
+            buttons.append(button)
+            self.add_widget(button)
+            button.bind(on_press=self.carousel.on_press)
+            prev_widget = button
+
+        print(len(buttons), len(self.children))
+        for child, text in zip(buttons, *str_list):
+            child.text = text
 
 
 class SongLibraryHeader(Label):
