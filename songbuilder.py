@@ -27,7 +27,7 @@ class SongBuilder(FloatLayout):
 
 
 class TabViewer(ScrollView):
-    file = ObjectProperty(None)
+    # file = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         self.prev_timesig = None
@@ -283,15 +283,7 @@ class TabViewer(ScrollView):
 
     def load_new_file(self, filepath):
         self.fileloader_popup.dismiss()
-        self.file = filepath[0]
-
-    def on_file(self, *args):
-        self.gp_song = guitarpro.parse(self.file)
-        self.flat_song = self.flatten_song()
-        self.floatlayout.clear_widgets()
-        self.set_floatlayout_height()
-        self.set_child_y()
-        self.build_track(self.flat_song[0])
+        self.load_file(filepath[0], False)
 
     def close_fileloader(self, *args):
         self.fileloader_popup.dismiss()
@@ -301,7 +293,8 @@ class TabViewer(ScrollView):
         editted_gp_song = gp_song
         for i in range(len(gp_song.tracks)):
             flat_track = self.flat_song[i]
-            editted_gp_song.tracks[i].measures = flat_track
+            editted_gp_song.tracks[i].measures[:] = flat_track
+            # print(len(flat_track), print(len(editted_gp_song.tracks[i].measures)))
         artist, album, title = gp_song.artist.title(), gp_song.album.title(), gp_song.title.title()
         song_name = '-'.join([artist, album, title]).lower() + '.gp5'
         filepath = './song-library/' + song_name
@@ -315,8 +308,21 @@ class TabViewer(ScrollView):
 
     def load_saved_file(self, filepath):
         self.song_library_popup.dismiss()
-        self.file = filepath
+        self.load_file(filepath, True)
 
+    def load_file(self, filepath, from_song_library):
+        self.gp_song = guitarpro.parse(filepath)
+        # Saved songs in ./song-library/ are already flattened.
+        if not from_song_library:
+            self.flat_song = self.flatten_song()
+        else:
+            self.flat_song = []
+            for track in self.gp_song.tracks:
+                self.flat_song.append(track.measures)
+        self.floatlayout.clear_widgets()
+        self.set_floatlayout_height()
+        self.set_child_y()
+        self.build_track(self.flat_song[0])
 
 class TabWidget(Widget):
     open_repeat_opac = NumericProperty(0)
@@ -561,7 +567,6 @@ class TabWidget(Widget):
             upper = (xpos, self.y + self.step_y * 2)
         else:
             upper = (xpos, self.y + self.step_y * 2.5)
-        # print(gp_beat.voice.measure.header.number, lower, upper)
         stem = Line(points=(*lower, *upper), width=1, cap='square')
         if gp_beat.duration.isDotted or gp_beat.duration.isDoubleDotted:
             xpos, ypos = lower
@@ -718,7 +723,6 @@ class SongLibrary(Carousel):
             self.add_widget(page)
 
     def on_press(self, button):
-        print('from carousel', button, self.current_slide.name)
         if self.current_slide.name == 'Artists':
             self.artist = button.text
             self.load_next(mode='next')
@@ -729,20 +733,16 @@ class SongLibrary(Carousel):
             self.song = button.text
 
     def on_artist(self, *args):
-        print("SongLibrary.on_artist", *args, self.artist)
         albums = slf.get_albums_by_artist(self.artist)
         self.albums_page.update_list(albums)
 
     def on_album(self, *args):
-        print("SongLibrary.on_album", *args)
         songs = slf.get_songs_on_album(self.artist, self.album)
         self.songs_page.update_list(songs)
 
     def on_song(self, *args):
         filepath = slf.get_saved_song_file(self.artist, self.album, self.song)
         self.load_saved_file(filepath)
-        print(filepath)
-        print("SongLibrary.on_song", *args)
 
 
 class SongLibraryPage(FloatLayout):
@@ -773,7 +773,6 @@ class SongLibraryPage(FloatLayout):
             button.bind(on_press=self.carousel.on_press)
             prev_widget = button
 
-        print("\t", len(buttons), len(self.children))
         for child, text in zip(buttons, str_list):
             child.text = text
 
