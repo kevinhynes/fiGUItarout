@@ -1,5 +1,5 @@
 import sqlite3
-from typing import List
+from typing import List, Tuple
 
 
 # Create the database and table.
@@ -33,30 +33,42 @@ def get_songs_by_artist(artist: str) -> List:
         return rows
 
 
-def get_artists():
+def get_artists() -> List[str]:
     with sqlite3.connect("song_library_DB.db") as connection:
         cursor = connection.cursor()
         cursor.execute("SELECT DISTINCT Artist FROM SongLibrary")
         rows = cursor.fetchall()
-        print(rows)
-        return rows
+        str_list = [tup[0] for tup in rows]
+        return str_list
 
 
-def get_albums_by_artist(artist: str) -> List:
+def get_albums_by_artist(artist: str) -> List[str]:
     with sqlite3.connect("song_library_DB.db") as connection:
         cursor = connection.cursor()
-        cursor.execute("SELECT Album FROM SongLibrary WHERE Artist = ?", (artist,))
+        cursor.execute("SELECT DISTINCT Album FROM SongLibrary WHERE Artist = ?", (artist,))
         rows = cursor.fetchall()
-        return rows
+        str_list = [tup[0] for tup in rows]
+        return str_list
     
 
-def get_songs_on_album(artist: str, album: str) -> List:
+def get_songs_on_album(artist: str, album: str) -> List[str]:
     with sqlite3.connect("song_library_DB.db") as connection:
         cursor = connection.cursor()
         cursor.execute("""SELECT Title FROM SongLibrary
                        WHERE Artist = ? AND Album = ?""", (artist, album))
         rows = cursor.fetchall()
-        return rows
+        str_list = [tup[0] for tup in rows]
+        return str_list
+
+
+def get_saved_song_file(artist: str, album: str, song: str) -> str:
+    with sqlite3.connect("song_library_DB.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute("""SELECT Filepath FROM SongLibrary
+                          WHERE Artist = ? AND Album = ? AND Title = ?""", (artist, album, song))
+        rows = cursor.fetchall()
+        str_list = [tup[0] for tup in rows]
+        return str_list[0]
 
 
 # Write to database.

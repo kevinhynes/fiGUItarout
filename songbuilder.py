@@ -276,15 +276,14 @@ class TabViewer(ScrollView):
         self.build_track(self.flat_song[0])
 
     def show_fileloader(self, *args):
-        content = FileLoaderPopupContent(load_song=self.load_song, cancel=self.close_fileloader)
+        content = FileLoaderPopupContent(load_new_file=self.load_new_file, cancel=self.close_fileloader)
         self.fileloader_popup = Popup(title="Load New Guitar Pro Song", content=content,
                                       size_hint=(0.9, 0.9))
         self.fileloader_popup.open()
 
-    def load_song(self, filepath):
+    def load_new_file(self, filepath):
         self.fileloader_popup.dismiss()
         self.file = filepath[0]
-        print("new song loaded")
 
     def on_file(self, *args):
         self.gp_song = guitarpro.parse(self.file)
@@ -310,9 +309,13 @@ class TabViewer(ScrollView):
         slf.save_song_to_library(artist, album, title, filepath)
 
     def show_song_library(self, *args):
-        content = SongLibrary(size_hint=(0.9, 0.9))
-        song_library_popup = Popup(title="Song Library", content=content, size_hint=(0.9, 0.9))
-        song_library_popup.open()
+        content = SongLibrary(size_hint=(0.9, 0.9), load_saved_file=self.load_saved_file)
+        self.song_library_popup = Popup(title="Song Library", content=content, size_hint=(0.9, 0.9))
+        self.song_library_popup.open()
+
+    def load_saved_file(self, filepath):
+        self.song_library_popup.dismiss()
+        self.file = filepath
 
 
 class TabWidget(Widget):
@@ -430,14 +433,12 @@ class TabWidget(Widget):
                 gp_beats += [gp_beat]
                 xpos += beat_width
         self.measure_end = xpos
-        # self.width = xpos - self.x
         return gp_beats, xmids
 
     def add_beat_glyph(self, gp_beat: guitarpro.models.Beat, xpos: float):
         # If notes list is empty, rest for gp_beat.duration.value.
         if not gp_beat.notes:
             self.draw_rest(gp_beat, xpos)
-            # return xpos, -1
             return xpos
         for gp_note in gp_beat.notes:
             xmid = self.draw_fretnum(gp_note, xpos)
@@ -650,7 +651,6 @@ class TabWidget(Widget):
                         self.ends_with_slide = True
 
     def draw_tie(self, gp_note: guitarpro.models.Note, start: float, end: float):
-        # print(start, end)
         string_y = self.y + self.step_y * (8 - (gp_note.string - 1))
         line_mid = (start + end) / 2
         points = (start, string_y - self.step_y / 3,
@@ -698,11 +698,13 @@ class CopyPopup(Popup):
 
 
 class FileLoaderPopupContent(BoxLayout):
-    load_song = ObjectProperty()
+    load_new_file = ObjectProperty()
     cancel = ObjectProperty()
 
 
 class SongLibrary(Carousel):
+    load_saved_file = ObjectProperty()
+
     artist = StringProperty('')
     album = StringProperty('')
     song = StringProperty('')
@@ -725,7 +727,6 @@ class SongLibrary(Carousel):
             self.load_next(mode='next')
         elif self.current_slide.name == 'Songs':
             self.song = button.text
-            self.parent.parent.parent.dismiss()
 
     def on_artist(self, *args):
         print("SongLibrary.on_artist", *args, self.artist)
@@ -738,6 +739,9 @@ class SongLibrary(Carousel):
         self.songs_page.update_list(songs)
 
     def on_song(self, *args):
+        filepath = slf.get_saved_song_file(self.artist, self.album, self.song)
+        self.load_saved_file(filepath)
+        print(filepath)
         print("SongLibrary.on_song", *args)
 
 
@@ -754,15 +758,14 @@ class SongLibraryPage(FloatLayout):
             self.update_list(artists)
 
     def update_list(self, str_list):
-        print("SongLibraryPage.update_list", self.name, str_list)
         buttons = [child for child in self.children if isinstance(child, Button)]
-        while len(*str_list) < len(buttons):
+        while len(str_list) < len(buttons):
             self.remove_widget(self.children[-1])
             buttons.pop()
 
         prev_widget = self.header
-        while len(*str_list) > len(buttons):
-            button = Button(size_hint=[None, None], size=[250, 50])
+        while len(str_list) > len(buttons):
+            button = Button(size_hint=[None, None], size=[350, 50])
             button.top = prev_widget.y
             prev_widget.bind(y=button.setter('top'))
             buttons.append(button)
@@ -771,7 +774,7 @@ class SongLibraryPage(FloatLayout):
             prev_widget = button
 
         print("\t", len(buttons), len(self.children))
-        for child, text in zip(buttons, *str_list):
+        for child, text in zip(buttons, str_list):
             child.text = text
 
 

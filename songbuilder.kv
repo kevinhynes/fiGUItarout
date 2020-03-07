@@ -121,7 +121,7 @@
     height: load_btn.height
     EditToolbarButton:
         id: load_btn
-        text: "Load File"
+        text: "Load New File"
         on_press: root.tabviewer.show_fileloader()
     EditToolbarButton:
         id: copy_btn
@@ -180,19 +180,13 @@
             on_release: root.cancel()
         Button:
             text: "Load"
-            on_release: root.load_song(filechooser.selection)
+            on_release: root.load_new_file(filechooser.selection)
 
 
 <SongLibrary>:
-#    scroll_distance: 10000
+    scroll_distance: 10000  # disables scrolling
     direction: 'right'
 <SongLibraryHeader>:
     size_hint: [1, None]
     height: 50
     pos_hint: {'top': 1}
-    canvas:
-        Color:
-            rgba: (1, 0, 0, 0.25)
-        Rectangle:
-            size: self.size
-            pos: self.pos
