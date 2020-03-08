@@ -237,6 +237,24 @@ class TabViewer(ScrollView):
             tabwidget.select()
         print([selectedwidget.idx for selectedwidget in self.selected_children])
 
+    def shift_select(self, tabwidget):
+        to_select = []
+        # Selected TabWidget is above the existing group.
+        if tabwidget.idx < self.selected_children[0].idx:
+            i = self.tabwidget_to_child_idx(self.selected_children[0])
+            j = self.tabwidget_to_child_idx(tabwidget)
+            to_select = self.floatlayout.children[i+1:j+1]  # Don't include i, include j.
+            self.selected_children[:] = to_select[::-1] + self.selected_children
+        # Selected TabWidget is below the existing selected group.
+        elif tabwidget.idx > self.selected_children[-1].idx:
+            i = self.tabwidget_to_child_idx(tabwidget)
+            j = self.tabwidget_to_child_idx(self.selected_children[-1])
+            to_select = self.floatlayout.children[i:j]
+            self.selected_children[:] = self.selected_children + to_select[::-1]
+        for tabwidget in to_select:
+            tabwidget.select()
+        print([selectedwidget.idx for selectedwidget in self.selected_children])
+
     def copy(self, *args):
         self.clipboard = [child for child in self.floatlayout.children if child.is_selected]
         self.show_copy_notification()
@@ -257,16 +275,18 @@ class TabViewer(ScrollView):
             self.floatlayout.remove_widget(child)
             print(child.idx)
             del self.flat_song[0][child.idx]
-        self.reindex_children()
+        self.reindex_tabwidgets()
 
-    def reindex_children(self):
+    def reindex_tabwidgets(self):
         '''TabWidget.idx should point to the relevant gp_measure in self.flat_song[0].'''
-        for i, child in enumerate(self.floatlayout.children[::-1]):
+        # floatlayout also contains song title Lable
+        tabwidgets = [child for child in self.floatlayout.children if isinstance(child, TabWidget)]
+        for i, child in enumerate(tabwidgets[::-1]):
             child.idx = i
 
     def tabwidget_to_child_idx(self, tabwidget):
         '''First TabWidget (TabWidget.idx == 0) in floatlayout is last in floatlayout.children.'''
-        last_index = len(self.floatlayout.children) - 1
+        last_index = len(self.floatlayout.children) - 2  # Additional -1 for header.
         return last_index - tabwidget.idx
 
     def rebuild(self, *args):
@@ -294,7 +314,6 @@ class TabViewer(ScrollView):
         for i in range(len(gp_song.tracks)):
             flat_track = self.flat_song[i]
             editted_gp_song.tracks[i].measures[:] = flat_track
-            # print(len(flat_track), print(len(editted_gp_song.tracks[i].measures)))
         artist, album, title = gp_song.artist.title(), gp_song.album.title(), gp_song.title.title()
         song_name = '-'.join([artist, album, title]).lower() + '.gp5'
         filepath = './song-library/' + song_name
@@ -323,6 +342,7 @@ class TabViewer(ScrollView):
         self.set_floatlayout_height()
         self.set_child_y()
         self.build_track(self.flat_song[0])
+
 
 class TabWidget(Widget):
     open_repeat_opac = NumericProperty(0)
