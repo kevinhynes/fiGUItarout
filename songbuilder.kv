@@ -1,5 +1,6 @@
 #: import os os
 
+
 <SongBuilder>:
     TabViewer:
         id: tabviewer
@@ -157,14 +158,13 @@
     size: [125, 50]
 
 
-<CopyPopup>:
-    size_hint: [None, None]
-    size: [200, 60]
-    pos_hint: {'center': [0.5, 0.5]}
-    separator_color: (0,0,0,0)
-    title: 'Measures Copied'
-    title_align: 'center'
-    font_size: 18
+<SongLibrary>:
+    scroll_distance: 10000  # disables scrolling
+    direction: 'right'
+<SongLibraryHeader>:
+    size_hint: [1, None]
+    height: 50
+    pos_hint: {'top': 1}
 
 
 <FileLoaderPopupContent>:
@@ -181,12 +181,30 @@
         Button:
             text: "Load"
             on_release: root.load_new_file(filechooser.selection)
+            
+
+<CopyPopup>:
+    size_hint: [None, None]
+    size: [200, 60]
+    pos_hint: {'center': [0.5, 0.5]}
+    separator_color: (0,0,0,0)
+    title: 'Measures Copied'
+    title_align: 'center'
+    font_size: 18
 
 
-<SongLibrary>:
-    scroll_distance: 10000  # disables scrolling
-    direction: 'right'
-<SongLibraryHeader>:
-    size_hint: [1, None]
-    height: 50
-    pos_hint: {'top': 1}
+<FileOverwritePopup>:
+    size_hint: [None, None]
+    size: [400, 100]
+    pos_hint: {'center': [0.5, 0.5]}
+    title: 'Overwrite existing file?'
+    title_align: 'center'
+    font_size: 18
+#    content:
+    BoxLayout:
+        Button:
+            text: "Cancel"
+            on_press: root.cancel()
+        Button:
+            text: "Overwrite"
+            on_press: root.overwrite(root.artist, root.album, root.song_title)

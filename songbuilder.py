@@ -205,6 +205,13 @@ class TabViewer(ScrollView):
         self.prev_timesig = timesig
         self.floatlayout.add_widget(tabwidget)
 
+    def on_touch_down(self, touch):
+        if not super().on_touch_down(touch):
+            if self.collide_point(touch.x, touch.y):
+                for tabwidget in self.selected_children:
+                    tabwidget.unselect()
+        return super().on_touch_down(touch)
+
     def select(self, tabwidget):
         # If no other tabwigets are selected, shift, ctrl and normal select do the same thing.
         if not self.selected_children:
@@ -218,24 +225,6 @@ class TabViewer(ScrollView):
             selectedwidget.unselect()
         tabwidget.select()
         self.selected_children = [tabwidget]
-
-    def shift_select(self, tabwidget):
-        to_select = []
-        # Selected TabWidget is above the existing group.
-        if tabwidget.idx < self.selected_children[0].idx:
-            i = self.tabwidget_to_child_idx(self.selected_children[0])
-            j = self.tabwidget_to_child_idx(tabwidget)
-            to_select = self.floatlayout.children[i+1:j+1]  # Don't include i, include j.
-            self.selected_children[:] = to_select[::-1] + self.selected_children
-        # Selected TabWidget is below the existing selected group.
-        elif tabwidget.idx > self.selected_children[-1].idx:
-            i = self.tabwidget_to_child_idx(tabwidget)
-            j = self.tabwidget_to_child_idx(self.selected_children[-1])
-            to_select = self.floatlayout.children[i:j]
-            self.selected_children[:] = self.selected_children + to_select[::-1]
-        for tabwidget in to_select:
-            tabwidget.select()
-        print([selectedwidget.idx for selectedwidget in self.selected_children])
 
     def shift_select(self, tabwidget):
         to_select = []
@@ -269,7 +258,8 @@ class TabViewer(ScrollView):
     def delete(self, *args):
         def tabwidget_sort(tabwidget):
             return -tabwidget.idx
-        tabwidgets_to_delete = [child for child in self.floatlayout.children if child.is_selected]
+        tabwidgets_to_delete = [child for child in self.floatlayout.children if \
+                                isinstance(child, TabWidget) and child.is_selected]
         tabwidgets_to_delete.sort(key=tabwidget_sort)
         for child in tabwidgets_to_delete:
             self.floatlayout.remove_widget(child)
@@ -310,15 +300,40 @@ class TabViewer(ScrollView):
 
     def save(self, *args):
         gp_song = self.gp_song
+        artist, album, song_title = gp_song.artist.title(), gp_song.album.title(), gp_song.title.title()
+        song_name = '-'.join([artist, album, song_title]).lower() + '.gp5'
+        filepath = './song-library/' + song_name
+        # Check if song already exists in database.
+        if slf.get_saved_song_file(artist, album, song_title):
+            # content = FileOverwritePopupContent(cancel=self.cancel_overwrite, overwrite=self.overwrite,
+            #                                     artist=artist, album=album, title=title)
+            self.fileoverwrite_popup = FileOverwritePopup(cancel=self.cancel_overwrite,
+                                                          overwrite=self.overwrite,
+                                                          artist=artist, album=album,
+                                                          song_title=song_title)
+            self.fileoverwrite_popup.open()
+        else:
+            editted_gp_song = gp_song
+            for i in range(len(gp_song.tracks)):
+                flat_track = self.flat_song[i]
+                editted_gp_song.tracks[i].measures[:] = flat_track
+
+            guitarpro.write(editted_gp_song, filepath, version=(5, 1, 0), encoding='cp1252')
+            slf.save_song_to_library(artist, album, song_title, filepath)
+
+    def overwrite(self, artist: str, album: str, song_title: str) -> None:
+        song_name = '-'.join([artist, album, song_title]).lower() + '.gp5'
+        filepath = './song-library/' + song_name
+        gp_song = self.gp_song
         editted_gp_song = gp_song
         for i in range(len(gp_song.tracks)):
             flat_track = self.flat_song[i]
             editted_gp_song.tracks[i].measures[:] = flat_track
-        artist, album, title = gp_song.artist.title(), gp_song.album.title(), gp_song.title.title()
-        song_name = '-'.join([artist, album, title]).lower() + '.gp5'
-        filepath = './song-library/' + song_name
         guitarpro.write(editted_gp_song, filepath, version=(5, 1, 0), encoding='cp1252')
-        slf.save_song_to_library(artist, album, title, filepath)
+        self.fileoverwrite_popup.dismiss()
+
+    def cancel_overwrite(self, *args):
+        self.fileoverwrite_popup.dismiss()
 
     def show_song_library(self, *args):
         content = SongLibrary(size_hint=(0.9, 0.9), load_saved_file=self.load_saved_file)
@@ -718,15 +733,6 @@ class EditToolbar(FloatLayout):
     tabviewer = ObjectProperty()
 
 
-class CopyPopup(Popup):
-    pass
-
-
-class FileLoaderPopupContent(BoxLayout):
-    load_new_file = ObjectProperty()
-    cancel = ObjectProperty()
-
-
 class SongLibrary(Carousel):
     load_saved_file = ObjectProperty()
 
@@ -799,6 +805,23 @@ class SongLibraryPage(FloatLayout):
 
 class SongLibraryHeader(Label):
     pass
+
+
+class FileLoaderPopupContent(BoxLayout):
+    load_new_file = ObjectProperty()
+    cancel = ObjectProperty()
+
+
+class CopyPopup(Popup):
+    pass
+
+
+class FileOverwritePopup(Popup):
+    cancel = ObjectProperty()
+    overwrite = ObjectProperty()
+    artist = StringProperty()
+    album = StringProperty()
+    song_title = StringProperty()
 
 
 class SongBuilderApp(App):
