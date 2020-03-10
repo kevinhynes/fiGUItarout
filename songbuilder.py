@@ -27,7 +27,6 @@ class SongBuilder(FloatLayout):
 
 
 class TabViewer(ScrollView):
-    # file = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         self.prev_timesig = None
@@ -39,7 +38,7 @@ class TabViewer(ScrollView):
         self.shift_pressed = False
         self.selected_children = []
         super().__init__(**kwargs)
-        self.floatlayout = FloatLayout(size_hint_y=None)
+        self.floatlayout = TabFloatLayout(tabviewer=self, size_hint_y=None)
         self.add_widget(self.floatlayout)
 
     def close_keyboard(self, *args):
@@ -205,13 +204,6 @@ class TabViewer(ScrollView):
         self.prev_timesig = timesig
         self.floatlayout.add_widget(tabwidget)
 
-    def on_touch_down(self, touch):
-        if not super().on_touch_down(touch):
-            if self.collide_point(touch.x, touch.y):
-                for tabwidget in self.selected_children:
-                    tabwidget.unselect()
-        return super().on_touch_down(touch)
-
     def select(self, tabwidget):
         # If no other tabwigets are selected, shift, ctrl and normal select do the same thing.
         if not self.selected_children:
@@ -243,6 +235,11 @@ class TabViewer(ScrollView):
         for tabwidget in to_select:
             tabwidget.select()
         print([selectedwidget.idx for selectedwidget in self.selected_children])
+
+    def unselect_all(self):
+        for tabwidget in self.selected_children:
+            tabwidget.unselect()
+        self.selected_children = []
 
     def copy(self, *args):
         self.clipboard = [child for child in self.floatlayout.children if child.is_selected]
@@ -305,8 +302,6 @@ class TabViewer(ScrollView):
         filepath = './song-library/' + song_name
         # Check if song already exists in database.
         if slf.get_saved_song_file(artist, album, song_title):
-            # content = FileOverwritePopupContent(cancel=self.cancel_overwrite, overwrite=self.overwrite,
-            #                                     artist=artist, album=album, title=title)
             self.fileoverwrite_popup = FileOverwritePopup(cancel=self.cancel_overwrite,
                                                           overwrite=self.overwrite,
                                                           artist=artist, album=album,
@@ -357,6 +352,18 @@ class TabViewer(ScrollView):
         self.set_floatlayout_height()
         self.set_child_y()
         self.build_track(self.flat_song[0])
+
+
+class TabFloatLayout(FloatLayout):
+
+    def __init__(self, tabviewer=None, **kwargs):
+        super().__init__(**kwargs)
+        self.tabviewer = tabviewer
+
+    def on_touch_down(self, touch):
+        tabwidget_touched = super().on_touch_down(touch)
+        if not tabwidget_touched:
+            self.tabviewer.unselect_all()
 
 
 class TabWidget(Widget):
@@ -716,7 +723,9 @@ class TabWidget(Widget):
 
     def on_touch_down(self, touch):
         if self.collide_point(touch.x, touch.y):
+            self.tabviewer.no_tabwidgets_touched = False
             self.tabviewer.select(self)
+            print('TabWidget.on_touch_down collision', self.idx)
             return True
         return super().on_touch_down(touch)
 
