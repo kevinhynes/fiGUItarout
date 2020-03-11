@@ -4,6 +4,7 @@
 <SongBuilder>:
     TabViewer:
         id: tabviewer
+        editbar: editbar
         pos_hint: {'center_x': 0.5}
         size_hint: [1, None]
         height: root.height - editbar.height
@@ -130,13 +131,21 @@
         x: load_btn.right
         on_press: root.tabviewer.copy()
     EditToolbarButton:
-        id: paste_btn
-        text: "Paste"
+        id: insert_before_btn
+        text: "Insert Before"
         x: copy_btn.right
+        on_press: root.tabviewer.insert_before()
+        disabled: True
+    EditToolbarButton:
+        id: insert_after_btn
+        text: "Insert After"
+        x: insert_before_btn.right
+        on_press: root.tabviewer.insert_after()
+        disabled: True
     EditToolbarButton:
         id: delete_btn
         text: "Delete"
-        x: paste_btn.right
+        x: insert_after_btn.right
         on_press: root.tabviewer.delete()
     EditToolbarButton:
         id: rebuild_btn

@@ -27,6 +27,7 @@ class SongBuilder(FloatLayout):
 
 
 class TabViewer(ScrollView):
+    editbar = ObjectProperty()
 
     def __init__(self, **kwargs):
         self.prev_timesig = None
@@ -205,7 +206,7 @@ class TabViewer(ScrollView):
         self.floatlayout.add_widget(tabwidget)
 
     def select(self, tabwidget):
-        # If no other tabwigets are selected, shift, ctrl and normal select do the same thing.
+        # If no other tabwigets are selected, shift and normal select do the same thing.
         if not self.selected_children:
             tabwidget.select()
             self.selected_children[:] = [tabwidget]
@@ -234,7 +235,7 @@ class TabViewer(ScrollView):
             self.selected_children[:] = self.selected_children + to_select[::-1]
         for tabwidget in to_select:
             tabwidget.select()
-        print([selectedwidget.idx for selectedwidget in self.selected_children])
+        print("TabViewer.shift_select, ", [selectedwidget.idx for selectedwidget in self.selected_children])
 
     def unselect_all(self):
         for tabwidget in self.selected_children:
@@ -242,15 +243,39 @@ class TabViewer(ScrollView):
         self.selected_children = []
 
     def copy(self, *args):
-        self.clipboard = [child for child in self.floatlayout.children if child.is_selected]
+        self.clipboard = [child.idx for child in self.floatlayout.children if \
+                          isinstance(child, TabWidget) and child.is_selected]
+        print("TabViewer.copy, clipboard: ", self.clipboard)
         self.show_copy_notification()
-        for child in self.clipboard:
+        for child in self.selected_children:
             child.is_selected = False
+        self.editbar.ids.insert_before_btn.disabled = False
+        self.editbar.ids.insert_after_btn.disabled = False
 
     def show_copy_notification(self):
         popup = CopyPopup()
         popup.open()
         Clock.schedule_once(popup.dismiss, 0.75)
+
+    def insert_before(self, *args):
+        before_idx = self.clipboard[0]
+        for i, track in enumerate(self.flat_song):
+            paste_measures = [track[j] for j in self.clipboard]
+            self.flat_song[i] = track[:before_idx] + paste_measures + track[before_idx:]
+        self.unselect_all()
+        self.editbar.ids.insert_before_btn.disabled = True
+        self.editbar.ids.insert_after_btn.disabled = True
+        self.rebuild()
+
+    def insert_after(self, *args):
+        after_idx = self.clipboard[-1]
+        for i, track in enumerate(self.flat_song):
+            paste_measures = [track[j] for j in self.clipboard]
+            self.flat_song[i] = track[:after_idx+1] + paste_measures + track[after_idx+1:]
+        self.unselect_all()
+        self.editbar.ids.insert_before_btn.disabled = True
+        self.editbar.ids.insert_after_btn.disabled = True
+        self.rebuild()
 
     def delete(self, *args):
         def tabwidget_sort(tabwidget):
@@ -261,7 +286,8 @@ class TabViewer(ScrollView):
         for child in tabwidgets_to_delete:
             self.floatlayout.remove_widget(child)
             print(child.idx)
-            del self.flat_song[0][child.idx]
+            for i, track in enumerate(self.flat_song):
+                del self.flat_song[i][child.idx]
         self.reindex_tabwidgets()
 
     def reindex_tabwidgets(self):
@@ -277,6 +303,7 @@ class TabViewer(ScrollView):
         return last_index - tabwidget.idx
 
     def rebuild(self, *args):
+        self.set_floatlayout_height()
         self.set_child_y()
         self.prev_tabwidget = self.prev_timesig = None
         self.floatlayout.clear_widgets()
@@ -312,7 +339,6 @@ class TabViewer(ScrollView):
             for i in range(len(gp_song.tracks)):
                 flat_track = self.flat_song[i]
                 editted_gp_song.tracks[i].measures[:] = flat_track
-
             guitarpro.write(editted_gp_song, filepath, version=(5, 1, 0), encoding='cp1252')
             slf.save_song_to_library(artist, album, song_title, filepath)
 
@@ -725,7 +751,6 @@ class TabWidget(Widget):
         if self.collide_point(touch.x, touch.y):
             self.tabviewer.no_tabwidgets_touched = False
             self.tabviewer.select(self)
-            print('TabWidget.on_touch_down collision', self.idx)
             return True
         return super().on_touch_down(touch)
 
