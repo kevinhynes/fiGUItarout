@@ -67,6 +67,8 @@ def get_saved_song_file(artist: str, album: str, song: str) -> str:
         cursor.execute("""SELECT Filepath FROM SongLibrary
                           WHERE Artist = ? AND Album = ? AND Title = ?""", (artist, album, song))
         rows = cursor.fetchall()
+        if not rows:
+            return
         str_list = [tup[0] for tup in rows]
         return str_list[0]
 

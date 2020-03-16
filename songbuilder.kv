@@ -17,6 +17,12 @@
 <TabViewer>:
     bar_width: 10
     scroll_type: ['bars', 'content']
+    canvas.after:
+        Color:
+            rgba: (1, 0, 0, 0.9)
+        Rectangle:
+            size: (5, 200)
+            pos: [root.scrollbar1_x, root.scrollbar1_y]
 
 
 <TabWidget>:
@@ -162,6 +168,11 @@
         text: "Show Song Library"
         x: save_btn.right
         on_press: root.tabviewer.show_song_library()
+    EditToolbarButton:
+        id: play_btn
+        text: "Play"
+        x: show_song_library_btn.right
+        on_press: root.tabviewer.play()
 <EditToolbarButton@Button>:
     size_hint: [None, None]
     size: [125, 50]
