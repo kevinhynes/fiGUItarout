@@ -27,10 +27,6 @@ class SongBuilder(FloatLayout):
 
 class TabViewer(ScrollView):
     editbar = ObjectProperty()
-    scrollbar1_x = NumericProperty(0)
-    scrollbar1_y = NumericProperty(0)
-    scrollbar2_y = NumericProperty(0)
-    scrollbar2_y = NumericProperty(0)
 
     def __init__(self, **kwargs):
         self.prev_timesig = None
@@ -383,26 +379,48 @@ class TabViewer(ScrollView):
         self.build_track(self.flat_song[0])
 
     def play(self, *args):
+        tempo = self.gp_song.tempo
+        self.floatlayout.play(tempo)
+
+
+class TabFloatLayout(FloatLayout):
+    scrollbar1_x = NumericProperty(0)
+    scrollbar1_y = NumericProperty(0)
+
+    def __init__(self, tabviewer=None, **kwargs):
+        super().__init__(**kwargs)
+        self.tabviewer = tabviewer
+
+    def on_touch_down(self, touch):
+        tabwidget_touched = super().on_touch_down(touch)
+        if not tabwidget_touched:
+            self.tabviewer.unselect_all()
+
+    def play(self, tempo):
+        # The GuitarPro songs' tempo are of form BPM where the B(eat) is always a quarter note.
+        self.beat_width = self.children[0].measure_width / 4
+        self.seconds_per_beat = 60/tempo
         self.scroll_coords = self.build_scroll_coords()
         self.scroll_coords_idx = 0
         self._play_next_line()
 
     def _play_next_line(self, *args):
-        print(f"TabViewer._play_next_line   idx: {self.scroll_coords_idx}")
         if self.scroll_coords_idx == len(self.scroll_coords):
             return
         x_start, x_stop, y = self.scroll_coords[self.scroll_coords_idx]
+        num_beats = (x_stop - x_start) / self.beat_width
+        seconds = self.seconds_per_beat * num_beats
         self.scroll_coords_idx += 1
         self.scrollbar1_x = x_start - 5
         self.scrollbar1_y = y
-        anim = Animation(scrollbar1_x=x_stop-5, d=2)
+        anim = Animation(scrollbar1_x=x_stop-5, d=seconds)
         anim.bind(on_complete=self._play_next_line)
         anim.start(self)
 
     def build_scroll_coords(self):
         # Scrolling bar will traverse 1 or more measures at a time. Build list of coordinates
         # for the scrolling bar to scroll to.
-        tabwidgets = [child for child in self.floatlayout.children if isinstance(child, TabWidget)]
+        tabwidgets = [child for child in self.children if isinstance(child, TabWidget)]
         scroll_coords = []
         i = len(tabwidgets) - 1
         while i >= 0:
@@ -413,20 +431,7 @@ class TabViewer(ScrollView):
             y = tabwidgets[i].y
             scroll_coords.append((x_start, x_stop, y))
             i -= 1
-        print(scroll_coords)
         return scroll_coords
-
-
-class TabFloatLayout(FloatLayout):
-
-    def __init__(self, tabviewer=None, **kwargs):
-        super().__init__(**kwargs)
-        self.tabviewer = tabviewer
-
-    def on_touch_down(self, touch):
-        tabwidget_touched = super().on_touch_down(touch)
-        if not tabwidget_touched:
-            self.tabviewer.unselect_all()
 
 
 class TabWidget(Widget):
