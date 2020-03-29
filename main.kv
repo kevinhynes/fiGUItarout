@@ -87,4 +87,11 @@
         size_hint: [None, None]
         size: [150, 50]
         x: btn6.right
-        on_press: pass
+        on_press: root.show_song_library()
+    Button:
+        id: btn8
+        text: 'Log in to Spotify'
+        size_hint: [None, None]
+        size: [150, 50]
+        x: btn7.right
+        on_press: root.show_spotify_login_popup()

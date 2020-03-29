@@ -1,3 +1,4 @@
+from kivy.uix.popup import Popup
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.carousel import Carousel
 from kivy.uix.label import Label
@@ -8,6 +9,11 @@ from kivy.lang import Builder
 import song_library_funcs as slf
 
 Builder.load_file('songlibrary.kv')
+
+
+class SongLibraryPopup(Popup):
+    load_saved_file = ObjectProperty()
+
 
 class SongLibrary(Carousel):
     load_saved_file = ObjectProperty()

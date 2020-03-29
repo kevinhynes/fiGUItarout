@@ -1,7 +1,14 @@
 #: import sl songlibrary
 
 
+<SongLibraryPopup>:
+    size_hint: [0.9, 0.9]
+    title: "Song Library"
+    SongLibrary:
+        load_saved_file: root.load_saved_file
+
 <SongLibrary>:
+    size_hint: [0.9, 0.9]
     scroll_distance: 10000  # disables scrolling
     direction: 'right'
 <SongLibraryHeader>:

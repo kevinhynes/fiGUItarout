@@ -17,7 +17,7 @@ from kivy.core.window import Window
 import guitarpro
 from typing import List
 import song_library_funcs as slf
-from songlibrary import SongLibrary
+from songlibrary import SongLibraryPopup
 
 black = Color(0, 0, 0, 1)
 
@@ -369,8 +369,9 @@ class TabViewer(ScrollView):
         self.fileoverwrite_popup.dismiss()
 
     def show_song_library(self, *args):
-        content = SongLibrary(size_hint=(0.9, 0.9), load_saved_file=self.load_saved_file)
-        self.song_library_popup = Popup(title="Song Library", content=content, size_hint=(0.9, 0.9))
+        # content = SongLibrary(size_hint=(0.9, 0.9), load_saved_file=self.load_saved_file)
+        # self.song_library_popup = Popup(title="Song Library", content=content, size_hint=(0.9, 0.9))
+        self.song_library_popup = SongLibraryPopup(load_saved_file=self.load_saved_file)
         self.song_library_popup.open()
 
     def load_saved_file(self, filepath):

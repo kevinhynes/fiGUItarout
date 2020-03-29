@@ -1,0 +1,27 @@
+<SpotifyLoginPopup>:
+    size_hint: [None, None]
+    size: [600, 400]
+    title: "Log in to Spotify"
+    FloatLayout:
+        id: content_container
+        size_hint: [0.9, 0.9]
+        pos_hint: {'top': 1}
+        Label:
+            id: instructions
+            size_hint: [1, 0.6]
+            pos_hint: {'center_x': 0.5}
+            top: content_container.top
+            text: root.instruction_text
+        TextInput:
+            id: username_input
+            size_hint: [0.5, 0.2]
+            pos_hint: {'center_x': 0.5}
+            top: instructions.y
+        Button:
+            id: submit_btn
+            size_hint: [0.5, 0.2]
+            pos_hint: {'center_x': 0.5}
+            top: username_input.y
+            text: "Submit"
+            on_press: root.login_func(username_input.text)
+
