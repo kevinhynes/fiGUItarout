@@ -15,6 +15,7 @@ class SpotifyLoginPopup(Popup):
             2) Enter your Spotify username below and press submit.
             3) If a new tab opened in your web browser:
                 Copy and paste that URL into the terminal you're running this from.
+                        (It's okay if the web page failed to load!)
             4) If no new tab opened, you already have a valid token.
             5) You're all set! 
         """

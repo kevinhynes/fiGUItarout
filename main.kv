@@ -35,63 +35,59 @@
     Tuner:
         id: tuner
 
+    Metronome:
+        id: metronome
+
     SongBuilder:
         id: songbuilder
         height: root.height - 50
 
-    Button:
+    # Toolbar
+    ToolbarButton:
         id: btn1
-        text: 'Show Chord Display'
-        size_hint: [None, None]
-        size: [150, 50]
+        text: 'Tuner'
         pos: (0, 0)
-        on_press: chorddisplay.slide(keysigtitlebar)
-    Button:
+        on_press: tuner.slide()
+    ToolbarButton:
         id: btn2
-        text: 'Fold / Unfold Rack'
-        size_hint: [None, None]
-        size: [150, 50]
+        text: 'Metronome'
         x: btn1.right
-        on_press: rack.fold()
-    Button:
+        on_press: metronome.slide()
+    ToolbarButton:
         id: btn3
         text: 'Choose Key Sig'
-        size_hint: [None, None]
-        size: [150, 50]
         x: btn2.right
         on_press: keysigchooser.slide()
-    Button:
+    ToolbarButton:
         id: btn4
         text: 'Highlight Options'
-        size_hint: [None, None]
-        size: [150, 50]
         x: btn3.right
         on_press: scaleoptionschooser.slide()
-    Button:
+    ToolbarButton:
         id: btn5
-        text: 'Tuner'
-        size_hint: [None, None]
-        size: [150, 50]
+        text: 'Show Piano'
         x: btn4.right
-        on_press: tuner.slide()
-    Button:
+        on_press: rack.fold()
+    ToolbarButton:
         id: btn6
-        text: 'Song Builder'
-        size_hint: [None, None]
-        size: [150, 50]
+        text: 'Show Chord Display'
         x: btn5.right
-        on_press: songbuilder.slide(keysigtitlebar)
-    Button:
+        on_press: chorddisplay.slide(keysigtitlebar)
+    ToolbarButton:
         id: btn7
-        text: 'Song Library'
-        size_hint: [None, None]
-        size: [150, 50]
+        text: 'Song Builder'
         x: btn6.right
-        on_press: root.show_song_library()
-    Button:
+        on_press: songbuilder.slide(keysigtitlebar)
+    ToolbarButton:
         id: btn8
-        text: 'Log in to Spotify'
-        size_hint: [None, None]
-        size: [150, 50]
+        text: 'Song Library'
         x: btn7.right
+        on_press: root.show_song_library()
+    ToolbarButton:
+        id: btn9
+        text: 'Log in to Spotify'
+        x: btn8.right
         on_press: root.show_spotify_login_popup()
+<ToolbarButton@Button>:
+    size_hint: [None, None]
+    size: [150, 50]

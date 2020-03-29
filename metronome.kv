@@ -20,7 +20,9 @@
     beatbar: beatbar
     buttonbar: buttonbar
     titlebar: titlebar
-
+    top: self.top_prop
+    size_hint: [None, None]
+    size: [800, 300]
     BoxLayout:
         id: box
         pos_hint: {"center": [0.5, 0.5]}
@@ -32,7 +34,6 @@
             Rectangle:
                 size: self.size
                 pos: self.pos
-
         TitleBar:
             id: titlebar
             metronome: metronome
@@ -47,11 +48,11 @@
                 size_hint: [0.5, 1]
                 text: str(metronome.bpm) + " BPM"
                 font_name: "./fonts/Impact"
-                font_size: 32
+                font_size: 26
                 valign: True
                 halign: "center"
                 multiline: False
-                on_text_validate: titlebar.validate_text(self.text)
+                on_focus: titlebar.validate_text(self, self.text)
             Button:
                 size_hint: [0.25, 1]
                 text: "+"

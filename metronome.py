@@ -1,19 +1,149 @@
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.relativelayout import RelativeLayout
-from kivy.properties import NumericProperty
+from kivy.properties import NumericProperty, ObjectProperty
 from kivy.graphics import Ellipse, Color, InstructionGroup
 from kivy.animation import Animation
-
 
 from threading import Thread, Event
 import time, wave, pyaudio, math
 
 
-class TitleBar(BoxLayout):
+############################################################################################
+# Playing with some sound stuff here...
+# Combination of NumPy and SciPy to write a sin wave .wav file.
+# https://www.youtube.com/watch?v=lbV2SoeAggU nightstatic
+import numpy as np
+from scipy.io import wavfile
+sps = 44100
+freq_hz = 660.0
+duration_s = 0.2
+each_sample_number = np.arange(duration_s * sps)
+waveform = np.sin(2 * np.pi * each_sample_number * freq_hz / sps)
+waveform_quiet = waveform * 0.3
+waveform_integers = np.int16(waveform_quiet * 32767)
+# Write the .wav file
+wavfile.write('sine.wav', sps, waveform_integers)
 
-    def validate_text(self, text):
+
+# simpleaudio can play NumPy arrays directly.
+# import simpleaudio as sa
+# Start playback
+# play_obj = sa.play_buffer(waveform_integers, 1, 2, sps)
+# Wait for playback to finish before exiting
+# play_obj.wait_done()
+############################################################################################
+
+
+class Metronome(FloatLayout):
+    needle_angle = NumericProperty(0)
+    num_beats = NumericProperty(4)
+    bpm = NumericProperty(200)
+    top_prop = NumericProperty(0)
+
+    def __init__(self, **kwargs):
+        self.box = BoxLayout()
+        self.beatbar = FloatLayout()
+        self.buttonbar = BoxLayout()
+        self.max_needle_angle = 30
+        super().__init__(**kwargs)
+        self.spb = 60 / self.bpm
+        self.time_sig = 4
+
+        self.sine_file = "./sine.wav"  # Written from NumPy array
+
+        self.player = pyaudio.PyAudio()
+        sine = wave.open(self.sine_file, "rb")
+        self.sine_data = sine.readframes(2048)
+        self.stream = self.player.open(
+            format=self.player.get_format_from_width(sine.getsampwidth()),
+            channels=sine.getnchannels(),
+            rate=sine.getframerate(),
+            output=True)
+
+        self.stopped = True
+        self.needle_animation = Animation()
+        self.beatmarker_animation = Animation()
+
+    def slide(self, *args):
+        if self.top_prop == 0:
+            self.top_prop = self.height + 50
+        else:
+            self.top_prop = 0
+
+    def on_size(self, *args):
+        target_ratio = 0.75
+        width, height = self.size
+        if width / height > target_ratio:
+            self.box.height = height
+            self.box.width = target_ratio * height
+        else:
+            self.box.width = width
+            self.box.height = width / target_ratio
+        self.size = self.box.size
+
+    def on_bpm(self, instance, bpm):
+        self.spb = 60 / self.bpm
+        self.stop()
+
+    def increment_bpm(self, val):
+        if 40 <= self.bpm + val <= 300:
+            self.bpm += val
+
+    def play(self, *args):
+        if self.stopped:
+            self.stopped = False
+            thread = Thread(target=self._play, daemon=True)
+            thread.start()
+
+    def _play(self):
+        start = time.time()
+        delta = self.spb
+        goal = start + delta
+        forward = True
+        while not self.stopped:
+            beat_num = (time.time() - start) // delta
+            self.animate_needle(self.spb, forward)
+            self.animate_beatmarker(0.1, beat_num)
+            self.stream.write(self.sine_data)
+            time.sleep(goal - time.time())
+            forward = not forward
+            goal += delta
+
+    def stop(self):
+        if not self.stopped:
+            self.beatmarker_animation.stop(self)
+            self.needle_animation.stop(self)
+            self.stopped = True
+            self.needle_angle = 0
+
+    def animate_needle(self, duration, forward):
+        self.needle_animation.stop(self)
+        if forward:
+            self.needle_angle = -self.max_needle_angle
+            self.needle_animation = Animation(needle_angle=self.max_needle_angle, duration=duration)
+        else:
+            self.needle_angle = self.max_needle_angle
+            self.needle_animation = Animation(needle_angle=-self.max_needle_angle, duration=duration)
+        self.needle_animation.start(self)
+
+    def animate_beatmarker(self, duration, beat_num):
+        self.beatmarker_animation.stop(self)
+        self.beatmarker_animation = Animation(duration=duration)
+        beat_idx = int(beat_num % self.num_beats)
+        beatmarker = self.beatbar.beatmarkers.children[beat_idx]
+        self.beatmarker_animation.bind(on_progress=beatmarker.update_animation)
+        self.beatmarker_animation.bind(on_complete=beatmarker.end_animation)
+        self.beatmarker_animation.start(self)
+
+
+class TitleBar(BoxLayout):
+    metronome = ObjectProperty()
+
+    def validate_text(self, text_input, text):
+
+        if text_input.focus:
+            return
         bpm = ""
         i = 0
         while i < len(text) and text[i].isdigit():
@@ -25,59 +155,6 @@ class TitleBar(BoxLayout):
         # In case bpm was invalid, out of range, or same value as before, make sure text is updated.
         self.metronome.bpm += 1
         self.metronome.bpm -= 1
-
-
-class BeatMarker(InstructionGroup):
-
-    def __init__(self, cx=1, cy=1, r=1, **kwargs):
-        super().__init__(**kwargs)
-        self.anim_color = Color(0, 1, 0, 0)
-        self.anim_circle = Ellipse()
-        self.color = Color(1, 1, 1, 0.5)
-        self.marker = Ellipse()
-
-        self.add(self.anim_color)
-        self.add(self.anim_circle)
-        self.add(self.color)
-        self.add(self.marker)
-
-        self.pos = cx, cy
-        self.size = [2*r, 2*r]
-
-    @property
-    def pos(self):
-        return self.pos
-
-    @pos.setter
-    def pos(self, pos):
-        self.anim_circle.pos = pos
-        self.marker.pos = pos
-
-    @property
-    def size(self):
-        return self.size
-
-    @size.setter
-    def size(self, size):
-        d, d = size
-        self.r = d/2
-        self.max_rdiff = self.r * 0.2
-        self.anim_circle.size = size
-        self.marker.size = size
-
-    def update_animation(self, animation, metronome, progress):
-        rdiff = progress * self.max_rdiff
-        cx, cy = self.marker.pos
-        self.anim_circle.pos = cx - rdiff, cy - rdiff
-        self.anim_circle.size = [2 * (self.r + rdiff), 2 * (self.r + rdiff)]
-        self.anim_color.a = progress
-
-    def end_animation(self, animation, metronome):
-        self.anim_color.a = 0
-        # cx, cy = self.marker.pos
-        # d, d = self.marker.size
-        self.anim_circle.pos = self.marker.pos
-        self.anim_circle.size = self.marker.size
 
 
 class BeatBar(FloatLayout):
@@ -134,124 +211,57 @@ class BeatBar(FloatLayout):
                 cx += step_x
 
 
-############################################################################################
-# Playing with some sound stuff here...
-# Combination of NumPy and SciPy to write a sin wave .wav file.
-# https://www.youtube.com/watch?v=lbV2SoeAggU nightstatic
-import numpy as np
-from scipy.io import wavfile
-sps = 44100
-freq_hz = 660.0
-duration_s = 0.2
-each_sample_number = np.arange(duration_s * sps)
-waveform = np.sin(2 * np.pi * each_sample_number * freq_hz / sps)
-waveform_quiet = waveform * 0.3
-waveform_integers = np.int16(waveform_quiet * 32767)
-# Write the .wav file
-wavfile.write('sine.wav', sps, waveform_integers)
+class BeatMarker(InstructionGroup):
 
-
-# simpleaudio can play NumPy arrays directly.
-# import simpleaudio as sa
-# Start playback
-# play_obj = sa.play_buffer(waveform_integers, 1, 2, sps)
-# Wait for playback to finish before exiting
-# play_obj.wait_done()
-############################################################################################
-
-
-class Metronome(FloatLayout):
-    needle_angle = NumericProperty(0)
-    num_beats = NumericProperty(4)
-    bpm = NumericProperty(200)
-
-    def __init__(self, **kwargs):
-        self.box = BoxLayout()
-        self.beatbar = FloatLayout()
-        self.buttonbar = BoxLayout()
-        self.max_needle_angle = 30
+    def __init__(self, cx=1, cy=1, r=1, **kwargs):
         super().__init__(**kwargs)
-        self.spb = 60 / self.bpm
-        self.time_sig = 4
+        self.anim_color = Color(0, 1, 0, 0)
+        self.anim_circle = Ellipse()
+        self.color = Color(1, 1, 1, 0.5)
+        self.marker = Ellipse()
 
-        self.sine_file = "./sine.wav"  # Written from NumPy array
+        self.add(self.anim_color)
+        self.add(self.anim_circle)
+        self.add(self.color)
+        self.add(self.marker)
 
-        self.player = pyaudio.PyAudio()
-        sine = wave.open(self.sine_file, "rb")
-        self.sine_data = sine.readframes(2048)
-        self.stream = self.player.open(
-            format=self.player.get_format_from_width(sine.getsampwidth()),
-            channels=sine.getnchannels(),
-            rate=sine.getframerate(),
-            output=True)
+        self.pos = cx, cy
+        self.size = [2*r, 2*r]
 
-        self.stopped = True
-        self.needle_animation = Animation()
-        self.beatmarker_animation = Animation()
+    @property
+    def pos(self):
+        return self.pos
 
-    def on_size(self, *args):
-        target_ratio = 0.75
-        width, height = self.size
-        if width / height > target_ratio:
-            self.box.height = height
-            self.box.width = target_ratio * height
-        else:
-            self.box.width = width
-            self.box.height = width / target_ratio
+    @pos.setter
+    def pos(self, pos):
+        self.anim_circle.pos = pos
+        self.marker.pos = pos
 
-    def on_bpm(self, instance, bpm):
-        self.spb = 60 / self.bpm
-        self.stop()
+    @property
+    def size(self):
+        return self.size
 
-    def increment_bpm(self, val):
-        if 40 <= self.bpm + val <= 300:
-            self.bpm += val
+    @size.setter
+    def size(self, size):
+        d, d = size
+        self.r = d/2
+        self.max_rdiff = self.r * 0.2
+        self.anim_circle.size = size
+        self.marker.size = size
 
-    def play(self, *args):
-        if self.stopped:
-            self.stopped = False
-            thread = Thread(target=self._play, daemon=True)
-            thread.start()
+    def update_animation(self, animation, metronome, progress):
+        rdiff = progress * self.max_rdiff
+        cx, cy = self.marker.pos
+        self.anim_circle.pos = cx - rdiff, cy - rdiff
+        self.anim_circle.size = [2 * (self.r + rdiff), 2 * (self.r + rdiff)]
+        self.anim_color.a = progress
 
-    def _play(self):
-        start = time.time()
-        delta = self.spb
-        goal = start + delta
-        forward = True
-        while not self.stopped:
-            beat_num = (time.time() - start) // delta
-            self.animate_needle(self.spb, forward)
-            self.animate_beatmarker(0.1, beat_num)
-            self.stream.write(self.sine_data)
-            time.sleep(goal - time.time())
-            forward = not forward
-            goal += delta
-
-    def stop(self):
-        if not self.stopped:
-            self.beatmarker_animation.stop(self)
-            self.needle_animation.stop(self)
-            self.stopped = True
-            self.needle_angle = 0
-
-    def animate_needle(self, duration, forward):
-        self.needle_animation.stop(self)
-        if forward:
-            self.needle_angle = -self.max_needle_angle
-            self.needle_animation = Animation(needle_angle=self.max_needle_angle, duration=duration)
-        else:
-            self.needle_angle = self.max_needle_angle
-            self.needle_animation = Animation(needle_angle=-self.max_needle_angle, duration=duration)
-        self.needle_animation.start(self)
-
-    def animate_beatmarker(self, duration, beat_num):
-        self.beatmarker_animation.stop(self)
-        self.beatmarker_animation = Animation(duration=duration)
-        beat_idx = int(beat_num % self.num_beats)
-        beatmarker = self.beatbar.beatmarkers.children[beat_idx]
-        self.beatmarker_animation.bind(on_progress=beatmarker.update_animation)
-        self.beatmarker_animation.bind(on_complete=beatmarker.end_animation)
-        self.beatmarker_animation.start(self)
+    def end_animation(self, animation, metronome):
+        self.anim_color.a = 0
+        # cx, cy = self.marker.pos
+        # d, d = self.marker.size
+        self.anim_circle.pos = self.marker.pos
+        self.anim_circle.size = self.marker.size
 
 
 class MetronomeApp(App):

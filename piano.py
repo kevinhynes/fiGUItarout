@@ -1,4 +1,5 @@
 from kivy.app import App
+from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import ListProperty, NumericProperty, StringProperty
 from kivy.graphics import InstructionGroup, Color, Line, Rectangle
@@ -29,6 +30,7 @@ class Piano(FloatLayout):
     root_note_idx = NumericProperty(0)
     mode_filter = NumericProperty(0b111111111111)
     scale_text = StringProperty("")
+    notes_to_highlight = StringProperty("")
     notes_or_octaves = StringProperty("")
     tuning = ListProperty(standard_tuning)
 
