@@ -4,6 +4,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import NumericProperty, ObjectProperty
 from kivy.graphics import Ellipse, Color, InstructionGroup
 from kivy.animation import Animation
+from kivy.clock import Clock
 
 from threading import Thread, Event
 import time, wave, pyaudio, math
@@ -64,6 +65,10 @@ class Metronome(FloatLayout):
         self.stopped = True
         self.needle_animation = Animation()
         self.beatmarker_animation = Animation()
+        Clock.schedule_once(self.hide)
+
+    def hide(self, *args):
+        self.top = 0
 
     def slide(self, *args):
         if self.top_prop == 0:

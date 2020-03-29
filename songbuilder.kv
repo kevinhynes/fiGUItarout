@@ -3,9 +3,11 @@
 
 
 <SongBuilder>:
+    id: songbuilder
     size_hint: [1, None]
     TabViewer:
         id: tabviewer
+        spt_conn: root.spt_conn
         editbar: editbar
         pos_hint: {'center_x': 0.5}
         size_hint: [1, None]
@@ -18,14 +20,15 @@
 
 
 <TabViewer>:
+    bar_width: 10
+    scroll_type: ['bars', 'content']
     canvas.before:
         Color:
             rgba: (0, 0, 0, 1)
         Rectangle:
             size: self.size
             pos: self.pos
-    bar_width: 10
-    scroll_type: ['bars', 'content']
+
 
 
 <TabFloatLayout>:

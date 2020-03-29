@@ -23,6 +23,7 @@ black = Color(0, 0, 0, 1)
 
 
 class SongBuilder(FloatLayout):
+    spt_conn = ObjectProperty()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -39,7 +40,10 @@ class SongBuilder(FloatLayout):
 
 
 class TabViewer(ScrollView):
+    songbuilder = ObjectProperty()
     editbar = ObjectProperty()
+    spt_conn = ObjectProperty()
+
 
     def __init__(self, **kwargs):
         self.prev_timesig = None
@@ -393,6 +397,10 @@ class TabViewer(ScrollView):
         self.build_track(self.flat_song[0])
 
     def play(self, *args):
+        query = self.gp_song.artist + ' ' + self.gp_song.title
+        query.lower()
+        if self.spt_conn:
+            self.spt_conn.play_on_spotify(query)
         tempo = self.gp_song.tempo
         self.floatlayout.play(tempo)
 
