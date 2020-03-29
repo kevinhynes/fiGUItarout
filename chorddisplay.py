@@ -32,13 +32,13 @@ class ChordDisplay(ScrollView):
     root_note_idx = NumericProperty(0)
     mode_filter = NumericProperty(0b101011010101)
     note_idxs = ListProperty([0, 0, 0, 0, 0, 0, 0])
+    tuner_tuning = ListProperty(standard_tuning)
     tuning = ListProperty(standard_tuning)
 
     top_prop = NumericProperty(0)
     instrument_rack = ObjectProperty(None)
 
     def __init__(self, **kwargs):
-        # self.chords_to_voicings = get_chord_voicings_for_tuning(standard_tuning)
         super().__init__(**kwargs)
         self.is_shown = False
         # No text in some groups and fold_buttons are tiny initially without this.
@@ -53,6 +53,7 @@ class ChordDisplay(ScrollView):
     def slide(self, keysigtitlebar):
         if not self.is_shown:
             self.height = keysigtitlebar.top
+            self.tuning = self.tuner_tuning
             self.top = keysigtitlebar.top
             self.is_shown = True
         else:

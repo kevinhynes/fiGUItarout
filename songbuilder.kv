@@ -1,7 +1,9 @@
 #: import os os
+#: import sbr songbuilder
 
 
 <SongBuilder>:
+    size_hint: [1, None]
     TabViewer:
         id: tabviewer
         editbar: editbar
@@ -12,9 +14,16 @@
     EditToolbar:
         id: editbar
         tabviewer: tabviewer
+        y: root.y
 
 
 <TabViewer>:
+    canvas.before:
+        Color:
+            rgba: (0, 0, 0, 1)
+        Rectangle:
+            size: self.size
+            pos: self.pos
     bar_width: 10
     scroll_type: ['bars', 'content']
 
@@ -27,12 +36,11 @@
             size: (5, 200)
             pos: [root.scrollbar1_x, root.scrollbar1_y]
 
-
 <TabWidget>:
     size_hint: [None, None]
     height: self.step_y * 10
     width: self.timesig_width + self.open_repeat_width + (self.measure_end - self.measure_start) + self.close_repeat_width
-    canvas.before:
+    canvas:
         # White background.
         Color:
             rgba: (1, 1, 1, 1)
@@ -134,60 +142,69 @@
         id: load_btn
         text: "Load New File"
         on_press: root.tabviewer.show_fileloader()
+        y: root.y
     EditToolbarButton:
         id: copy_btn
         text: "Copy"
         x: load_btn.right
         on_press: root.tabviewer.copy()
+        y: root.y
     EditToolbarButton:
         id: insert_before_btn
         text: "Insert Before"
         x: copy_btn.right
         on_press: root.tabviewer.insert_before()
         disabled: True
+        y: root.y
     EditToolbarButton:
         id: insert_after_btn
         text: "Insert After"
         x: insert_before_btn.right
         on_press: root.tabviewer.insert_after()
         disabled: True
+        y: root.y
     EditToolbarButton:
         id: delete_btn
         text: "Delete"
         x: insert_after_btn.right
         on_press: root.tabviewer.delete()
+        y: root.y
     EditToolbarButton:
         id: rebuild_btn
         text: "Rebuild"
         x: delete_btn.right
         on_press: root.tabviewer.rebuild()
+        y: root.y
     EditToolbarButton:
         id: save_btn
         text: "Save"
         x: rebuild_btn.right
         on_press: root.tabviewer.save()
+        y: root.y
     EditToolbarButton:
         id: show_song_library_btn
         text: "Show Song Library"
         x: save_btn.right
         on_press: root.tabviewer.show_song_library()
+        y: root.y
     EditToolbarButton:
         id: play_btn
         text: "Play"
         x: show_song_library_btn.right
         on_press: root.tabviewer.play()
+        y: root.y
 <EditToolbarButton@Button>:
     size_hint: [None, None]
     size: [125, 50]
 
 
-<SongLibrary>:
-    scroll_distance: 10000  # disables scrolling
-    direction: 'right'
-<SongLibraryHeader>:
-    size_hint: [1, None]
-    height: 50
-    pos_hint: {'top': 1}
+#<SongLibrary>:
+#    scroll_distance: 10000  # disables scrolling
+#    direction: 'right'
+#<SongLibraryHeader>:
+#    size_hint: [1, None]
+#    height: 50
+#    pos_hint: {'top': 1}
 
 
 <FileLoaderPopupContent>:

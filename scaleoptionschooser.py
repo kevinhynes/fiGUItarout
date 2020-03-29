@@ -28,7 +28,6 @@ class ScaleOptionsChooser(FloatLayout):
     scale_text = StringProperty("")
     notes_to_highlight = StringProperty("")
     notes_or_octaves = StringProperty("")
-
     top_prop = NumericProperty(0)
 
     def on_size(self, instance, value):

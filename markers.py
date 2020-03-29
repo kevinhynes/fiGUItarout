@@ -27,6 +27,7 @@ octave_colors = [
     rainbow[9],
     rainbow[11]]
 
+
 class Marker(InstructionGroup):
 
     def __init__(self, **kwargs):
@@ -62,8 +63,7 @@ class Marker(InstructionGroup):
         self.parent_string = None
         self.animation = None
 
-    def update(self, i, note_text, c1x, c1y, r1, c2x, c2y, r2,
-               included, highlighted, color):
+    def update(self, i, note_text, c1x, c1y, r1, c2x, c2y, r2, included, highlighted, color):
         self.background.size = [2*r1, 2*r1]
         self.background.pos = [c1x, c1y]
         self.marker.size = [2*r2, 2*r2]
@@ -90,8 +90,6 @@ class Marker(InstructionGroup):
             self.text2_color.a = 0
 
     def update_text(self, i, note_text, c1x, c1y, r1):
-        # scale_degree = scale_degrees[i]
-        # note_text = scale_degree
         if "/" in note_text:
             # Accidental notes. Add diagonal line.
             a1 = (1 / 2) ** 0.5 * r1  # a1 is side of a 45-45-90 right triangle.

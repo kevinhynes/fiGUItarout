@@ -19,6 +19,7 @@ Builder.load_file("numfretschanger.kv")
 Builder.load_file("fretboard.kv")
 Builder.load_file("piano.kv")
 Builder.load_file("instrumentrack.kv")
+Builder.load_file("songbuilder.kv")
 
 
 class MainPage(FloatLayout):

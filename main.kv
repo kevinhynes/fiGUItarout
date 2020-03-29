@@ -1,6 +1,6 @@
 <MainPage>:
     KeySigTitleBar:
-        id: titlebar
+        id: keysigtitlebar
         key_sig_text: keysigchooser.key_sig_text
         root_note_idx: keysigchooser.root_note_idx
         mode_filter: keysigchooser.mode_filter
@@ -10,8 +10,8 @@
 
     InstrumentRack:
         id: rack
-        top: titlebar.y
-        key_sig_title_bar: titlebar
+        top: keysigtitlebar.y
+        key_sig_title_bar: keysigtitlebar
         root_note_idx: keysigchooser.root_note_idx
         mode_filter: keysigchooser.mode_filter
         notes_to_highlight: scaleoptionschooser.notes_to_highlight
@@ -24,7 +24,7 @@
         instrument_rack: rack
         root_note_idx: keysigchooser.root_note_idx
         mode_filter: keysigchooser.mode_filter
-        tuning: tuner.tuning
+        tuner_tuning: tuner.tuning
 
     KeySigChooser:
         id: keysigchooser
@@ -35,13 +35,17 @@
     Tuner:
         id: tuner
 
+    SongBuilder:
+        id: songbuilder
+        height: root.height - 50
+
     Button:
         id: btn1
         text: 'Show Chord Display'
         size_hint: [None, None]
         size: [150, 50]
         pos: (0, 0)
-        on_press: chorddisplay.slide(titlebar)
+        on_press: chorddisplay.slide(keysigtitlebar)
     Button:
         id: btn2
         text: 'Fold / Unfold Rack'
@@ -70,4 +74,17 @@
         size: [150, 50]
         x: btn4.right
         on_press: tuner.slide()
-
+    Button:
+        id: btn6
+        text: 'Song Builder'
+        size_hint: [None, None]
+        size: [150, 50]
+        x: btn5.right
+        on_press: songbuilder.slide(keysigtitlebar)
+    Button:
+        id: btn7
+        text: 'Song Library'
+        size_hint: [None, None]
+        size: [150, 50]
+        x: btn6.right
+        on_press: pass

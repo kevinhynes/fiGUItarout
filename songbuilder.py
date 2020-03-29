@@ -17,12 +17,25 @@ from kivy.core.window import Window
 import guitarpro
 from typing import List
 import song_library_funcs as slf
+from songlibrary import SongLibrary
 
 black = Color(0, 0, 0, 1)
 
 
 class SongBuilder(FloatLayout):
-    pass
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        Clock.schedule_once(self.hide, 1)
+
+    def hide(self, *args):
+        self.top = 0
+
+    def slide(self, keysigtitlebar):
+        if self.top == 0:
+            self.top = keysigtitlebar.top
+        else:
+            self.top = 0
 
 
 class TabViewer(ScrollView):
@@ -399,7 +412,8 @@ class TabFloatLayout(FloatLayout):
     def play(self, tempo):
         # The GuitarPro songs' tempo are of form BPM where the B(eat) is always a quarter note.
         self.beat_width = self.children[0].measure_width / 4
-        self.seconds_per_beat = 60/tempo
+        self.seconds_per_beat = 60 / tempo
+
         self.scroll_coords = self.build_scroll_coords()
         self.scroll_coords_idx = 0
         self._play_next_line()
@@ -407,12 +421,13 @@ class TabFloatLayout(FloatLayout):
     def _play_next_line(self, *args):
         if self.scroll_coords_idx == len(self.scroll_coords):
             return
-        x_start, x_stop, y = self.scroll_coords[self.scroll_coords_idx]
+        x_start, x_stop, y, scroll_y = self.scroll_coords[self.scroll_coords_idx]
         num_beats = (x_stop - x_start) / self.beat_width
         seconds = self.seconds_per_beat * num_beats
         self.scroll_coords_idx += 1
         self.scrollbar1_x = x_start - 5
         self.scrollbar1_y = y
+        self.tabviewer.scroll_y = scroll_y
         anim = Animation(scrollbar1_x=x_stop-5, d=seconds)
         anim.bind(on_complete=self._play_next_line)
         anim.start(self)
@@ -423,13 +438,16 @@ class TabFloatLayout(FloatLayout):
         tabwidgets = [child for child in self.children if isinstance(child, TabWidget)]
         scroll_coords = []
         i = len(tabwidgets) - 1
+        scroll_y = 1
         while i >= 0:
             x_start = tabwidgets[i].measure_start
             while tabwidgets[i-1].x != 0:
                 i -= 1
             x_stop = tabwidgets[i].measure_end
             y = tabwidgets[i].y
-            scroll_coords.append((x_start, x_stop, y))
+            # if scroll_y > self.tabview.height:
+            scroll_y -= (210 / (self.height - self.tabviewer.height))
+            scroll_coords.append((x_start, x_stop, y, scroll_y))
             i -= 1
         return scroll_coords
 
@@ -809,77 +827,77 @@ class EditToolbar(FloatLayout):
     tabviewer = ObjectProperty()
 
 
-class SongLibrary(Carousel):
-    load_saved_file = ObjectProperty()
-    artist = StringProperty('')
-    album = StringProperty('')
-    song = StringProperty('')
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.artists_page = SongLibraryPage(name='Artists', carousel=self)
-        self.albums_page = SongLibraryPage(name='Albums', carousel=self)
-        self.songs_page = SongLibraryPage(name='Songs', carousel=self)
-        for page in (self.artists_page, self.albums_page, self.songs_page):
-            self.add_widget(page)
-
-    def on_press(self, button):
-        if self.current_slide.name == 'Artists':
-            self.artist = button.text
-            self.load_next(mode='next')
-        elif self.current_slide.name == 'Albums':
-            self.album = button.text
-            self.load_next(mode='next')
-        elif self.current_slide.name == 'Songs':
-            self.song = button.text
-
-    def on_artist(self, *args):
-        albums = slf.get_albums_by_artist(self.artist)
-        self.albums_page.update_list(albums)
-
-    def on_album(self, *args):
-        songs = slf.get_songs_on_album(self.artist, self.album)
-        self.songs_page.update_list(songs)
-
-    def on_song(self, *args):
-        filepath = slf.get_saved_song_file(self.artist, self.album, self.song)
-        self.load_saved_file(filepath)
-
-
-class SongLibraryPage(FloatLayout):
-
-    def __init__(self, name=None, carousel=None, **kwargs):
-        super().__init__(**kwargs)
-        self.name = name
-        self.carousel = carousel
-        self.header = SongLibraryHeader(text=name.title())
-        self.add_widget(self.header)
-        if name == 'Artists':
-            artists = slf.get_artists()
-            self.update_list(artists)
-
-    def update_list(self, str_list):
-        buttons = [child for child in self.children if isinstance(child, Button)]
-        while len(str_list) < len(buttons):
-            self.remove_widget(self.children[-1])
-            buttons.pop()
-
-        prev_widget = self.header
-        while len(str_list) > len(buttons):
-            button = Button(size_hint=[None, None], size=[350, 50])
-            button.top = prev_widget.y
-            prev_widget.bind(y=button.setter('top'))
-            buttons.append(button)
-            self.add_widget(button)
-            button.bind(on_press=self.carousel.on_press)
-            prev_widget = button
-
-        for child, text in zip(buttons, str_list):
-            child.text = text
-
-
-class SongLibraryHeader(Label):
-    pass
+# class SongLibrary(Carousel):
+#     load_saved_file = ObjectProperty()
+#     artist = StringProperty('')
+#     album = StringProperty('')
+#     song = StringProperty('')
+#
+#     def __init__(self, **kwargs):
+#         super().__init__(**kwargs)
+#         self.artists_page = SongLibraryPage(name='Artists', carousel=self)
+#         self.albums_page = SongLibraryPage(name='Albums', carousel=self)
+#         self.songs_page = SongLibraryPage(name='Songs', carousel=self)
+#         for page in (self.artists_page, self.albums_page, self.songs_page):
+#             self.add_widget(page)
+#
+#     def on_press(self, button):
+#         if self.current_slide.name == 'Artists':
+#             self.artist = button.text
+#             self.load_next(mode='next')
+#         elif self.current_slide.name == 'Albums':
+#             self.album = button.text
+#             self.load_next(mode='next')
+#         elif self.current_slide.name == 'Songs':
+#             self.song = button.text
+#
+#     def on_artist(self, *args):
+#         albums = slf.get_albums_by_artist(self.artist)
+#         self.albums_page.update_list(albums)
+#
+#     def on_album(self, *args):
+#         songs = slf.get_songs_on_album(self.artist, self.album)
+#         self.songs_page.update_list(songs)
+#
+#     def on_song(self, *args):
+#         filepath = slf.get_saved_song_file(self.artist, self.album, self.song)
+#         self.load_saved_file(filepath)
+#
+#
+# class SongLibraryPage(FloatLayout):
+#
+#     def __init__(self, name=None, carousel=None, **kwargs):
+#         super().__init__(**kwargs)
+#         self.name = name
+#         self.carousel = carousel
+#         self.header = SongLibraryHeader(text=name.title())
+#         self.add_widget(self.header)
+#         if name == 'Artists':
+#             artists = slf.get_artists()
+#             self.update_list(artists)
+#
+#     def update_list(self, str_list):
+#         buttons = [child for child in self.children if isinstance(child, Button)]
+#         while len(str_list) < len(buttons):
+#             self.remove_widget(self.children[-1])
+#             buttons.pop()
+#
+#         prev_widget = self.header
+#         while len(str_list) > len(buttons):
+#             button = Button(size_hint=[None, None], size=[350, 50])
+#             button.top = prev_widget.y
+#             prev_widget.bind(y=button.setter('top'))
+#             buttons.append(button)
+#             self.add_widget(button)
+#             button.bind(on_press=self.carousel.on_press)
+#             prev_widget = button
+#
+#         for child, text in zip(buttons, str_list):
+#             child.text = text
+#
+#
+# class SongLibraryHeader(Label):
+#     pass
 
 
 class FileLoaderPopupContent(BoxLayout):
