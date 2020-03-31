@@ -68,16 +68,17 @@
         x: btn3.right
         group: 'current_tool'
         on_state: scaleoptionschooser.slide(self.state)
-    ToolbarButton:
+    ToolbarToggleButton:
         id: btn5
-        text: 'Show Piano'
+        text: 'Show Chord Display'
         x: btn4.right
-        on_press: rack.fold()
+        group: 'current_tool'
+        on_state: chorddisplay.slide(keysigtitlebar, self.state)
     ToolbarButton:
         id: btn6
-        text: 'Show Chord Display'
+        text: 'Show Piano'
         x: btn5.right
-        on_press: chorddisplay.slide(keysigtitlebar)
+        on_press: rack.fold()
     ToolbarButton:
         id: btn7
         text: 'Song Builder'

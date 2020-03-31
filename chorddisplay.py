@@ -50,8 +50,8 @@ class ChordDisplay(ScrollView):
         for child in self.ids.scroll_child.children:
             child.top_justify()
 
-    def slide(self, keysigtitlebar):
-        if not self.is_shown:
+    def slide(self, keysigtitlebar, state):
+        if state == 'down' and not self.is_shown:
             self.height = keysigtitlebar.top
             self.tuning = self.tuner_tuning
             self.top = keysigtitlebar.top
