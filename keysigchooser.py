@@ -101,8 +101,8 @@ class KeySigChooser(FloatLayout):
                 self.ids.box.height = width / target_ratio
         self.size = self.ids.box.size
 
-    def slide(self, *args):
-        if self.top == 0:
+    def slide(self, state):
+        if state == 'down' and self.top == 0:
             self.top_prop = 150
         else:
             self.top_prop = 0

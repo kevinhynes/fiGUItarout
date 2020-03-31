@@ -85,8 +85,8 @@ class Tuner(FloatLayout):
             self.ids.box.height = width / target_ratio
         self.size = self.ids.box.size
 
-    def slide(self, *args):
-        if self.top_prop == 0:
+    def slide(self, state):
+        if state == 'down' and self.top_prop == 0:
             self.top_prop = self.height + 50
         else:
             self.top_prop = 0

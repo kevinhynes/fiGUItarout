@@ -44,26 +44,30 @@
         height: root.height - 50
 
     # Toolbar
-    ToolbarButton:
+    ToolbarToggleButton:
         id: btn1
         text: 'Tuner'
         pos: (0, 0)
-        on_press: tuner.slide()
-    ToolbarButton:
+        group: 'current_tool'
+        on_state: tuner.slide(self.state)
+    ToolbarToggleButton:
         id: btn2
         text: 'Metronome'
         x: btn1.right
-        on_press: metronome.slide()
-    ToolbarButton:
+        group: 'current_tool'
+        on_state: metronome.slide(self.state)
+    ToolbarToggleButton:
         id: btn3
         text: 'Choose Key Sig'
         x: btn2.right
-        on_press: keysigchooser.slide()
-    ToolbarButton:
+        group: 'current_tool'
+        on_state: keysigchooser.slide(self.state)
+    ToolbarToggleButton:
         id: btn4
         text: 'Highlight Options'
         x: btn3.right
-        on_press: scaleoptionschooser.slide()
+        group: 'current_tool'
+        on_state: scaleoptionschooser.slide(self.state)
     ToolbarButton:
         id: btn5
         text: 'Show Piano'
@@ -73,7 +77,7 @@
         id: btn6
         text: 'Show Chord Display'
         x: btn5.right
-        on_press: chorddisplay.slide_to_rack(keysigtitlebar)
+        on_press: chorddisplay.slide(keysigtitlebar)
     ToolbarButton:
         id: btn7
         text: 'Song Builder'
@@ -90,5 +94,8 @@
         x: btn8.right
         on_press: root.show_spotify_login_popup()
 <ToolbarButton@Button>:
+    size_hint: [None, None]
+    size: [150, 50]
+<ToolbarToggleButton@ToggleButton>:
     size_hint: [None, None]
     size: [150, 50]
