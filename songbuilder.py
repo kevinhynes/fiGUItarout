@@ -44,7 +44,6 @@ class TabViewer(ScrollView):
     editbar = ObjectProperty()
     spt_conn = ObjectProperty()
 
-
     def __init__(self, **kwargs):
         self.prev_timesig = None
         self.prev_tabwidget = None

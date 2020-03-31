@@ -1,53 +1,31 @@
 #: import tnr tuner
-# Make size_hint: [None, None] when you want to specify .size properties explicitly.
 
 
-<StringTunerButton@Button>:
-    size_hint: [1, 0.2]
-    font_name: "./fonts/Arial"
-    font_size: self.width * 0.2
-    border: [2, 2, 2, 2]
+<Tuner>:
+    tuning: six_string_tuner.tuning
+    size_hint: [None, None]
+    size: [400, 200]
+    top: self.top_prop
+    BoxLayout:
+        id: box
+        orientation: "vertical"
+        size_hint: [None, None]
+        pos_hint: {"center": [0.5, 0.5]}
+#        padding: [20, 20]
+#        spacing: 5
+        canvas:
+            Color:
+                rgba: [1, 1, 1, 0.5]
+            Rectangle:
+                pos: self.pos
+                size: self.size
 
-
-<StringTuner>:
-    orientation: "vertical"
-    pos_hint: {"center_x": 0.5}
-    StringTunerButton:
-        text: u'\u25B2'
-        on_release: root.increment_note_val()
-    Label:
-        size_hint: [1, 0.6]
-        text: root.note_text
-        font_size: self.height * 10/13 * 0.75
-    StringTunerButton:
-        text: u'\u25BC'
-        on_release: root.decrement_note_val()
-
-
-<SixStringTuner>:
-    tuning: [s6.note_val, s5.note_val, s4.note_val, s3.note_val, s2.note_val, s1.note_val]
-    orientation: "horizontal"
-    pos_hint: {"center_y": 0.5}
-    StringTuner:
-        id: s6
-    StringTuner:
-        id: s5
-    StringTuner:
-        id: s4
-    StringTuner:
-        id: s3
-    StringTuner:
-        id: s2
-    StringTuner:
-        id: s1
-
-
-<ControlBarButton@Button>:
-    halign: "center"
-    valign: "center"
-    text_size: self.size
-    texture_size: self.size
-    border: [2,2,2,2]
+        ControlBar:
+            tuner_ref: six_string_tuner
+            size_hint: [1, 1/5]
+        SixStringTuner:
+            id: six_string_tuner
+            size_hint: [1, 4/5]
 
 
 <ControlBar>:
@@ -77,35 +55,57 @@
         text: "+1"
         font_size: self.width*0.3
         on_release: root.tuner_ref.tune_up_or_down(2)
+<ControlBarButton@Button>:
+    halign: "center"
+    valign: "center"
+    text_size: self.size
+    texture_size: self.size
+    border: [2,2,2,2]
 
 
-<Tuner>:
-    tuning: six_string_tuner.tuning
-    size_hint: [None, None]
-    size: [400, 200]
-    top: self.top_prop
-    canvas:
-        Color:
-            rgba: [1, 0, 0, 0.5]
-        Line:
-            rectangle: [*self.pos, *self.size]
-    BoxLayout:
-        id: box
-        orientation: "vertical"
-        size_hint: [None, None]
-        pos_hint: {"center": [0.5, 0.5]}
-#        padding: [20, 20]
-#        spacing: 5
-        canvas:
-            Color:
-                rgba: [1, 1, 1, 0.5]
-            Rectangle:
-                pos: self.pos
-                size: self.size
+<SixStringTuner>:
+    tuning: [s6.note_val, s5.note_val, s4.note_val, s3.note_val, s2.note_val, s1.note_val]
+    orientation: "horizontal"
+    pos_hint: {"center_y": 0.5}
+    StringTuner:
+        id: s6
+    StringTuner:
+        id: s5
+    StringTuner:
+        id: s4
+    StringTuner:
+        id: s3
+    StringTuner:
+        id: s2
+    StringTuner:
+        id: s1
 
-        ControlBar:
-            tuner_ref: six_string_tuner
-            size_hint: [1, 1/5]
-        SixStringTuner:
-            id: six_string_tuner
-            size_hint: [1, 4/5]
+
+<StringTuner>:
+    orientation: "vertical"
+    pos_hint: {"center_x": 0.5}
+    StringTunerButton:
+        text: u'\u25B2'
+        on_release: root.increment_note_val()
+    Label:
+        size_hint: [1, 0.6]
+        text: root.note_text
+        font_size: self.height * 10/13 * 0.75
+    StringTunerButton:
+        text: u'\u25BC'
+        on_release: root.decrement_note_val()
+<StringTunerButton@Button>:
+    size_hint: [1, 0.2]
+    font_name: "./fonts/Arial"
+    font_size: self.width * 0.2
+    border: [2, 2, 2, 2]
+
+
+
+
+
+
+
+
+
+
