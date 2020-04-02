@@ -413,8 +413,9 @@ class ChordDiagramPopupContent(ScrollView):
             cd.voicing = voicing
             column.add_widget(cd)
 
-        # Set scroll_grid width.
-        self.scroll_grid.width = column.width * 4
+        # Set scroll_grid width. Error is voicings is empty.
+        if voicings:
+            self.scroll_grid.width = column.width * 4
 
         # Set the column and scroll_grid heights.
         for column_idx in range(4):
