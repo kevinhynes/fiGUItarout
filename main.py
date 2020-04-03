@@ -32,13 +32,12 @@ class SpotifyConnection:
 
     def __init__(self, token):
         self.conn = spotipy.Spotify(auth=token)
-        print('connected to spotify')
 
     def play_on_spotify(self, query):
         results = self.conn.search(q=query)
         track_id = results['tracks']['items'][0]['id']
         self.conn.start_playback(uris=['spotify:track:' + track_id])
-        print('started spotify playback')
+
 
 class MainPage(FloatLayout):
     spt_conn = ObjectProperty()
@@ -62,8 +61,6 @@ class MainPage(FloatLayout):
                                            client_secret="a00b878607994e4fbcc08cf9c053bd21",
                                            redirect_uri="http://localhost:5000/callback/spotify")
         self.spt_conn = SpotifyConnection(token)
-
-
 
 
 class MainApp(App):

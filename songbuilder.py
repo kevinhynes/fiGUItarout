@@ -89,12 +89,6 @@ class TabPlayerScrollView(ScrollView):
     def __init__(self, **kwargs):
         self.prev_timesig = None
         self.prev_tabwidget = None
-        # self.clipboard = []
-        # self.keyboard = Window.request_keyboard(self.close_keyboard, self)
-        # self.keyboard.bind(on_key_down=self.on_key_down)
-        # self.keyboard.bind(on_key_up=self.on_key_up)
-        # self.shift_pressed = False
-        # self.selected_children = []
         super().__init__(**kwargs)
         #TODO: change tabbuilder reference
         self.floatlayout = TabFloatLayout(tabbuilder=self, size_hint_y=None)
@@ -108,22 +102,6 @@ class TabPlayerScrollView(ScrollView):
 
     def unselect_all(self, *args):
         pass
-
-    # def close_keyboard(self, *args):
-    #     self.keyboard.unbind(on_key_down=self.on_key_down)
-    #     self.keyboard = None
-    #
-    # def on_key_down(self, keyboard, keycode, text, modifiers):
-    #     keynum, keytext = keycode
-    #     if keytext == 'shift':
-    #         self.shift_pressed = True
-    #     else:
-    #         self.shift_pressed = False
-    #
-    # def on_key_up(self, keyboard, keycode):
-    #     keynum, keytext = keycode
-    #     if keytext == 'shift':
-    #         self.shift_pressed = False
 
     def flatten_song(self):
         '''
@@ -272,110 +250,6 @@ class TabPlayerScrollView(ScrollView):
         self.prev_timesig = timesig
         self.floatlayout.add_widget(tabwidget)
 
-    # def select(self, tabwidget):
-    #     # If no other tabwigets are selected, shift and normal select do the same thing.
-    #     if not self.selected_children:
-    #         tabwidget.select()
-    #         self.selected_children[:] = [tabwidget]
-    #         return
-    #     if self.shift_pressed:
-    #         self.shift_select(tabwidget)
-    #         return
-    #     for selectedwidget in self.selected_children:
-    #         selectedwidget.unselect()
-    #     tabwidget.select()
-    #     self.selected_children = [tabwidget]
-    #
-    # def shift_select(self, tabwidget):
-    #     to_select = []
-    #     # Selected TabWidget is above the existing group.
-    #     if tabwidget.idx < self.selected_children[0].idx:
-    #         i = self.tabwidget_to_child_idx(self.selected_children[0])
-    #         j = self.tabwidget_to_child_idx(tabwidget)
-    #         to_select = self.floatlayout.children[i+1:j+1]  # Don't include i, include j.
-    #         self.selected_children[:] = to_select[::-1] + self.selected_children
-    #     # Selected TabWidget is below the existing selected group.
-    #     elif tabwidget.idx > self.selected_children[-1].idx:
-    #         i = self.tabwidget_to_child_idx(tabwidget)
-    #         j = self.tabwidget_to_child_idx(self.selected_children[-1])
-    #         to_select = self.floatlayout.children[i:j]
-    #         self.selected_children[:] = self.selected_children + to_select[::1-1]
-    #     for tabwidget in to_select:
-    #         tabwidget.select()
-    #     print("TabBuilderScrollView.shift_select, ", [selectedwidget.idx for selectedwidget in self.selected_children])
-    #
-    # def unselect_all(self):
-    #     for tabwidget in self.selected_children:
-    #         tabwidget.unselect()
-    #     self.selected_children = []
-    #
-    # def copy(self, *args):
-    #     self.clipboard = [child.idx for child in self.floatlayout.children if \
-    #                       isinstance(child, TabWidget) and child.is_selected]
-    #     print("TabBuilderScrollView.copy, clipboard: ", self.clipboard)
-    #     self.show_copy_notification()
-    #     for child in self.selected_children:
-    #         child.is_selected = False
-    #     self.editbar.ids.insert_before_btn.disabled = False
-    #     self.editbar.ids.insert_after_btn.disabled = False
-    #
-    # def show_copy_notification(self):
-    #     popup = CopyPopup()
-    #     popup.open()
-    #     Clock.schedule_once(popup.dismiss, 0.75)
-    #
-    # def insert_before(self, *args):
-    #     before_idx = self.clipboard[0]
-    #     for i, track in enumerate(self.flat_song):
-    #         paste_measures = [track[j] for j in self.clipboard]
-    #         self.flat_song[i] = track[:before_idx] + paste_measures + track[before_idx:]
-    #     self.unselect_all()
-    #     self.editbar.ids.insert_before_btn.disabled = True
-    #     self.editbar.ids.insert_after_btn.disabled = True
-    #     self.rebuild()
-    #
-    # def insert_after(self, *args):
-    #     after_idx = self.clipboard[-1]
-    #     for i, track in enumerate(self.flat_song):
-    #         paste_measures = [track[j] for j in self.clipboard]
-    #         self.flat_song[i] = track[:after_idx+1] + paste_measures + track[after_idx+1:]
-    #     self.unselect_all()
-    #     self.editbar.ids.insert_before_btn.disabled = True
-    #     self.editbar.ids.insert_after_btn.disabled = True
-    #     self.rebuild()
-    #
-    # def delete(self, *args):
-    #     def tabwidget_sort(tabwidget):
-    #         return -tabwidget.idx
-    #     tabwidgets_to_delete = [child for child in self.floatlayout.children if \
-    #                             isinstance(child, TabWidget) and child.is_selected]
-    #     tabwidgets_to_delete.sort(key=tabwidget_sort)
-    #     for child in tabwidgets_to_delete:
-    #         self.floatlayout.remove_widget(child)
-    #         print(child.idx)
-    #         for i, track in enumerate(self.flat_song):
-    #             del self.flat_song[i][child.idx]
-    #     self.reindex_tabwidgets()
-    #
-    # def reindex_tabwidgets(self):
-    #     '''TabWidget.idx should point to the relevant gp_measure in self.flat_song[0].'''
-    #     # floatlayout also contains song title Lable
-    #     tabwidgets = [child for child in self.floatlayout.children if isinstance(child, TabWidget)]
-    #     for i, child in enumerate(tabwidgets[::-1]):
-    #         child.idx = i
-    #
-    # def tabwidget_to_child_idx(self, tabwidget):
-    #     '''First TabWidget (TabWidget.idx == 0) in floatlayout is last in floatlayout.children.'''
-    #     last_index = len(self.floatlayout.children) - 2  # Additional -1 for header.
-    #     return last_index - tabwidget.idx
-    #
-    # def rebuild(self, *args):
-    #     self.set_floatlayout_height()
-    #     self.set_child_y()
-    #     self.prev_tabwidget = self.prev_timesig = None
-    #     self.floatlayout.clear_widgets()
-    #     self.build_track(self.flat_song[0])
-
     def show_fileloader(self, *args):
         content = FileLoaderPopupContent(load_new_file=self.load_new_file, cancel=self.close_fileloader)
         self.fileloader_popup = Popup(title="Load New Guitar Pro Song", content=content,
@@ -388,40 +262,6 @@ class TabPlayerScrollView(ScrollView):
 
     def close_fileloader(self, *args):
         self.fileloader_popup.dismiss()
-
-    # def save(self, *args):
-    #     gp_song = self.gp_song
-    #     artist, album, song_title = gp_song.artist.title(), gp_song.album.title(), gp_song.title.title()
-    #     song_name = '-'.join([artist, album, song_title]).lower() + '.gp5'
-    #     filepath = './song-library/' + song_name
-    #     # Check if song already exists in database.
-    #     if slf.get_saved_song_file(artist, album, song_title):
-    #         self.fileoverwrite_popup = FileOverwritePopup(cancel=self.cancel_overwrite,
-    #                                                       overwrite=self.overwrite,
-    #                                                       artist=artist, album=album,
-    #                                                       song_title=song_title)
-    #         self.fileoverwrite_popup.open()
-    #     else:
-    #         editted_gp_song = gp_song
-    #         for i in range(len(gp_song.tracks)):
-    #             flat_track = self.flat_song[i]
-    #             editted_gp_song.tracks[i].measures[:] = flat_track
-    #         guitarpro.write(editted_gp_song, filepath, version=(5, 1, 0), encoding='cp1252')
-    #         slf.save_song_to_library(artist, album, song_title, filepath)
-    #
-    # def overwrite(self, artist: str, album: str, song_title: str) -> None:
-    #     song_name = '-'.join([artist, album, song_title]).lower() + '.gp5'
-    #     filepath = './song-library/' + song_name
-    #     gp_song = self.gp_song
-    #     editted_gp_song = gp_song
-    #     for i in range(len(gp_song.tracks)):
-    #         flat_track = self.flat_song[i]
-    #         editted_gp_song.tracks[i].measures[:] = flat_track
-    #     guitarpro.write(editted_gp_song, filepath, version=(5, 1, 0), encoding='cp1252')
-    #     self.fileoverwrite_popup.dismiss()
-    #
-    # def cancel_overwrite(self, *args):
-    #     self.fileoverwrite_popup.dismiss()
 
     def show_song_library(self, *args):
         # content = SongLibrary(size_hint=(0.9, 0.9), load_saved_file=self.load_saved_file)
@@ -489,153 +329,6 @@ class TabBuilderScrollView(TabPlayerScrollView):
         keynum, keytext = keycode
         if keytext == 'shift':
             self.shift_pressed = False
-
-    # def flatten_song(self):
-    #     '''
-    #     GuitarPro.models.Song structure summary
-    #     Song:
-    #         Tracks: List[Track]
-    #             Track:
-    #                 Measures: List[Measure]
-    #                     Measure:
-    #                         MeasureHeader
-    #                         Voices: List[Voice]
-    #                             Voice:
-    #                                 Beats: List[Beat]
-    #                                     Beat:
-    #                                         Notes: List[Note]
-    #                                             Note
-    #
-    #     Tracks list represents each guitar (guitar1, guitar2, ...).
-    #     Voicings list is of length 2, and represents left and right hand on piano.
-    #         So far, 2nd Voicing is empty and can be ignored.
-    #
-    #     Measures are grouped into repeat groups. This will make it more difficult to read later.
-    #     Flatten each track of the song to be a 'linear' list of measures so we can iterate
-    #     straight through it later.
-    #     '''
-    #     flat_song = []
-    #     for gp_track in self.gp_song.tracks:
-    #         flat_song += [self.flatten_track(gp_track)]
-    #     return flat_song
-    #
-    # def flatten_track(self, gp_track):
-    #     '''
-    #     PyGuitarPro does not appear to be parsing measure.header.repeatAlternative correctly.
-    #     Also, no info on Da Capo or Dal Segno type of repeats. Requires user to copy/paste/delete
-    #     in order to make corrections.
-    #     '''
-    #     flat_track = []
-    #     repeat_group = []
-    #     for gp_measure in gp_track.measures:
-    #         # Add to existing open repeat group.
-    #         if repeat_group != []:
-    #             repeat_group += [gp_measure]
-    #             # Close the repeat group.
-    #             if gp_measure.repeatClose > 0:
-    #                 repeat_group *= gp_measure.repeatClose
-    #                 flat_track += repeat_group
-    #                 repeat_group = []
-    #         # Start a new repeat group.
-    #         elif gp_measure.isRepeatOpen:
-    #             repeat_group = [gp_measure]
-    #             # Single measures may be repeated by themselves.
-    #             if gp_measure.repeatClose > 0:
-    #                 repeat_group *= gp_measure.repeatClose
-    #                 flat_track += repeat_group
-    #                 repeat_group = []
-    #         # Add normal measure.
-    #         else:
-    #             flat_track += [gp_measure]
-    #     return flat_track
-    #
-    # def print_flattened_track(self, flat_track):
-    #     for i, gp_measure in enumerate(flat_track):
-    #         print(f'{i} {gp_measure.header.number + 1}')
-    #         for gp_voice in gp_measure.voices[:-1]:
-    #             for gp_beat in gp_voice.beats:
-    #                 print(f'\t {gp_beat.notes}')
-    #
-    # def set_floatlayout_height(self):
-    #     height = 0
-    #     spacing = 10
-    #     tabwidget = TabWidget()
-    #     prev_timesig = None
-    #     prev_measure = None
-    #     child_parity = 'left'
-    #     for gp_measure in self.flat_song[0]:
-    #         timesig = (gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value)
-    #         prev_timesig_ratio = prev_timesig[0] / prev_timesig[1] if prev_timesig else 0
-    #         # Place first measure all the way at the top left.
-    #         if prev_measure is None:
-    #             height += tabwidget.height + spacing
-    #             child_parity = 'right'
-    #         # Place the next measure on a new line below.
-    #         elif (prev_timesig_ratio > 1
-    #               or prev_timesig != timesig
-    #               or prev_measure.repeatClose > 0
-    #               or gp_measure.isRepeatOpen
-    #               or child_parity == 'left'):
-    #             height += tabwidget.height + spacing
-    #             child_parity = 'right'
-    #         # Place the next measure to the right of the last measure of the same time signature.
-    #         else:
-    #             child_parity = 'left'
-    #         prev_measure = gp_measure
-    #         prev_timesig = timesig
-    #     # Add 1 extra tabwidget.height for songlabel
-    #     self.floatlayout.height = height + tabwidget.height
-    #
-    # def set_child_y(self):
-    #     tabwidget = TabWidget()
-    #     self.child_y = self.floatlayout.height - tabwidget.height
-    #
-    # def add_song_label(self):
-    #     tabwidget = TabWidget()
-    #     song_name = (self.gp_song.artist + " - " + self.gp_song.title).upper()
-    #     song_label = Label(text=song_name, font_size=32, font_name='./fonts/Impact',
-    #                        halign='center', valign='center',
-    #                        size_hint=(1, None), height=(tabwidget.height), pos=(0, self.child_y))
-    #     self.floatlayout.add_widget(song_label)
-    #     self.child_y -= tabwidget.height
-    #
-    # def build_track(self, flat_track):
-    #     self.add_song_label()
-    #     total_measures = len(flat_track)
-    #     self.prev_timesig = self.prev_timesig_ratio = self.prev_tabwidget = None
-    #     for i, gp_measure in enumerate(flat_track):
-    #         self.add_measure(gp_measure, i, total_measures)
-    #
-    # def add_measure(self, gp_measure, idx, total_measures):
-    #     timesig = (gp_measure.timeSignature.numerator, gp_measure.timeSignature.denominator.value)
-    #     prev_tabwidget = self.prev_tabwidget
-    #     prev_timesig = self.prev_timesig
-    #     prev_timesig_ratio = prev_timesig[0] / prev_timesig[1] if prev_timesig else 0
-    #     spacing = 10
-    #     tabwidget = TabWidget(self, idx, total_measures)
-    #
-    #     # Place first measure all the way at the top left.
-    #     if prev_tabwidget is None:
-    #         tabwidget.pos = (0, self.child_y)
-    #     # Place the next measure on a new line below.
-    #     elif (prev_timesig_ratio > 1 or prev_timesig != timesig
-    #           or prev_tabwidget.close_repeat_width > 0 or prev_tabwidget.x != 0
-    #           or gp_measure.isRepeatOpen):
-    #         self.child_y -= tabwidget.height + spacing
-    #         tabwidget.pos = (0, self.child_y)
-    #     # Place the next measure to the right of the last measure of the same time signature.
-    #     else:
-    #         tabwidget.timesig_width = 0
-    #         tabwidget.pos = (prev_tabwidget.right, self.child_y)
-    #
-    #     tabwidget.build_measure(gp_measure)
-    #     if tabwidget.starts_with_tie:
-    #         start = self.prev_tabwidget.xmids[-1]
-    #         end = tabwidget.xmids[0]
-    #         tabwidget.draw_tie_across_measures(tabwidget.gp_beats[0], start, end)
-    #     self.prev_tabwidget = tabwidget
-    #     self.prev_timesig = timesig
-    #     self.floatlayout.add_widget(tabwidget)
 
     def select(self, tabwidget):
         # If no other tabwigets are selected, shift and normal select do the same thing.
@@ -741,19 +434,6 @@ class TabBuilderScrollView(TabPlayerScrollView):
         self.floatlayout.clear_widgets()
         self.build_track(self.flat_song[0])
 
-    # def show_fileloader(self, *args):
-    #     content = FileLoaderPopupContent(load_new_file=self.load_new_file, cancel=self.close_fileloader)
-    #     self.fileloader_popup = Popup(title="Load New Guitar Pro Song", content=content,
-    #                                   size_hint=(0.9, 0.9))
-    #     self.fileloader_popup.open()
-    #
-    # def load_new_file(self, filepath):
-    #     self.fileloader_popup.dismiss()
-    #     self.load_file(filepath[0], False)
-    #
-    # def close_fileloader(self, *args):
-    #     self.fileloader_popup.dismiss()
-
     def save(self, *args):
         gp_song = self.gp_song
         artist, album, song_title = gp_song.artist.title(), gp_song.album.title(), gp_song.title.title()
@@ -787,38 +467,6 @@ class TabBuilderScrollView(TabPlayerScrollView):
 
     def cancel_overwrite(self, *args):
         self.fileoverwrite_popup.dismiss()
-
-    # def show_song_library(self, *args):
-    #     # content = SongLibrary(size_hint=(0.9, 0.9), load_saved_file=self.load_saved_file)
-    #     # self.song_library_popup = Popup(title="Song Library", content=content, size_hint=(0.9, 0.9))
-    #     self.song_library_popup = SongLibraryPopup(load_saved_file=self.load_saved_file)
-    #     self.song_library_popup.open()
-    #
-    # def load_saved_file(self, filepath):
-    #     self.song_library_popup.dismiss()
-    #     self.load_file(filepath, True)
-    #
-    # def load_file(self, filepath, from_song_library):
-    #     self.gp_song = guitarpro.parse(filepath)
-    #     # Saved songs in ./song-library/ are already flattened.
-    #     if not from_song_library:
-    #         self.flat_song = self.flatten_song()
-    #     else:
-    #         self.flat_song = []
-    #         for track in self.gp_song.tracks:
-    #             self.flat_song.append(track.measures)
-    #     self.floatlayout.clear_widgets()
-    #     self.set_floatlayout_height()
-    #     self.set_child_y()
-    #     self.build_track(self.flat_song[0])
-
-    # def play(self, *args):
-    #     query = self.gp_song.artist + ' ' + self.gp_song.title
-    #     query.lower()
-    #     if self.spt_conn:
-    #         self.spt_conn.play_on_spotify(query)
-    #     tempo = self.gp_song.tempo
-    #     self.floatlayout.play(tempo)
 
 
 class TabFloatLayout(FloatLayout):
@@ -1249,79 +897,6 @@ class TabWidget(Widget):
 
 class EditToolbar(FloatLayout):
     tabbuilder = ObjectProperty()
-
-
-# class SongLibrary(Carousel):
-#     load_saved_file = ObjectProperty()
-#     artist = StringProperty('')
-#     album = StringProperty('')
-#     song = StringProperty('')
-#
-#     def __init__(self, **kwargs):
-#         super().__init__(**kwargs)
-#         self.artists_page = SongLibraryPage(name='Artists', carousel=self)
-#         self.albums_page = SongLibraryPage(name='Albums', carousel=self)
-#         self.songs_page = SongLibraryPage(name='Songs', carousel=self)
-#         for page in (self.artists_page, self.albums_page, self.songs_page):
-#             self.add_widget(page)
-#
-#     def on_press(self, button):
-#         if self.current_slide.name == 'Artists':
-#             self.artist = button.text
-#             self.load_next(mode='next')
-#         elif self.current_slide.name == 'Albums':
-#             self.album = button.text
-#             self.load_next(mode='next')
-#         elif self.current_slide.name == 'Songs':
-#             self.song = button.text
-#
-#     def on_artist(self, *args):
-#         albums = slf.get_albums_by_artist(self.artist)
-#         self.albums_page.update_list(albums)
-#
-#     def on_album(self, *args):
-#         songs = slf.get_songs_on_album(self.artist, self.album)
-#         self.songs_page.update_list(songs)
-#
-#     def on_song(self, *args):
-#         filepath = slf.get_saved_song_file(self.artist, self.album, self.song)
-#         self.load_saved_file(filepath)
-#
-#
-# class SongLibraryPage(FloatLayout):
-#
-#     def __init__(self, name=None, carousel=None, **kwargs):
-#         super().__init__(**kwargs)
-#         self.name = name
-#         self.carousel = carousel
-#         self.header = SongLibraryHeader(text=name.title())
-#         self.add_widget(self.header)
-#         if name == 'Artists':
-#             artists = slf.get_artists()
-#             self.update_list(artists)
-#
-#     def update_list(self, str_list):
-#         buttons = [child for child in self.children if isinstance(child, Button)]
-#         while len(str_list) < len(buttons):
-#             self.remove_widget(self.children[-1])
-#             buttons.pop()
-#
-#         prev_widget = self.header
-#         while len(str_list) > len(buttons):
-#             button = Button(size_hint=[None, None], size=[350, 50])
-#             button.top = prev_widget.y
-#             prev_widget.bind(y=button.setter('top'))
-#             buttons.append(button)
-#             self.add_widget(button)
-#             button.bind(on_press=self.carousel.on_press)
-#             prev_widget = button
-#
-#         for child, text in zip(buttons, str_list):
-#             child.text = text
-#
-#
-# class SongLibraryHeader(Label):
-#     pass
 
 
 class FileLoaderPopupContent(BoxLayout):
