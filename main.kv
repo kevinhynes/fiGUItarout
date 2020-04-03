@@ -9,7 +9,7 @@
         notes_or_octaves: scaleoptionschooser.notes_or_octaves
 
     InstrumentRack:
-        id: rack
+        id: instrumentrack
         top: keysigtitlebar.y
         key_sig_title_bar: keysigtitlebar
         root_note_idx: keysigchooser.root_note_idx
@@ -19,12 +19,11 @@
         scale_text: scaleoptionschooser.scale_text
         tuning: tuner.tuning
 
-    ChordDisplay:
-        id: chorddisplay
-        instrument_rack: rack
-        root_note_idx: keysigchooser.root_note_idx
-        mode_filter: keysigchooser.mode_filter
-        tuner_tuning: tuner.tuning
+    Tuner:
+        id: tuner
+
+    Metronome:
+        id: metronome
 
     KeySigChooser:
         id: keysigchooser
@@ -32,16 +31,22 @@
     ScaleOptionsChooser:
         id: scaleoptionschooser
 
-    Tuner:
-        id: tuner
-
-    Metronome:
-        id: metronome
+    ChordDisplay:
+        id: chorddisplay
+        instrument_rack: instrumentrack
+        root_note_idx: keysigchooser.root_note_idx
+        mode_filter: keysigchooser.mode_filter
+        tuner_tuning: tuner.tuning
 
     SongBuilder:
         id: songbuilder
         spt_conn: root.spt_conn
         height: root.height - 50
+
+    SongPlayer:
+        id: songplayer
+        spt_conn: root.spt_conn
+        top: self.top_prop
 
     # Toolbar
     ToolbarToggleButton:
@@ -58,7 +63,7 @@
         on_state: metronome.slide(self.state)
     ToolbarToggleButton:
         id: btn3
-        text: 'Choose Key Sig'
+        text: 'Choose Key Signature'
         x: btn2.right
         group: 'current_tool'
         on_state: keysigchooser.slide(self.state)
@@ -78,7 +83,7 @@
         id: btn6
         text: 'Show Piano'
         x: btn5.right
-        on_press: rack.fold()
+        on_press: instrumentrack.fold()
     ToolbarButton:
         id: btn7
         text: 'Song Builder'
@@ -88,12 +93,18 @@
         id: btn8
         text: 'Song Library'
         x: btn7.right
-        on_press: root.show_song_library()
+        on_press: songplayer.initiate(instrumentrack)
     ToolbarButton:
         id: btn9
         text: 'Log in to Spotify'
         x: btn8.right
         on_press: root.show_spotify_login_popup()
+    ToolbarButton:
+        id: btn10
+        text: 'Play Song'
+        x: btn9.right
+        on_press: songplayer.play()
+
 <ToolbarButton@Button>:
     size_hint: [None, None]
     size: [150, 50]

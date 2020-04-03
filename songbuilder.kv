@@ -5,23 +5,36 @@
 <SongBuilder>:
     id: songbuilder
     size_hint: [1, None]
-    TabViewer:
-        id: tabviewer
+    TabBuilderScrollView:
+        id: tabbuilder
         spt_conn: root.spt_conn
         editbar: editbar
-        pos_hint: {'center_x': 0.5}
-        size_hint: [1, None]
         height: root.height - editbar.height
         y: editbar.top
     EditToolbar:
         id: editbar
-        tabviewer: tabviewer
+        tabbuilder: tabbuilder
         y: root.y
 
 
-<TabViewer>:
+<SongPlayer>:
+    id: songplayer
+    tabplayer: tabplayer
+    size_hint: [1, None]
+
+    TabPlayerScrollView:
+        id: tabplayer
+        spt_conn: root.spt_conn
+        height: root.height - 50
+
+
+
+<TabBuilderScrollView>:
     bar_width: 10
     scroll_type: ['bars', 'content']
+    pos_hint: {'center_x': 0.5}
+    size_hint: [1, None]
+    # Black background covers the rest of the app.
     canvas.before:
         Color:
             rgba: (0, 0, 0, 1)
@@ -29,6 +42,12 @@
             size: self.size
             pos: self.pos
 
+
+<TabPlayerScrollView>:
+    bar_width: 10
+    scroll_type: ['bars', 'content']
+    pos_hint: {'center_x': 0.5, 'top': 1}
+    size_hint: [1, None]
 
 
 <TabFloatLayout>:
@@ -145,57 +164,57 @@
     EditToolbarButton:
         id: load_btn
         text: "Load New File"
-        on_press: root.tabviewer.show_fileloader()
+        on_press: root.tabbuilder.show_fileloader()
         y: root.y
     EditToolbarButton:
         id: copy_btn
         text: "Copy"
         x: load_btn.right
-        on_press: root.tabviewer.copy()
+        on_press: root.tabbuilder.copy()
         y: root.y
     EditToolbarButton:
         id: insert_before_btn
         text: "Insert Before"
         x: copy_btn.right
-        on_press: root.tabviewer.insert_before()
+        on_press: root.tabbuilder.insert_before()
         disabled: True
         y: root.y
     EditToolbarButton:
         id: insert_after_btn
         text: "Insert After"
         x: insert_before_btn.right
-        on_press: root.tabviewer.insert_after()
+        on_press: root.tabbuilder.insert_after()
         disabled: True
         y: root.y
     EditToolbarButton:
         id: delete_btn
         text: "Delete"
         x: insert_after_btn.right
-        on_press: root.tabviewer.delete()
+        on_press: root.tabbuilder.delete()
         y: root.y
     EditToolbarButton:
         id: rebuild_btn
         text: "Rebuild"
         x: delete_btn.right
-        on_press: root.tabviewer.rebuild()
+        on_press: root.tabbuilder.rebuild()
         y: root.y
     EditToolbarButton:
         id: save_btn
         text: "Save"
         x: rebuild_btn.right
-        on_press: root.tabviewer.save()
+        on_press: root.tabbuilder.save()
         y: root.y
     EditToolbarButton:
         id: show_song_library_btn
         text: "Show Song Library"
         x: save_btn.right
-        on_press: root.tabviewer.show_song_library()
+        on_press: root.tabbuilder.show_song_library()
         y: root.y
     EditToolbarButton:
         id: play_btn
         text: "Play"
         x: show_song_library_btn.right
-        on_press: root.tabviewer.play()
+        on_press: root.tabbuilder.play()
         y: root.y
 <EditToolbarButton@Button>:
     size_hint: [None, None]

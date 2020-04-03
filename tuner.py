@@ -45,10 +45,11 @@ class SixStringTuner(BoxLayout):
 
     def tune_to(self, req="Standard"):
         tunings = {
-            "Standard": [28, 33, 38, 43, 47, 52],
+            "Standard": [28, 33, 38, 43, 47, 52],  # E-A-D-G-B-E
             "Drop D": [26, 33, 38, 43, 47, 52],
             "Drop C": [24, 31, 36, 41, 45, 50],
             "Drop B": [23, 30, 35, 40, 44, 49],
+            "Open G": [26, 31, 38, 43, 47, 50],  # D-G-D-G-B-D
         }
         for string_tuner, tuning in zip(self.ids.values(), tunings[req]):
             string_tuner.note_val = tuning
