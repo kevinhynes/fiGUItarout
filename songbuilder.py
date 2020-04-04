@@ -61,11 +61,9 @@ class SongPlayer(FloatLayout):
             self.top_prop = instrumentrack.y  # before changing the position.
             self.tabplayer.top = self.top
             instrumentrack.bind(y=self.top_prop_setter)
-            self.is_shown = True
         else:
             instrumentrack.unbind(y=self.top_prop_setter)
             self.top_prop = 0
-            self.is_shown = False
 
     def top_prop_setter(self, instrumentrack, instrument_rack_y):
         # Unbinding from the self.setter('top_prop') callback is not working.
@@ -87,6 +85,7 @@ class TabPlayerScrollView(ScrollView):
     spt_conn = ObjectProperty()
 
     def __init__(self, **kwargs):
+        self.flat_song = None
         self.prev_timesig = None
         self.prev_tabwidget = None
         super().__init__(**kwargs)
@@ -264,14 +263,26 @@ class TabPlayerScrollView(ScrollView):
         self.fileloader_popup.dismiss()
 
     def show_song_library(self, *args):
-        # content = SongLibrary(size_hint=(0.9, 0.9), load_saved_file=self.load_saved_file)
-        # self.song_library_popup = Popup(title="Song Library", content=content, size_hint=(0.9, 0.9))
         self.song_library_popup = SongLibraryPopup(load_saved_file=self.load_saved_file)
         self.song_library_popup.open()
 
-    def load_saved_file(self, filepath):
+    def load_saved_file(self, filepath, edit_instructions):
         self.song_library_popup.dismiss()
-        self.load_file(filepath, True)
+        self.gp_song = guitarpro.parse(filepath)
+        edit_instructions = [int(num) for num in edit_instructions.split(',')]
+        self.flat_song = []
+        for track in self.gp_song.tracks:
+            measure_map = {}
+            for measure in track.measures:
+                measure_map[measure.header.number] = measure
+            flat_track = []
+            for measure_num in edit_instructions:
+                flat_track.append(measure_map[measure_num])
+            self.flat_song.append(flat_track)
+        self.floatlayout.clear_widgets()
+        self.set_floatlayout_height()
+        self.set_child_y()
+        self.build_track(self.flat_song[0])
 
     def load_file(self, filepath, from_song_library):
         self.gp_song = guitarpro.parse(filepath)
@@ -357,7 +368,7 @@ class TabBuilderScrollView(TabPlayerScrollView):
             i = self.tabwidget_to_child_idx(tabwidget)
             j = self.tabwidget_to_child_idx(self.selected_children[-1])
             to_select = self.floatlayout.children[i:j]
-            self.selected_children[:] = self.selected_children + to_select[::1-1]
+            self.selected_children[:] = self.selected_children + to_select[::-1]
         for tabwidget in to_select:
             tabwidget.select()
         print("TabBuilderScrollView.shift_select, ", [selectedwidget.idx for selectedwidget in self.selected_children])
@@ -440,29 +451,28 @@ class TabBuilderScrollView(TabPlayerScrollView):
         song_name = '-'.join([artist, album, song_title]).lower() + '.gp5'
         filepath = './song-library/' + song_name
         # Check if song already exists in database.
-        if slf.get_saved_song_file(artist, album, song_title):
+        if slf.get_saved_song_info(artist, album, song_title):
             self.fileoverwrite_popup = FileOverwritePopup(cancel=self.cancel_overwrite,
                                                           overwrite=self.overwrite,
                                                           artist=artist, album=album,
                                                           song_title=song_title)
             self.fileoverwrite_popup.open()
         else:
-            editted_gp_song = gp_song
-            for i in range(len(gp_song.tracks)):
-                flat_track = self.flat_song[i]
-                editted_gp_song.tracks[i].measures[:] = flat_track
-            guitarpro.write(editted_gp_song, filepath, version=(5, 1, 0), encoding='cp1252')
-            slf.save_song_to_library(artist, album, song_title, filepath)
+            guitarpro.write(self.gp_song, filepath, version=(5, 1, 0), encoding='cp1252')
+            edit_instructions = []
+            for measure in self.flat_song[0]:
+                edit_instructions.append(str(measure.header.number))
+            edit_instructions = ','.join(edit_instructions)
+            slf.save_song_to_library(artist, album, song_title, filepath, edit_instructions)
+
 
     def overwrite(self, artist: str, album: str, song_title: str) -> None:
-        song_name = '-'.join([artist, album, song_title]).lower() + '.gp5'
-        filepath = './song-library/' + song_name
-        gp_song = self.gp_song
-        editted_gp_song = gp_song
-        for i in range(len(gp_song.tracks)):
-            flat_track = self.flat_song[i]
-            editted_gp_song.tracks[i].measures[:] = flat_track
-        guitarpro.write(editted_gp_song, filepath, version=(5, 1, 0), encoding='cp1252')
+        '''Update the EditInstructions for this song in the DB.'''
+        edit_instructions = []
+        for measure in self.flat_song[0]:
+            edit_instructions.append(str(measure.header.number))
+        edit_instructions = ','.join(edit_instructions)
+        slf.update_edit_instructions(artist, album, song_title, edit_instructions)
         self.fileoverwrite_popup.dismiss()
 
     def cancel_overwrite(self, *args):
@@ -485,7 +495,7 @@ class TabFloatLayout(FloatLayout):
     def play(self, tempo):
         # The GuitarPro songs' tempo are of form BPM where the B(eat) is always a quarter note.
         self.beat_width = self.children[0].measure_width / 4
-        self.seconds_per_beat = 60 / tempo
+        self.seconds_per_beat = (60 / tempo) * 0.98
         self.scroll_coords = self.build_scroll_coords()
         self.scroll_coords_idx = 0
         self._play_next_line()
@@ -559,7 +569,7 @@ class TabWidget(Widget):
         self.note_glyphs = InstructionGroup()
         self.num_glyphs = InstructionGroup()
         self.tuplet_count = 0
-        self.canvas.add(Color(1, 0, 0, 0.5))
+        self.canvas.add(Color(1, 0, 0, 0))
         self.canvas.add(self.backgrounds)
         self.canvas.add(black)
         self.canvas.add(self.glyphs)

@@ -48,8 +48,8 @@ class SongLibrary(Carousel):
         self.songs_page.update_list(songs)
 
     def on_song(self, *args):
-        filepath = slf.get_saved_song_file(self.artist, self.album, self.song)
-        self.load_saved_file(filepath)
+        filepath, edit_instructions = slf.get_saved_song_info(self.artist, self.album, self.song)
+        self.load_saved_file(filepath, edit_instructions)
 
 
 class SongLibraryPage(FloatLayout):

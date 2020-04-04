@@ -11,7 +11,8 @@ def create_song_lib_db():
                         Artist TEXT,
                         Album TEXT,
                         Title TEXT,
-                        Filepath TEXT)
+                        Filepath TEXT,
+                        EditInstructions TEXT)
                         """)
         return
 
@@ -61,25 +62,32 @@ def get_songs_on_album(artist: str, album: str) -> List[str]:
         return str_list
 
 
-def get_saved_song_file(artist: str, album: str, song: str) -> str:
+def get_saved_song_info(artist: str, album: str, title: str) -> List[str]:
     with sqlite3.connect("song_library_DB.db") as connection:
         cursor = connection.cursor()
-        cursor.execute("""SELECT Filepath FROM SongLibrary
-                          WHERE Artist = ? AND Album = ? AND Title = ?""", (artist, album, song))
-        rows = cursor.fetchall()
+        cursor.execute("""SELECT Filepath, EditInstructions FROM SongLibrary
+                          WHERE Artist = ? AND Album = ? AND Title = ?""", (artist, album, title))
+        rows = cursor.fetchall()  # -> [(str, str)]
         if not rows:
             return
-        str_list = [tup[0] for tup in rows]
-        return str_list[0]
+        str_list = list(rows[0])
+        return str_list
 
 
 # Write to database.
-def save_song_to_library(artist: str, album: str, title: str, filepath: str) -> None:
+def save_song_to_library(artist: str, album: str, title: str, filepath: str, edit_instructions: str) -> None:
     with sqlite3.connect("song_library_DB.db") as connection:
         cursor = connection.cursor()
-        cursor.execute("""INSERT INTO SongLibrary (Artist, Album, Title, Filepath)
-                          VALUES (?, ?, ?, ?)""", (artist, album, title, filepath))
+        cursor.execute("""INSERT INTO SongLibrary (Artist, Album, Title, Filepath, EditInstructions)
+                          VALUES (?, ?, ?, ?, ?)""", (artist, album, title, filepath, edit_instructions))
         return
+
+def update_edit_instructions(artist: str, album: str, title: str, edit_instructions: str) -> None:
+    with sqlite3.connect("song_library_DB.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute("""UPDATE SongLibrary SET EditInstructions = ? 
+                          WHERE Artist = ? AND Album = ? AND Title = ?""",
+                          (edit_instructions, artist, album, title))
 
 
 # create_song_lib_db()
