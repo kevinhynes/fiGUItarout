@@ -14,10 +14,11 @@ from kivy.core.window import Window
 
 import guitarpro
 from typing import List
+from threading import Thread
+import time
 import song_library_funcs as slf
 from songlibrary import SongLibraryPopup
-
-black = Color(0, 0, 0, 1)
+from colors import black, white
 
 
 class SongBuilder(FloatLayout):
@@ -299,12 +300,12 @@ class TabPlayerScrollView(ScrollView):
         self.build_track(self.flat_song[0])
 
     def play(self, *args):
-        query = self.gp_song.artist + ' ' + self.gp_song.title
-        query.lower()
+        self.floatlayout.build_scroll_coords()
+        artist, title  = self.gp_song.artist.lower() ,self.gp_song.title.lower()
         if self.spt_conn:
-            self.spt_conn.play_on_spotify(query)
+            self.spt_conn.play_on_spotify(artist, title)
         tempo = self.gp_song.tempo
-        self.floatlayout.play(tempo)
+        self.floatlayout.play_thread(tempo)
 
 
 class TabBuilderScrollView(TabPlayerScrollView):
@@ -379,12 +380,14 @@ class TabBuilderScrollView(TabPlayerScrollView):
         self.selected_children = []
 
     def copy(self, *args):
-        self.clipboard = [child.idx for child in self.floatlayout.children if \
-                          isinstance(child, TabWidget) and child.is_selected]
+        # self.clipboard = [child.idx for child in self.floatlayout.children if \
+        #                   isinstance(child, TabWidget) and child.is_selected]
+        self.clipboard = [tabwidget.idx for tabwidget in self.selected_children]
         print("TabBuilderScrollView.copy, clipboard: ", self.clipboard)
         self.show_copy_notification()
-        for child in self.selected_children:
-            child.is_selected = False
+        for tabwidget in self.selected_children:
+            tabwidget.unselect()
+        self.selected_children = []
         self.editbar.ids.insert_before_btn.disabled = False
         self.editbar.ids.insert_after_btn.disabled = False
 
@@ -394,7 +397,9 @@ class TabBuilderScrollView(TabPlayerScrollView):
         Clock.schedule_once(popup.dismiss, 0.75)
 
     def insert_before(self, *args):
-        before_idx = self.clipboard[0]
+        if not self.selected_children:
+            return
+        before_idx = self.selected_children[0].idx
         for i, track in enumerate(self.flat_song):
             paste_measures = [track[j] for j in self.clipboard]
             self.flat_song[i] = track[:before_idx] + paste_measures + track[before_idx:]
@@ -404,7 +409,9 @@ class TabBuilderScrollView(TabPlayerScrollView):
         self.rebuild()
 
     def insert_after(self, *args):
-        after_idx = self.clipboard[-1]
+        if not self.selected_children:
+            return
+        after_idx = self.selected_children[-1].idx
         for i, track in enumerate(self.flat_song):
             paste_measures = [track[j] for j in self.clipboard]
             self.flat_song[i] = track[:after_idx+1] + paste_measures + track[after_idx+1:]
@@ -531,7 +538,34 @@ class TabFloatLayout(FloatLayout):
             scroll_y -= (210 / (self.height - self.tabbuilder.height))
             scroll_coords.append((x_start, x_stop, y, scroll_y))
             i -= 1
-        return scroll_coords
+        self.scroll_coords = scroll_coords
+
+    def play_thread(self, tempo):
+        # The GuitarPro songs' tempo are of form BPM where the B(eat) is always a quarter note.
+        self.beat_width = self.children[0].measure_width / 4
+        self.seconds_per_beat = 60 / tempo
+        # self.scroll_coords = self.build_scroll_coords()
+        self.scroll_coords_idx = 0
+        thread = Thread(target=self._play_thread, daemon=True)
+        thread.start()
+
+    def _play_thread(self):
+        start = time.time()
+        goal = start
+        while True:
+            if self.scroll_coords_idx == len(self.scroll_coords):
+                return
+            x_start, x_stop, y, scroll_y = self.scroll_coords[self.scroll_coords_idx]
+            num_beats = (x_stop - x_start) / self.beat_width
+            seconds = self.seconds_per_beat * num_beats
+            goal += seconds
+            self.scroll_coords_idx += 1
+            self.scrollbar1_x = x_start - 5
+            self.scrollbar1_y = y
+            self.tabbuilder.scroll_y = scroll_y
+            anim = Animation(scrollbar1_x=x_stop - 5, d=seconds)
+            anim.start(self)
+            time.sleep(goal - time.time())
 
 
 class TabWidget(Widget):
@@ -569,7 +603,7 @@ class TabWidget(Widget):
         self.note_glyphs = InstructionGroup()
         self.num_glyphs = InstructionGroup()
         self.tuplet_count = 0
-        self.canvas.add(Color(1, 0, 0, 0))
+        self.canvas.add(white)
         self.canvas.add(self.backgrounds)
         self.canvas.add(black)
         self.canvas.add(self.glyphs)
@@ -668,7 +702,7 @@ class TabWidget(Widget):
             fret_text = 'X'
         if gp_note.effect.isHarmonic:
             fret_text = '<' + fret_text + '>'
-        fret_num_glyph = CoreLabel(text=fret_text, font_size=14, font_name='./fonts/Arial', bold=True)
+        fret_num_glyph = CoreLabel(text=fret_text, font_size=16, font_name='./fonts/Arial', bold=True)
         fret_num_glyph.refresh()
         ypos = self.y + self.step_y * (8 - (gp_note.string - 1)) - fret_num_glyph.height / 2
         background = Rectangle(pos=(xpos, ypos), size=fret_num_glyph.texture.size)
@@ -763,7 +797,7 @@ class TabWidget(Widget):
         rest_instr = Rectangle(pos=(xpos, self.y + rest_y), size=rest_glyph.texture.size)
         rest_instr.texture = rest_glyph.texture
         background = Rectangle(pos=(xpos, self.y + rest_y), size=rest_glyph.texture.size)
-        self.backgrounds.add(background)
+        # self.backgrounds.add(background)  # Looks bad because of mscore-20 font.
         self.glyphs.add(rest_instr)
         if gp_beat.duration.isDotted or gp_beat.duration.isDoubleDotted:
             ypos = rest_y + rest_glyph.texture.height * 0.75

@@ -4,8 +4,6 @@ from kivy.properties import ObjectProperty
 from kivy.lang import Builder
 from kivy.core.window import Window
 Window.maximize()
-# Window.size = (500, 300)
-from kivy.clock import Clock
 from songlibrary import SongLibraryPopup
 from spotifylogin import SpotifyLoginPopup
 
@@ -32,11 +30,27 @@ class SpotifyConnection:
 
     def __init__(self, token):
         self.conn = spotipy.Spotify(auth=token)
+        self.device_id = None
+        results = self.conn.devices()
+        for device in results['devices']:
+            if device['type'] == 'Computer':
+                self.device_id = device['id']
+                break
 
-    def play_on_spotify(self, query):
-        results = self.conn.search(q=query)
-        track_id = results['tracks']['items'][0]['id']
-        self.conn.start_playback(uris=['spotify:track:' + track_id])
+    def get_track_uri(self, artist, title):
+        print(f"Searching for {artist + ' ' + title}")
+        results = self.conn.search(artist + ' ' + title)
+        for track in results['tracks']['items']:
+            if track['name'].lower() == title:
+                print(f"\tFound {track['name']}")
+                return track['uri']
+        print(f"\tNo exact match found for {artist} - {title}")
+        return None
+
+    def play_on_spotify(self, artist, title):
+        track_uri = self.get_track_uri(artist, title)
+        if track_uri:
+            self.conn.start_playback(uris=[track_uri], device_id=self.device_id)
 
 
 class MainPage(FloatLayout):
@@ -44,6 +58,7 @@ class MainPage(FloatLayout):
 
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
+        self.log_in_to_spotify("RandallSkeffington")
 
     def show_song_library(self, *args):
         self.song_library_popup = SongLibraryPopup()
@@ -54,7 +69,7 @@ class MainPage(FloatLayout):
         self.spotify_log_in_popup.open()
 
     def log_in_to_spotify(self, username):
-        self.spotify_log_in_popup.dismiss()
+        # self.spotify_log_in_popup.dismiss()
         scope = 'user-library-read user-modify-playback-state'
         token = spotipy.util.prompt_for_user_token(username, scope,
                                            client_id="b8a306fd829d4ea4a757cb1411baf0eb",
