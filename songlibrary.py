@@ -3,7 +3,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.carousel import Carousel
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-from kivy.properties import ObjectProperty, StringProperty, NumericProperty
+from kivy.properties import ObjectProperty, StringProperty
 from kivy.lang import Builder
 
 import song_library_funcs as slf

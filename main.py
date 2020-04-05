@@ -38,13 +38,20 @@ class SpotifyConnection:
                 break
 
     def get_track_uri(self, artist, title):
+        if title == "mouths like sidewinder missles":
+            title = "mouths like sidewinder misssles"
         print(f"Searching for {artist + ' ' + title}")
-        results = self.conn.search(artist + ' ' + title)
+        query = artist + " " + title
+        print(query)
+        results = self.conn.search(str(query))
         for track in results['tracks']['items']:
+            print(track['name'])
             if track['name'].lower() == title:
                 print(f"\tFound {track['name']}")
                 return track['uri']
         print(f"\tNo exact match found for {artist} - {title}")
+        results_log = open('./results_log.txt', 'w')
+        results_log.write(str(results))
         return None
 
     def play_on_spotify(self, artist, title):

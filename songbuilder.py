@@ -7,7 +7,7 @@ from kivy.properties import NumericProperty, ObjectProperty, AliasProperty, Stri
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.core.text import Label as CoreLabel
-from kivy.graphics import Color, Line, Rectangle, Ellipse, InstructionGroup, Bezier
+from kivy.graphics import Line, Rectangle, Ellipse, InstructionGroup, Bezier
 from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.core.window import Window
@@ -258,7 +258,9 @@ class TabPlayerScrollView(ScrollView):
 
     def load_new_file(self, filepath):
         self.fileloader_popup.dismiss()
-        self.load_file(filepath[0], False)
+        self.gp_song = guitarpro.parse(filepath)
+        self.flat_song = self.flatten_song()
+        self.load_file()
 
     def close_fileloader(self, *args):
         self.fileloader_popup.dismiss()
@@ -280,20 +282,13 @@ class TabPlayerScrollView(ScrollView):
             for measure_num in edit_instructions:
                 flat_track.append(measure_map[measure_num])
             self.flat_song.append(flat_track)
-        self.floatlayout.clear_widgets()
-        self.set_floatlayout_height()
-        self.set_child_y()
-        self.build_track(self.flat_song[0])
+        self.load_file()
+        # self.floatlayout.clear_widgets()
+        # self.set_floatlayout_height()
+        # self.set_child_y()
+        # self.build_track(self.flat_song[0])
 
-    def load_file(self, filepath, from_song_library):
-        self.gp_song = guitarpro.parse(filepath)
-        # Saved songs in ./song-library/ are already flattened.
-        if not from_song_library:
-            self.flat_song = self.flatten_song()
-        else:
-            self.flat_song = []
-            for track in self.gp_song.tracks:
-                self.flat_song.append(track.measures)
+    def load_file(self):
         self.floatlayout.clear_widgets()
         self.set_floatlayout_height()
         self.set_child_y()
@@ -314,8 +309,6 @@ class TabBuilderScrollView(TabPlayerScrollView):
     spt_conn = ObjectProperty()
 
     def __init__(self, **kwargs):
-        # self.prev_timesig = None
-        # self.prev_tabwidget = None
         self.clipboard = []
         self.keyboard = Window.request_keyboard(self.close_keyboard, self)
         self.keyboard.bind(on_key_down=self.on_key_down)
@@ -323,8 +316,6 @@ class TabBuilderScrollView(TabPlayerScrollView):
         self.shift_pressed = False
         self.selected_children = []
         super().__init__(**kwargs)
-        # self.floatlayout = TabFloatLayout(tabbuilder=self, size_hint_y=None)
-        # self.add_widget(self.floatlayout)
 
     def close_keyboard(self, *args):
         self.keyboard.unbind(on_key_down=self.on_key_down)
@@ -380,8 +371,6 @@ class TabBuilderScrollView(TabPlayerScrollView):
         self.selected_children = []
 
     def copy(self, *args):
-        # self.clipboard = [child.idx for child in self.floatlayout.children if \
-        #                   isinstance(child, TabWidget) and child.is_selected]
         self.clipboard = [tabwidget.idx for tabwidget in self.selected_children]
         print("TabBuilderScrollView.copy, clipboard: ", self.clipboard)
         self.show_copy_notification()

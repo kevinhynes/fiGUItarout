@@ -28,7 +28,7 @@
 
 
 <TabBuilderScrollView>:
-    bar_width: 10
+    bar_width: 15
     scroll_type: ['bars', 'content']
     pos_hint: {'center_x': 0.5}
     size_hint: [1, None]
@@ -42,7 +42,7 @@
 
 
 <TabPlayerScrollView>:
-    bar_width: 10
+    bar_width: 15
     scroll_type: ['bars', 'content']
     pos_hint: {'center_x': 0.5, 'top': 1}
     size_hint: [1, None]
@@ -232,7 +232,7 @@
             on_release: root.cancel()
         Button:
             text: "Load"
-            on_release: root.load_new_file(filechooser.selection)
+            on_release: root.load_new_file(filechooser.selection[0])
 
 
 <CopyPopup>:
