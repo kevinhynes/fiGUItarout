@@ -214,6 +214,12 @@
         x: show_song_library_btn.right
         on_press: root.tabbuilder.play()
         y: root.y
+    EditToolbarButton:
+        id: stop_btn
+        text: "Stop"
+        x: play_btn.right
+        on_press: root.tabbuilder.stop()
+        y: root.y
 <EditToolbarButton@Button>:
     size_hint: [None, None]
     size: [125, 50]

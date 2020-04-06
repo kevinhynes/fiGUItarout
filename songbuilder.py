@@ -12,13 +12,15 @@ from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.core.window import Window
 
+import song_library_funcs as slf
+from songlibrary import SongLibraryPopup
+from colors import black, white
+
 import guitarpro
 from typing import List
 from threading import Thread
 import time
-import song_library_funcs as slf
-from songlibrary import SongLibraryPopup
-from colors import black, white
+from functools import partial
 
 
 class SongBuilder(FloatLayout):
@@ -283,10 +285,6 @@ class TabPlayerScrollView(ScrollView):
                 flat_track.append(measure_map[measure_num])
             self.flat_song.append(flat_track)
         self.load_file()
-        # self.floatlayout.clear_widgets()
-        # self.set_floatlayout_height()
-        # self.set_child_y()
-        # self.build_track(self.flat_song[0])
 
     def load_file(self):
         self.floatlayout.clear_widgets()
@@ -296,11 +294,18 @@ class TabPlayerScrollView(ScrollView):
 
     def play(self, *args):
         self.floatlayout.build_scroll_coords()
-        artist, title  = self.gp_song.artist.lower() ,self.gp_song.title.lower()
+        artist, album, title = self.gp_song.artist.title(), self.gp_song.album.title(), self.gp_song.title.title()
+        lead_in = slf.get_saved_song_lead_in(artist, album, title)
+        tempo_multiplier = slf.get_saved_song_tempo_multiplier(artist, album, title)
         if self.spt_conn:
-            self.spt_conn.play_on_spotify(artist, title)
+            self.spt_conn.play_on_spotify(artist, album, title)
         tempo = self.gp_song.tempo
-        self.floatlayout.play_thread(tempo)
+        self.floatlayout.play_thread(tempo, lead_in, tempo_multiplier)
+
+    def stop(self, *args):
+        if not self.floatlayout.scroll_coords:
+            self.floatlayout.build_scroll_coords()
+        self.floatlayout.stop()
 
 
 class TabBuilderScrollView(TabPlayerScrollView):
@@ -318,6 +323,7 @@ class TabBuilderScrollView(TabPlayerScrollView):
         super().__init__(**kwargs)
 
     def close_keyboard(self, *args):
+        print(f'TabBuilderScrollView.close_keyboard {args}')
         self.keyboard.unbind(on_key_down=self.on_key_down)
         self.keyboard = None
 
@@ -480,6 +486,8 @@ class TabFloatLayout(FloatLayout):
     scrollbar1_y = NumericProperty(0)
 
     def __init__(self, tabbuilder=None, **kwargs):
+        self.stopped = False
+        self.scroll_coords = None
         super().__init__(**kwargs)
         self.tabbuilder = tabbuilder
 
@@ -487,28 +495,6 @@ class TabFloatLayout(FloatLayout):
         tabwidget_touched = super().on_touch_down(touch)
         if not tabwidget_touched:
             self.tabbuilder.unselect_all()
-
-    def play(self, tempo):
-        # The GuitarPro songs' tempo are of form BPM where the B(eat) is always a quarter note.
-        self.beat_width = self.children[0].measure_width / 4
-        self.seconds_per_beat = (60 / tempo) * 0.98
-        self.scroll_coords = self.build_scroll_coords()
-        self.scroll_coords_idx = 0
-        self._play_next_line()
-
-    def _play_next_line(self, *args):
-        if self.scroll_coords_idx == len(self.scroll_coords):
-            return
-        x_start, x_stop, y, scroll_y = self.scroll_coords[self.scroll_coords_idx]
-        num_beats = (x_stop - x_start) / self.beat_width
-        seconds = self.seconds_per_beat * num_beats
-        self.scroll_coords_idx += 1
-        self.scrollbar1_x = x_start - 5
-        self.scrollbar1_y = y
-        self.tabbuilder.scroll_y = scroll_y
-        anim = Animation(scrollbar1_x=x_stop-5, d=seconds)
-        anim.bind(on_complete=self._play_next_line)
-        anim.start(self)
 
     def build_scroll_coords(self):
         # Scrolling bar will traverse 1 or more measures at a time. Build list of coordinates
@@ -529,32 +515,44 @@ class TabFloatLayout(FloatLayout):
             i -= 1
         self.scroll_coords = scroll_coords
 
-    def play_thread(self, tempo):
+    def play_thread(self, tempo, lead_in, tempo_multiplier):
+        self.stopped = False
         # The GuitarPro songs' tempo are of form BPM where the B(eat) is always a quarter note.
         self.beat_width = self.children[0].measure_width / 4
-        self.seconds_per_beat = 60 / tempo
-        # self.scroll_coords = self.build_scroll_coords()
+        self.seconds_per_beat = 60 / (tempo * tempo_multiplier)
         self.scroll_coords_idx = 0
-        thread = Thread(target=self._play_thread, daemon=True)
+        thread = Thread(target=partial(self._play_thread, lead_in), daemon=True)
         thread.start()
 
-    def _play_thread(self):
+    def _play_thread(self, lead_in):
+        print(lead_in, time.time())
+        time.sleep(lead_in)
+        print(time.time())
         start = time.time()
         goal = start
-        while True:
+        while not self.stopped:
             if self.scroll_coords_idx == len(self.scroll_coords):
                 return
-            x_start, x_stop, y, scroll_y = self.scroll_coords[self.scroll_coords_idx]
-            num_beats = (x_stop - x_start) / self.beat_width
-            seconds = self.seconds_per_beat * num_beats
-            goal += seconds
-            self.scroll_coords_idx += 1
-            self.scrollbar1_x = x_start - 5
-            self.scrollbar1_y = y
-            self.tabbuilder.scroll_y = scroll_y
-            anim = Animation(scrollbar1_x=x_stop - 5, d=seconds)
-            anim.start(self)
-            time.sleep(goal - time.time())
+            if goal <= time.time():
+                x_start, x_stop, y, scroll_y = self.scroll_coords[self.scroll_coords_idx]
+                num_beats = (x_stop - x_start) / self.beat_width
+                seconds = self.seconds_per_beat * num_beats
+                goal += seconds
+                self.scroll_coords_idx += 1
+                self.scrollbar1_x = x_start - 5
+                self.scrollbar1_y = y
+                self.tabbuilder.scroll_y = scroll_y
+                distance = x_stop - x_start
+            self.scrollbar1_x = x_start + distance * (1 - (goal - time.time()) / seconds)
+            time.sleep(1/60)
+            # anim = Animation(scrollbar1_x=x_stop - 5, d=seconds)
+            # anim.start(self)
+            # time.sleep(goal - time.time())
+
+    def stop(self):
+        self.stopped = True
+        x_start, x_stop, y, scroll_y = self.scroll_coords[0]
+        self.scrollbar1_x, scrollbar1_y, self.tabbuilder.scroll_y = x_start, y, scroll_y
 
 
 class TabWidget(Widget):

@@ -1,5 +1,5 @@
 import sqlite3
-from typing import List, Tuple
+from typing import List
 
 
 # Create the database and table.
@@ -12,7 +12,9 @@ def create_song_lib_db():
                         Album TEXT,
                         Title TEXT,
                         Filepath TEXT,
-                        EditInstructions TEXT)
+                        EditInstructions TEXT,
+                        LeadIn INT,
+                        TempoMultiplier INT)
                         """)
         return
 
@@ -61,7 +63,6 @@ def get_songs_on_album(artist: str, album: str) -> List[str]:
         str_list = [tup[0] for tup in rows]
         return str_list
 
-
 def get_saved_song_info(artist: str, album: str, title: str) -> List[str]:
     with sqlite3.connect("song_library_DB.db") as connection:
         cursor = connection.cursor()
@@ -73,6 +74,27 @@ def get_saved_song_info(artist: str, album: str, title: str) -> List[str]:
         str_list = list(rows[0])
         return str_list
 
+def get_saved_song_lead_in(artist: str, album: str, title: str) -> int:
+    with sqlite3.connect("song_library_DB.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute("""SELECT LeadIn FROM SongLibrary
+                          WHERE Artist = ? AND Album = ? AND Title = ?""", (artist, album, title))
+        rows = cursor.fetchall()
+        if not rows:
+            return
+        print('lead_in', rows)
+        return rows[0][0]
+
+def get_saved_song_tempo_multiplier(artist: str, album: str, title: str) -> int:
+    with sqlite3.connect("song_library_DB.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute("""SELECT TempoMultiplier FROM SongLibrary
+                          WHERE Artist = ? AND Album = ? AND Title = ?""", (artist, album, title))
+        rows = cursor.fetchall()
+        if not rows:
+            return
+        print('tempo_mult', rows)
+        return rows[0][0]
 
 # Write to database.
 def save_song_to_library(artist: str, album: str, title: str, filepath: str, edit_instructions: str) -> None:
@@ -90,4 +112,27 @@ def update_edit_instructions(artist: str, album: str, title: str, edit_instructi
                           (edit_instructions, artist, album, title))
 
 
-# create_song_lib_db()
+# def update_table():
+#     with sqlite3.connect("song_library_DB.db") as connection:
+#         cursor = connection.cursor()
+#         cursor.execute("""UPDATE SongLibrary SET LeadIn = 8 WHERE Title = 'Blue'""")
+
+
+# def update_lead_in(seconds, artist, album, title):
+#     with sqlite3.connect("song_library_DB.db") as connection:
+#         cursor = connection.cursor()
+#         cursor.execute("""UPDATE SongLibrary SET LeadIn = ?
+#                           WHERE Artist = ? AND Album = ? AND Title = ?""",
+#                        (seconds, artist, album, title))
+
+
+# def update_tempo_multiplier(multiplier, artist, album, title):
+#     with sqlite3.connect("song_library_DB.db") as connection:
+#         cursor = connection.cursor()
+#         cursor.execute("""UPDATE SongLibrary SET TempoMultiplier = ?
+#                           WHERE Artist = ? AND Album = ? AND Title = ?""",
+#                        (multiplier, artist, album, title))
+
+
+if __name__ == "__main__":
+    # update_tempo_multiplier(0.985,  'Toothgrinder', 'Nocturnal Masquerade', "Waltz Of Madmen")

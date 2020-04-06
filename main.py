@@ -4,6 +4,8 @@ from kivy.properties import ObjectProperty
 from kivy.lang import Builder
 from kivy.core.window import Window
 Window.maximize()
+# from kivy.config import Config
+# Config.set('graphics', 'maxfps', '1000')
 from songlibrary import SongLibraryPopup
 from spotifylogin import SpotifyLoginPopup
 
@@ -37,25 +39,32 @@ class SpotifyConnection:
                 self.device_id = device['id']
                 break
 
-    def get_track_uri(self, artist, title):
+    def get_track_uri(self, artist, album, title):
+        artist, album, title = artist.lower(), album.lower(), title.lower()
         if title == "mouths like sidewinder missles":
             title = "mouths like sidewinder misssles"
+        if title == "coure d'alene":
+            title = "coeur d'alene"
         print(f"Searching for {artist + ' ' + title}")
-        query = artist + " " + title
-        print(query)
-        results = self.conn.search(str(query))
+        results = self.conn.search(artist + " " + title)
         for track in results['tracks']['items']:
             print(track['name'])
             if track['name'].lower() == title:
-                print(f"\tFound {track['name']}")
+                print(f"\tFound {track['name']} with artist and title")
+                return track['uri']
+        results = self.conn.search(artist + ' ' + album)
+        for track in results['tracks']['items']:
+            print(track['name'])
+            if track['name'].lower() == title:
+                print(f"\tFound {track['name']} with artist and album")
                 return track['uri']
         print(f"\tNo exact match found for {artist} - {title}")
         results_log = open('./results_log.txt', 'w')
         results_log.write(str(results))
         return None
 
-    def play_on_spotify(self, artist, title):
-        track_uri = self.get_track_uri(artist, title)
+    def play_on_spotify(self, artist, album, title):
+        track_uri = self.get_track_uri(artist, album, title)
         if track_uri:
             self.conn.start_playback(uris=[track_uri], device_id=self.device_id)
 
