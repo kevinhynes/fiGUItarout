@@ -118,21 +118,22 @@ def update_edit_instructions(artist: str, album: str, title: str, edit_instructi
 #         cursor.execute("""UPDATE SongLibrary SET LeadIn = 8 WHERE Title = 'Blue'""")
 
 
-# def update_lead_in(seconds, artist, album, title):
-#     with sqlite3.connect("song_library_DB.db") as connection:
-#         cursor = connection.cursor()
-#         cursor.execute("""UPDATE SongLibrary SET LeadIn = ?
-#                           WHERE Artist = ? AND Album = ? AND Title = ?""",
-#                        (seconds, artist, album, title))
+def update_lead_in(seconds, artist, album, title):
+    with sqlite3.connect("song_library_DB.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute("""UPDATE SongLibrary SET LeadIn = ?
+                          WHERE Artist = ? AND Album = ? AND Title = ?""",
+                       (seconds, artist, album, title))
 
 
-# def update_tempo_multiplier(multiplier, artist, album, title):
-#     with sqlite3.connect("song_library_DB.db") as connection:
-#         cursor = connection.cursor()
-#         cursor.execute("""UPDATE SongLibrary SET TempoMultiplier = ?
-#                           WHERE Artist = ? AND Album = ? AND Title = ?""",
-#                        (multiplier, artist, album, title))
+def update_tempo_multiplier(multiplier, artist, album, title):
+    with sqlite3.connect("song_library_DB.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute("""UPDATE SongLibrary SET TempoMultiplier = ?
+                          WHERE Artist = ? AND Album = ? AND Title = ?""",
+                       (multiplier, artist, album, title))
 
 
 if __name__ == "__main__":
-    # update_tempo_multiplier(0.985,  'Toothgrinder', 'Nocturnal Masquerade', "Waltz Of Madmen")
+    update_tempo_multiplier(1,  'Toothgrinder', 'Nocturnal Masquerade', "I Lie In Rain")
+    update_lead_in(0.3,  'Toothgrinder', 'Nocturnal Masquerade', "I Lie In Rain")
