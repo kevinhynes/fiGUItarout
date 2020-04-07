@@ -296,7 +296,11 @@ class TabPlayerScrollView(ScrollView):
         self.floatlayout.build_scroll_coords()
         artist, album, title = self.gp_song.artist.title(), self.gp_song.album.title(), self.gp_song.title.title()
         lead_in = slf.get_saved_song_lead_in(artist, album, title)
+        if lead_in is None:
+            lead_in = 0
         tempo_multiplier = slf.get_saved_song_tempo_multiplier(artist, album, title)
+        if tempo_multiplier is None:
+            tempo_multiplier = 1
         if self.spt_conn:
             self.spt_conn.play_on_spotify(artist, album, title)
         tempo = self.gp_song.tempo
@@ -450,8 +454,7 @@ class TabBuilderScrollView(TabPlayerScrollView):
     def save(self, *args):
         gp_song = self.gp_song
         artist, album, song_title = gp_song.artist.title(), gp_song.album.title(), gp_song.title.title()
-        song_name = '-'.join([artist, album, song_title]).lower() + '.gp5'
-        filepath = './song-library/' + song_name
+        filepath = self.prep_filepath(artist, album, song_title)
         # Check if song already exists in database.
         if slf.get_saved_song_info(artist, album, song_title):
             self.fileoverwrite_popup = FileOverwritePopup(cancel=self.cancel_overwrite,
@@ -467,6 +470,12 @@ class TabBuilderScrollView(TabPlayerScrollView):
             edit_instructions = ','.join(edit_instructions)
             slf.save_song_to_library(artist, album, song_title, filepath, edit_instructions)
 
+    def prep_filepath(self, artist, album, song_title):
+        texts = [artist, album, song_title]
+        for i, text in enumerate(texts):
+            texts[i] = ''.join(text.split('/'))
+        filepath = './song-library/' + '-'.join(texts)
+        return filepath.lower()
 
     def overwrite(self, artist: str, album: str, song_title: str) -> None:
         '''Update the EditInstructions for this song in the DB.'''

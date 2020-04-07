@@ -100,8 +100,10 @@ def get_saved_song_tempo_multiplier(artist: str, album: str, title: str) -> int:
 def save_song_to_library(artist: str, album: str, title: str, filepath: str, edit_instructions: str) -> None:
     with sqlite3.connect("song_library_DB.db") as connection:
         cursor = connection.cursor()
-        cursor.execute("""INSERT INTO SongLibrary (Artist, Album, Title, Filepath, EditInstructions)
-                          VALUES (?, ?, ?, ?, ?)""", (artist, album, title, filepath, edit_instructions))
+        cursor.execute("""INSERT INTO SongLibrary (Artist, Album, Title, Filepath, 
+                                                   EditInstructions, LeadIn, TempoMultiplier)
+                          VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                                 (artist, album, title, filepath, edit_instructions, 0, 1))
         return
 
 def update_edit_instructions(artist: str, album: str, title: str, edit_instructions: str) -> None:
@@ -135,5 +137,6 @@ def update_tempo_multiplier(multiplier, artist, album, title):
 
 
 if __name__ == "__main__":
-    update_tempo_multiplier(1,  'Toothgrinder', 'Nocturnal Masquerade', "I Lie In Rain")
-    update_lead_in(0.3,  'Toothgrinder', 'Nocturnal Masquerade', "I Lie In Rain")
+    # update_lead_in(8.95,  'Saosin', 'S/T', "But, It'S Far Better To Learn")
+    # update_tempo_multiplier(1.01,  'Saosin', 'S/T', "But, It'S Far Better To Learn")
+    pass

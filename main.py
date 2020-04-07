@@ -45,6 +45,17 @@ class SpotifyConnection:
             title = "mouths like sidewinder misssles"
         if title == "coure d'alene":
             title = "coeur d'alene"
+        if title == "but, it's far better to learn":
+            title = "it's far better to learn"
+
+        print(f"Searching for {artist + ' ' + album}")
+        results = self.conn.search(artist + ' ' + album)
+        for track in results['tracks']['items']:
+            print(track['name'])
+            if track['name'].lower() == title:
+                print(f"\tFound {track['name']} with artist and album")
+                return track['uri']
+
         print(f"Searching for {artist + ' ' + title}")
         results = self.conn.search(artist + " " + title)
         for track in results['tracks']['items']:
@@ -52,12 +63,15 @@ class SpotifyConnection:
             if track['name'].lower() == title:
                 print(f"\tFound {track['name']} with artist and title")
                 return track['uri']
-        results = self.conn.search(artist + ' ' + album)
+
+        print(f"Searching for {artist}")
+        results = self.conn.search(artist)
         for track in results['tracks']['items']:
             print(track['name'])
             if track['name'].lower() == title:
-                print(f"\tFound {track['name']} with artist and album")
+                print(f"\tFound {track['name']} with artist and title")
                 return track['uri']
+
         print(f"\tNo exact match found for {artist} - {title}")
         results_log = open('./results_log.txt', 'w')
         results_log.write(str(results))
