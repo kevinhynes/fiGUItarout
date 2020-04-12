@@ -1,4 +1,6 @@
 <MainPage>:
+    songplayer: songplayer
+    songbuilder: songbuilder
     KeySigTitleBar:
         id: keysigtitlebar
         key_sig_text: keysigchooser.key_sig_text
@@ -40,12 +42,11 @@
 
     SongBuilder:
         id: songbuilder
-        spt_conn: root.spt_conn
         height: root.height - 50
 
     SongPlayer:
         id: songplayer
-        spt_conn: root.spt_conn
+        instrument_rack: instrumentrack
         top: self.top_prop
 
     # Toolbar
@@ -93,7 +94,7 @@
         id: btn8
         text: 'Song Library'
         x: btn7.right
-        on_press: songplayer.initiate(instrumentrack)
+        on_press: songplayer.show_song_library()
     ToolbarButton:
         id: btn9
         text: 'Log in to Spotify'
@@ -103,8 +104,12 @@
         id: btn10
         text: 'Play Song'
         x: btn9.right
-        on_press: songplayer.play()
-
+        on_press: root.play(songplayer)
+    ToolbarButton:
+        id: btn11
+        text: 'Stop Song'
+        x: btn10.right
+        on_press: root.stop(songplayer)
 <ToolbarButton@Button>:
     size_hint: [None, None]
     size: [150, 50]

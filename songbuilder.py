@@ -24,7 +24,10 @@ from functools import partial
 
 
 class SongBuilder(FloatLayout):
-    spt_conn = ObjectProperty()
+    tabbuilder = ObjectProperty()
+
+    gp_song = ObjectProperty()
+    flat_song = ObjectProperty()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -39,11 +42,24 @@ class SongBuilder(FloatLayout):
         else:
             self.top = 0
 
+    def prep_play(self):
+        self.tabbuilder.prep_play()
+
+    def play(self):
+        self.tabbuilder.play()
+
+    def stop(self, *args):
+        self.tabbuilder.stop()
+
 
 class SongPlayer(FloatLayout):
-    spt_conn = ObjectProperty()
-    tabplayer = ObjectProperty()
     top_prop = NumericProperty(0)
+
+    tabplayer = ObjectProperty()
+    instrument_rack = ObjectProperty()
+
+    gp_song = ObjectProperty()
+    flat_song = ObjectProperty()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -58,7 +74,8 @@ class SongPlayer(FloatLayout):
         else:
             self.top_prop = 0
 
-    def slide_to_rack(self, instrumentrack):
+    def slide_to_rack(self):
+        instrumentrack = self.instrument_rack
         if self.top_prop == 0:
             self.height = instrumentrack.y  # Change the size,
             self.top_prop = instrumentrack.y  # before changing the position.
@@ -74,26 +91,36 @@ class SongPlayer(FloatLayout):
         self.top_prop = instrumentrack.y
         self.tabplayer.top = self.top
 
-    def initiate(self, instrumentrack):
+    def show_song_library(self, *args):
         self.tabplayer.show_song_library()
-        self.slide_to_rack(instrumentrack)
+
+    def on_flat_song(self, *args):
+        self.slide_to_rack()
+
+    def prep_play(self, *args):
+        self.tabplayer.prep_play()
 
     def play(self, *args):
         self.tabplayer.play()
 
+    def stop(self, *args):
+        self.tabplayer.stop()
+
 
 class TabPlayerScrollView(ScrollView):
     songbuilder = ObjectProperty()
-    editbar = ObjectProperty()
-    spt_conn = ObjectProperty()
+    tabplayer = ObjectProperty()
+
+    gp_song = ObjectProperty()
+    flat_song = ObjectProperty()
 
     def __init__(self, **kwargs):
-        self.flat_song = None
         self.prev_timesig = None
         self.prev_tabwidget = None
         super().__init__(**kwargs)
         #TODO: change tabbuilder reference
         self.floatlayout = TabFloatLayout(tabbuilder=self, size_hint_y=None)
+        self.bind(flat_song=self.floatlayout.setter('flat_song'))
         self.add_widget(self.floatlayout)
 
     def select(self, *args):
@@ -137,7 +164,7 @@ class TabPlayerScrollView(ScrollView):
     def flatten_track(self, gp_track):
         '''
         PyGuitarPro does not appear to be parsing measure.header.repeatAlternative correctly.
-        Also, no info on Da Capo or Dal Segno type of repeats. Requires user to copy/paste/delete
+        Also, no info on DS al Coda or Dal Segno type of repeats. Requires user to copy/paste/delete
         in order to make corrections.
         '''
         flat_track = []
@@ -292,8 +319,10 @@ class TabPlayerScrollView(ScrollView):
         self.set_child_y()
         self.build_track(self.flat_song[0])
 
-    def play(self, *args):
+    def prep_play(self):
         self.floatlayout.build_scroll_coords()
+
+    def play(self, *args):
         artist, album, title = self.gp_song.artist.title(), self.gp_song.album.title(), self.gp_song.title.title()
         lead_in = slf.get_saved_song_lead_in(artist, album, title)
         if lead_in is None:
@@ -301,8 +330,7 @@ class TabPlayerScrollView(ScrollView):
         tempo_multiplier = slf.get_saved_song_tempo_multiplier(artist, album, title)
         if tempo_multiplier is None:
             tempo_multiplier = 1
-        if self.spt_conn:
-            self.spt_conn.play_on_spotify(artist, album, title)
+        # if self.spt_conn:
         tempo = self.gp_song.tempo
         self.floatlayout.play_thread(tempo, lead_in, tempo_multiplier)
 
@@ -315,7 +343,6 @@ class TabPlayerScrollView(ScrollView):
 class TabBuilderScrollView(TabPlayerScrollView):
     songbuilder = ObjectProperty()
     editbar = ObjectProperty()
-    spt_conn = ObjectProperty()
 
     def __init__(self, **kwargs):
         self.clipboard = []
@@ -493,11 +520,13 @@ class TabBuilderScrollView(TabPlayerScrollView):
 class TabFloatLayout(FloatLayout):
     scrollbar1_x = NumericProperty(0)
     scrollbar1_y = NumericProperty(0)
+    flat_song = ObjectProperty()
 
     def __init__(self, tabbuilder=None, **kwargs):
         self.stopped = False
         self.scroll_coords = None
         super().__init__(**kwargs)
+        # TODO: change tabbuilder reference; just use self.parent?
         self.tabbuilder = tabbuilder
 
     def on_touch_down(self, touch):
@@ -508,21 +537,24 @@ class TabFloatLayout(FloatLayout):
     def build_scroll_coords(self):
         # Scrolling bar will traverse 1 or more measures at a time. Build list of coordinates
         # for the scrolling bar to scroll to.
-        tabwidgets = [child for child in self.children if isinstance(child, TabWidget)]
+        tabwidgets = [child for child in self.children if isinstance(child, TabWidget)][::-1]
         scroll_coords = []
-        i = len(tabwidgets) - 1
         scroll_y = 1
-        while i >= 0:
-            x_start = tabwidgets[i].measure_start
-            while tabwidgets[i-1].x != 0:
-                i -= 1
-            x_stop = tabwidgets[i].measure_end
-            y = tabwidgets[i].y
-            # if scroll_y > self.tabview.height:
-            scroll_y -= (210 / (self.height - self.tabbuilder.height))
-            scroll_coords.append((x_start, x_stop, y, scroll_y))
-            i -= 1
+        cur_y = None
+        for tabwidget, gp_measure in zip(tabwidgets, self.flat_song[0]):
+            x_start, x_stop, y = tabwidget.measure_start, tabwidget.measure_end, tabwidget.y
+            # if cur_y is None:
+            #     cur_y = y
+            if y != cur_y:
+                cur_y = y
+                scroll_y -= (210 / (self.height - self.tabbuilder.height))
+                scroll_y = max(scroll_y, 0)
+            scroll_coords.append((x_start, x_stop, y, scroll_y, gp_measure.tempo.value))
         self.scroll_coords = scroll_coords
+        print([tup[3] for tup in scroll_coords])
+
+    def prep_play(self, *args):
+        self.build_scroll_coords()
 
     def play_thread(self, tempo, lead_in, tempo_multiplier):
         self.stopped = False
@@ -530,22 +562,21 @@ class TabFloatLayout(FloatLayout):
         self.beat_width = self.children[0].measure_width / 4
         self.seconds_per_beat = 60 / (tempo * tempo_multiplier)
         self.scroll_coords_idx = 0
-        thread = Thread(target=partial(self._play_thread, lead_in), daemon=True)
+        thread = Thread(target=partial(self._play_thread_animation, lead_in, tempo_multiplier), daemon=True)
         thread.start()
 
-    def _play_thread(self, lead_in):
-        print(lead_in, time.time())
+    def _play_thread(self, lead_in, tempo_multiplier):
         time.sleep(lead_in)
-        print(time.time())
         start = time.time()
         goal = start
         while not self.stopped:
             if self.scroll_coords_idx == len(self.scroll_coords):
                 return
             if goal <= time.time():
-                x_start, x_stop, y, scroll_y = self.scroll_coords[self.scroll_coords_idx]
+                x_start, x_stop, y, scroll_y, tempo = self.scroll_coords[self.scroll_coords_idx]
+                spb = 60 / (tempo * tempo_multiplier)
                 num_beats = (x_stop - x_start) / self.beat_width
-                seconds = self.seconds_per_beat * num_beats
+                seconds = spb * num_beats
                 goal += seconds
                 self.scroll_coords_idx += 1
                 self.scrollbar1_x = x_start - 5
@@ -554,13 +585,30 @@ class TabFloatLayout(FloatLayout):
                 distance = x_stop - x_start
             self.scrollbar1_x = x_start + distance * (1 - (goal - time.time()) / seconds)
             time.sleep(1/60)
-            # anim = Animation(scrollbar1_x=x_stop - 5, d=seconds)
-            # anim.start(self)
-            # time.sleep(goal - time.time())
+
+    def _play_thread_animation(self, lead_in, tempo_multiplier):
+        time.sleep(lead_in)
+        start = time.time()
+        goal = start
+        while not self.stopped:
+            if self.scroll_coords_idx == len(self.scroll_coords):
+                return
+            x_start, x_stop, y, scroll_y, tempo = self.scroll_coords[self.scroll_coords_idx]
+            spb = 60 / (tempo * tempo_multiplier)
+            num_beats = (x_stop - x_start) / self.beat_width
+            seconds = spb * num_beats
+            goal += seconds
+            self.scroll_coords_idx += 1
+            self.scrollbar1_x = x_start - 5
+            self.scrollbar1_y = y
+            self.tabbuilder.scroll_y = scroll_y
+            anim = Animation(scrollbar1_x=x_stop - 5, d=seconds)
+            anim.start(self)
+            time.sleep(goal - time.time())
 
     def stop(self):
         self.stopped = True
-        x_start, x_stop, y, scroll_y = self.scroll_coords[0]
+        x_start, x_stop, y, scroll_y, tempo = self.scroll_coords[0]
         self.scrollbar1_x, scrollbar1_y, self.tabbuilder.scroll_y = x_start, y, scroll_y
 
 

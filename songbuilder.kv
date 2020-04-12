@@ -4,15 +4,18 @@
 
 <SongBuilder>:
     id: songbuilder
+    tabbuilder: tabbuilder
+    gp_song: tabbuilder.gp_song
+    flat_song: tabbuilder.flat_song
     size_hint: [1, None]
     TabBuilderScrollView:
         id: tabbuilder
-        spt_conn: root.spt_conn
         editbar: editbar
         height: root.height - editbar.height
         y: editbar.top
     EditToolbar:
         id: editbar
+        songbuilder: songbuilder
         tabbuilder: tabbuilder
         y: root.y
 
@@ -20,10 +23,11 @@
 <SongPlayer>:
     id: songplayer
     tabplayer: tabplayer
+    gp_song: tabplayer.gp_song
+    flat_song: tabplayer.flat_song
     size_hint: [1, None]
     TabPlayerScrollView:
         id: tabplayer
-        spt_conn: root.spt_conn
         height: root.height - 50
 
 
@@ -212,13 +216,13 @@
         id: play_btn
         text: "Play"
         x: show_song_library_btn.right
-        on_press: root.tabbuilder.play()
+        on_press: app.play(root.songbuilder)
         y: root.y
     EditToolbarButton:
         id: stop_btn
         text: "Stop"
         x: play_btn.right
-        on_press: root.tabbuilder.stop()
+        on_press: app.stop(root.songbuilder)
         y: root.y
 <EditToolbarButton@Button>:
     size_hint: [None, None]

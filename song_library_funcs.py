@@ -137,6 +137,6 @@ def update_tempo_multiplier(multiplier, artist, album, title):
 
 
 if __name__ == "__main__":
-    # update_lead_in(8.95,  'Saosin', 'S/T', "But, It'S Far Better To Learn")
-    # update_tempo_multiplier(1.01,  'Saosin', 'S/T', "But, It'S Far Better To Learn")
+    # update_lead_in(9,  'Saosin', 'S/T', "But, It'S Far Better To Learn")
+    # update_tempo_multiplier(1.06,  'The Fall Of Troy', 'Doppelgänger', "Mouths Like Sidewinder Missles")
     pass
