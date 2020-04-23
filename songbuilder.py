@@ -551,7 +551,6 @@ class TabFloatLayout(FloatLayout):
                 scroll_y = max(scroll_y, 0)
             scroll_coords.append((x_start, x_stop, y, scroll_y, gp_measure.tempo.value))
         self.scroll_coords = scroll_coords
-        print([tup[3] for tup in scroll_coords])
 
     def prep_play(self, *args):
         self.build_scroll_coords()

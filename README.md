@@ -30,5 +30,9 @@ Log in to Spotify.
 ![](screenshots/screen7.jpg)
 
 
-Click Play and throw some horns.  
-:metal:
+[Click Play!](https://imgur.com/a/IYHCI7l)
+
+
+
+Throw some horns.  
+:metal::metal::metal:

@@ -40,7 +40,6 @@ class MainPage(FloatLayout):
     def __init__(self,  **kwargs):
         self.device_id = None
         super().__init__(**kwargs)
-        self.log_in_to_spotify("RandallSkeffington")
 
     def show_song_library(self, *args):
         self.song_library_popup = SongLibraryPopup()
@@ -51,7 +50,7 @@ class MainPage(FloatLayout):
         self.spotify_log_in_popup.open()
 
     def log_in_to_spotify(self, username):
-        # self.spotify_log_in_popup.dismiss()
+        self.spotify_log_in_popup.dismiss()
         scope = 'user-library-read user-modify-playback-state'
         token = spotipy.util.prompt_for_user_token(username, scope,
                                                    client_id="b8a306fd829d4ea4a757cb1411baf0eb",

@@ -238,7 +238,7 @@ class Fretboard(StencilView, FloatLayout):
                     play_instr.append(beat_instr)
         self.play_instr = play_instr
         print("Fretboard.build_play_instr ")
-        print(*play_instr, sep="\n")
+        # print(*play_instr, sep="\n")
 
     def build_beat_instr(self, gp_beat: guitarpro.models.Beat, tempo: int, tempo_mult: float):
         strings, durs = [-1] * 6, [-1] * 6
