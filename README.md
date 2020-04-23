@@ -30,7 +30,8 @@ Log in to Spotify.
 ![](screenshots/screen7.jpg)
 
 
-[Click Play!](https://imgur.com/a/IYHCI7l)
+Play your song!
+[Watch video!](https://imgur.com/a/IYHCI7l)
 
 
 
