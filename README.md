@@ -14,6 +14,21 @@ Display all chords and voicings that belong in this key signature.
 ![](screenshots/screen3.jpg)
 
 
+Load GuitarPro files in.
+![](screenshots/screen4.jpg)
 
 
+Edit and save them for later (alternate endings and D.S. al coda repeats must be fixed manually).
+![](screenshots/screen5.jpg)
 
+
+Retrieve from your SongLibrary.
+![](screenshots/screen6.jpg)
+
+
+Log in to Spotify.
+![](screenshots/screen7.jpg)
+
+
+Click Play and throw some horns.  
+:metal:
