@@ -39,6 +39,8 @@ class SlidingChordDisplay(ChordDisplay):
 
 
 class InstrumentRack(ScrollView):
+    fretboard = ObjectProperty()
+    piano = ObjectProperty()
 
     def fold(self, *args):
         if self.height == dp(250):

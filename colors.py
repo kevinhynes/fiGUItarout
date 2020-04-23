@@ -12,11 +12,12 @@ blues = [Color(hsv=[0.6, i / 12, 1]) for i in range(12)][::-1]
 
 octave_colors = [
     rainbow[9],
-    rainbow[10],
     rainbow[0],  # Lowest octave in standard tuning is octave 2.
+    rainbow[1],
     rainbow[2],
     rainbow[4],
     rainbow[6],
+    rainbow[7],
     rainbow[8],
 ]
 

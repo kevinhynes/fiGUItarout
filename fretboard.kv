@@ -10,13 +10,14 @@
 <Fretboard>:
     id: fretboard
     box_pos: box.pos
+    strings: [s6, s5, s4, s3, s2, s1]
     BoxLayout:
         id: box
         size_hint: [None, None]
         pos_hint: {"center": [0.5, 0.5]}
         orientation: "vertical"
         String:
-            id: s6
+            id: s1
             fretboard: fretboard
             fret_positions: fretboard.fret_positions
             open_note_val: fretboard.tuning[5]
@@ -27,7 +28,7 @@
             notes_to_highlight: fretboard.notes_to_highlight
             notes_or_octaves: fretboard.notes_or_octaves
         String:
-            id: s5
+            id: s2
             fretboard: fretboard
             fret_positions: fretboard.fret_positions
             open_note_val: fretboard.tuning[4]
@@ -38,7 +39,7 @@
             notes_to_highlight: fretboard.notes_to_highlight
             notes_or_octaves: fretboard.notes_or_octaves
         String:
-            id: s4
+            id: s3
             fretboard: fretboard
             fret_positions: fretboard.fret_positions
             open_note_val: fretboard.tuning[3]
@@ -49,7 +50,7 @@
             notes_to_highlight: fretboard.notes_to_highlight
             notes_or_octaves: fretboard.notes_or_octaves
         String:
-            id: s3
+            id: s4
             fretboard: fretboard
             fret_positions: fretboard.fret_positions
             open_note_val: fretboard.tuning[2]
@@ -60,7 +61,7 @@
             notes_to_highlight: fretboard.notes_to_highlight
             notes_or_octaves: fretboard.notes_or_octaves
         String:
-            id: s2
+            id: s5
             fretboard: fretboard
             fret_positions: fretboard.fret_positions
             open_note_val: fretboard.tuning[1]
@@ -71,7 +72,7 @@
             notes_to_highlight: fretboard.notes_to_highlight
             notes_or_octaves: fretboard.notes_or_octaves
         String:
-            id: s1
+            id: s6
             fretboard: fretboard
             fret_positions: fretboard.fret_positions
             open_note_val: fretboard.tuning[0]

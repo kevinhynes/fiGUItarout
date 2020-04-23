@@ -3,6 +3,8 @@
 
 <InstrumentRack>:
     id: rack
+    fretboard: fretboard
+    piano: piano
     size_hint_y: None
     height: dp(250)
     BoxLayout:
@@ -10,6 +12,7 @@
         size_hint_y: None
         height: dp(500)
         Fretboard:
+            id: fretboard
             root_note_idx: rack.root_note_idx
             mode_filter: rack.mode_filter
             notes_to_highlight: rack.notes_to_highlight
@@ -17,6 +20,7 @@
             scale_text: rack.scale_text
             tuning: rack.tuning
         Piano:
+            id: piano
             root_note_idx: rack.root_note_idx
             mode_filter: rack.mode_filter
             notes_to_highlight: rack.notes_to_highlight

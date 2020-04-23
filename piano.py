@@ -155,7 +155,8 @@ class Piano(FloatLayout):
                 color_idx = note_idx - self.root_note_idx
                 color = rainbow[color_idx]
             else:
-                color_idx = octave
+                print(note_val, divmod(note_val, 12))
+                color_idx = (octave - 1) % 8
                 color = octave_colors[color_idx]
 
             if self.scale_text == "Scale Degrees":
@@ -185,7 +186,6 @@ class Piano(FloatLayout):
         lowest_guitar_octave, note_idx = divmod(self.tuning[0], 12)
         lowest_piano_octave, _ = divmod(self.note_vals[0], 12)
         if lowest_guitar_octave != lowest_piano_octave:
-            # if lowest_guitar_octave < lowest_piano_octave:
             low_c_note_val = lowest_guitar_octave * 12
             self.note_vals = [note_val for note_val in range(low_c_note_val, low_c_note_val + 61)]
             self.update_note_markers()

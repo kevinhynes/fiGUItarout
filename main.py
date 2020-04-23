@@ -8,6 +8,7 @@ Window.maximize()
 # Config.set('graphics', 'maxfps', '1000')
 from songlibrary import SongLibraryPopup
 from spotifylogin import SpotifyLoginPopup
+import song_library_funcs as slf
 
 import spotipy
 
@@ -28,68 +29,13 @@ Builder.load_file("instrumentrack.kv")
 Builder.load_file("songbuilder.kv")
 
 
-# class SpotifyConnection:
-#
-#     def __init__(self, token):
-#         self.conn = spotipy.Spotify(auth=token)
-#         self.device_id = None
-#         results = self.conn.devices()
-#         for device in results['devices']:
-#             if device['type'] == 'Computer':
-#                 self.device_id = device['id']
-#                 break
-#
-#     def get_track_uri(self, artist, album, title):
-#         artist, album, title = artist.lower(), album.lower(), title.lower()
-#         if title == "mouths like sidewinder missles":
-#             title = "mouths like sidewinder misssles"
-#         if title == "coure d'alene":
-#             title = "coeur d'alene"
-#         if title == "but, it's far better to learn":
-#             title = "it's far better to learn"
-#
-#         print(f"Searching for {artist + ' ' + album}")
-#         results = self.conn.search(artist + ' ' + album)
-#         for track in results['tracks']['items']:
-#             print(track['name'])
-#             if track['name'].lower() == title:
-#                 print(f"\tFound {track['name']} with artist and album")
-#                 return track['uri']
-#
-#         print(f"Searching for {artist + ' ' + title}")
-#         results = self.conn.search(artist + " " + title)
-#         for track in results['tracks']['items']:
-#             print(track['name'])
-#             if track['name'].lower() == title:
-#                 print(f"\tFound {track['name']} with artist and title")
-#                 return track['uri']
-#
-#         print(f"Searching for {artist}")
-#         results = self.conn.search(artist)
-#         for track in results['tracks']['items']:
-#             print(track['name'])
-#             if track['name'].lower() == title:
-#                 print(f"\tFound {track['name']} with artist and title")
-#                 return track['uri']
-#
-#         print(f"\tNo exact match found for {artist} - {title}")
-#         results_log = open('./results_log.txt', 'w')
-#         results_log.write(str(results))
-#         return None
-#
-#     def play_on_spotify(self, artist, album, title):
-#         track_uri = self.get_track_uri(artist, album, title)
-#         if track_uri:
-#             self.conn.start_playback(uris=[track_uri], device_id=self.device_id)
-
-
 class MainPage(FloatLayout):
     spt_conn = ObjectProperty()
     songplayer = ObjectProperty()
     songbuilder = ObjectProperty()
     fretboard = ObjectProperty()
     piano = ObjectProperty()
-    keysigdisplay = ObjectProperty
+    keysigtitlebar = ObjectProperty
 
     def __init__(self,  **kwargs):
         self.device_id = None
@@ -122,23 +68,25 @@ class MainPage(FloatLayout):
                 break
 
     def play(self, songplayer_widget):
+        gp_song = songplayer_widget.gp_song
+        flat_song = songplayer_widget.flat_song
+        artist, album, title = gp_song.artist.title(), gp_song.album.title(), gp_song.title.title()
+        lead_in = slf.get_saved_song_lead_in(artist, album, title)
+        tempo_mult = slf.get_saved_song_tempo_multiplier(artist, album, title)
         self.play_gp_song_on_spotify(songplayer_widget.gp_song)
         if songplayer_widget is self.songplayer:
             # keysigdisplay.prep_play()
-            # fretboard.prep_play()
             # piano.prep_play()
-
-            print("play songplayer")
+            self.fretboard.prep_play(flat_song, 0, tempo_mult)
             songplayer_widget.prep_play()
             songplayer_widget.play()
         if songplayer_widget is self.songbuilder:
-            print("play songbuilder")
             songplayer_widget.prep_play()
             songplayer_widget.play()
 
     def stop(self, songplayer_widget):
         if songplayer_widget is self.songplayer:
-            print("dtop SongPlayer")
+            print("stop SongPlayer")
             songplayer_widget.stop()
         if songplayer_widget is self.songbuilder:
             print("stop SongBuilder")

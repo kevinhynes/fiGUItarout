@@ -10,6 +10,12 @@ from music_constants import chrom_scale, chrom_scale_no_acc, scale_degrees
 from markers import Marker
 from colors import black, white, gray, brown, rainbow, reds, blues, octave_colors
 
+from threading import Thread
+import time
+from functools import partial
+import guitarpro
+from typing import List, Tuple
+
 
 scale_texts = {
     None: chrom_scale,
@@ -29,142 +35,10 @@ scale_highlights = {
 
 
 
-class String(FloatLayout):
-    open_note_val = NumericProperty(0)
-    num_frets = NumericProperty(12)
-    fret_positions = ListProperty()
-    note_vals = ListProperty()
-    mode_filter = NumericProperty(0b111111111111)
-    root_note_idx = NumericProperty(0)
-    string_blinks = ReferenceListProperty()
-    animation_prop = NumericProperty(0)
-    scale_text = StringProperty("")
-    notes_to_highlight = StringProperty("")
-    notes_or_octaves = StringProperty("")
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.string_shadow = Rectangle()
-        self.string_graphic = Rectangle()
-        self.note_markers = InstructionGroup()
-        self.octave_markers = InstructionGroup()
-
-        self.canvas.add(Color(rgba=[0 / 255, 0 / 255, 0 / 255, 0.25]))
-        self.canvas.add(self.string_shadow)
-        self.canvas.add(Color(rgba=[169 / 255, 169 / 255, 169 / 255, 1]))
-        self.canvas.add(self.string_graphic)
-        self._add_markers()
-        self.canvas.add(self.note_markers)
-        self.canvas.add(self.octave_markers)
-        self.bind(size=self.update_canvas, pos=self.update_canvas)
-
-    def _add_markers(self):
-        for i in range(25):
-            marker = Marker()
-            self.note_markers.add(marker)
-
-    def animate_marker(self, index, *args):
-        markers = self.note_markers.children
-        anim = Animation(animation_prop=1, duration=2, t="in_circ")
-        anim.bind(on_start=markers[index].initiate_animation)
-        anim.bind(on_progress=markers[index].update_animation)
-        anim.bind(on_complete=markers[index].end_animation)
-        anim.start(self)
-
-    def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos):
-            self.animate_marker(0)
-
-    def update_canvas(self, *args):
-        if self.fret_positions:  # self.fret_positions is empty during instantiation.
-            # self.update_octave_markers()
-            self.update_string_graphics()
-            self.update_note_markers()
-
-    def update_string_graphics(self):
-        w, h = self.width, self.height * 0.1
-        x, y = self.pos
-        cy = y + (self.height / 2)
-        string_y = cy - (h/2)
-        shadow_height = 3 * h
-        shadow_y = string_y - shadow_height
-        # Shadow effect.
-        self.string_shadow.size = [w, shadow_height]
-        self.string_shadow.pos = [x, cy - shadow_height]
-        # String.
-        self.string_graphic.size = [w, h]
-        self.string_graphic.pos = [x, string_y]
-
-    def update_note_markers(self, *args):
-        x, y = self.pos
-        r1 = self.height / 2
-        r2 = r1 * 0.9
-        rdiff = r1 - r2
-        for i, (note_val, marker) in enumerate(zip(self.note_vals, self.note_markers.children)):
-            # Make right edge of circle touch left edge of fret bar (where your finger should go!)
-            fret_left = self.fret_positions[i] - (self.fretboard.fret_bar_width / 2)
-            # Draw 2 concentric circles, c1 and c2.
-            # Circles are defined by a square's lower left corner.
-            c1x, c1y = (fret_left - 2 * r1) + x, y
-            c2x, c2y = c1x + rdiff, c1y + rdiff
-
-            octave, note_idx = divmod(note_val, 12)
-            included = int(bin(self.mode_filter)[2:][note_idx - self.root_note_idx])
-            highlighted = int(bin(scale_highlights[self.notes_to_highlight])[2:][note_idx - self.root_note_idx])
-            if self.notes_or_octaves == "Notes":
-                color_idx = note_idx - self.root_note_idx
-                color = rainbow[color_idx]
-            else:
-                color_idx = octave
-                color = octave_colors[color_idx]
-
-            if self.scale_text == "Scale Degrees":
-                note_idx -= self.root_note_idx
-
-            note_text = scale_texts[self.scale_text][note_idx]
-
-            marker.update(i, note_text, c1x, c1y, r1, c2x, c2y, r2, included, highlighted, color)
-
-    def update_octave_markers(self):
-        self.octave_markers.clear()
-        for i, note_val in enumerate(self.note_vals):
-            self.update_octave_marker(i, note_val)
-
-    def update_octave_marker(self, i, note_val):
-        if self.fret_ranges:
-            octave = (note_val - self.fretboard.root_note_idx) // 12
-            left, right = self.fret_ranges[i]
-            width = right - left
-            self.octave_markers.add(octave_colors[octave])
-            self.octave_markers.add(Rectangle(pos=[left, 0], size=[width, self.height]))
-
-    def on_open_note_val(self, instance, value):
-        self.note_vals = [val for val in range(self.open_note_val, self.open_note_val + 25)]
-        self.update_canvas(instance, value)
-
-    def on_num_frets(self, instance, value):
-        self.note_vals = [val for val in range(self.open_note_val, self.open_note_val + 25)]
-        self.update_canvas(instance, value)
-
-    def on_root_note_idx(self, instance, value):
-        self.update_canvas(instance, value)
-
-    def on_mode_filter(self, instance, value):
-        self.update_canvas(instance, value)
-
-    def on_scale_text(self, instance, value):
-        self.update_note_markers()
-
-    def on_notes_to_highlight(self, instance, value):
-        self.update_note_markers()
-
-    def on_notes_or_octaves(self, *args):
-        self.update_note_markers()
-
-
 class Fretboard(StencilView, FloatLayout):
+    strings = ListProperty()
     num_frets = NumericProperty(24)
-    tuning = ListProperty([28, 33, 38, 43, 47, 52])
+    tuning = ListProperty([40, 45, 50, 55, 59, 64])
     fret_ranges = ListProperty()
     fret_positions = ListProperty()
     root_note_idx = NumericProperty(0)
@@ -326,6 +200,233 @@ class Fretboard(StencilView, FloatLayout):
     def on_num_frets(self, *args):
         self.calc_fret_positions(self)
         self.update_canvas()
+
+    ### SONG PLAYING METHODS
+    def prep_play(self, flat_song: List[List[guitarpro.models.Measure]], track_num=0, tempo_mult=1):
+        flat_track = flat_song[track_num]
+        self.build_track_tuning(flat_track)
+        self.build_play_instr(flat_song[track_num], tempo_mult)
+
+    def build_track_tuning(self, flat_track: List[guitarpro.models.Measure]):
+        # GuitarPro song doesn't have the track's guitar tuning?  Dumb.
+        track_tuning = [-1] * 6
+        for gp_measure in flat_track:
+            for gp_voice in gp_measure.voices[:-1]:
+                for gp_beat in gp_voice.beats:
+                    for gp_note in gp_beat.notes:
+                        string_idx = 6 - gp_note.string
+                        fret_num = gp_note.value
+                        note_val = gp_note.realValue
+                        track_tuning[string_idx] = note_val - fret_num
+                        if not any(tuning == -1 for tuning in track_tuning):
+                            break
+
+        # Possible that some strings weren't played the whole song... just assume its in standard.
+        for i in range(6):
+            if track_tuning[i] == -1:
+                track_tuning[i] = self.tuning[i]
+        self.tuning = track_tuning
+        print("Fretboard.build_track_tuning ", self.tuning, "\n")
+
+    def build_play_instr(self, flat_track: List[guitarpro.models.Measure], tempo_mult: float) -> None:
+        # Build list of notes to play length of that beat in seconds.
+        play_instr = []
+        for gp_measure in flat_track:
+            for gp_voice in gp_measure.voices[:-1]:
+                for gp_beat in gp_voice.beats:
+                    beat_instr = self.build_beat_instr(gp_beat, gp_measure.tempo.value, tempo_mult)
+                    play_instr.append(beat_instr)
+        self.play_instr = play_instr
+        print("Fretboard.build_play_instr ")
+        print(*play_instr, sep="\n")
+
+    def build_beat_instr(self, gp_beat: guitarpro.models.Beat, tempo: int, tempo_mult: float):
+        strings, durs = [-1] * 6, [-1] * 6
+        spb = 60 / (tempo * tempo_mult)
+        for gp_note in gp_beat.notes:
+            string_idx = 6 - gp_note.string
+            fret_num = gp_note.value
+
+            percent_quarter_note = (gp_beat.duration.value) / 4
+            percent_quarter_note *= (gp_beat.duration.tuplet.times / gp_beat.duration.tuplet.enters)
+            if gp_beat.duration.isDotted:
+                percent_quarter_note *= 3/2
+            elif gp_beat.duration.isDoubleDotted:
+                percent_quarter_note *= 7/ 4
+            seconds = spb * percent_quarter_note
+
+            strings[string_idx] = fret_num
+            durs[string_idx] = seconds
+        return strings, durs
+
+    def play_thread(self, tempo, lead_in, tempo_multiplier):
+        self.stopped = False
+        self.play_instr_idx = 0
+        # The GuitarPro songs' tempo are of form BPM where the B(eat) is always a quarter note.
+        thread = Thread(target=partial(self._play_thread_animation, lead_in), daemon=True)
+        thread.start()
+
+    def _play_thread_animation(self, lead_in):
+        time.sleep(lead_in)
+        start = time.time()
+        goal = start
+        while not self.stopped:
+            if self.play_instr_idx == len(self.play_instr):
+                return
+            strings, durs = self.play_instr[self.play_instr_idx]
+
+            for i in range(6):
+                fret_num, seconds = strings[i], durs[i]
+                if seconds != -1:
+                    self.strings[i].play(fret_num, seconds)
+
+
+class String(FloatLayout):
+    open_note_val = NumericProperty(0)
+    num_frets = NumericProperty(12)
+    fret_positions = ListProperty()
+    note_vals = ListProperty()
+    mode_filter = NumericProperty(0b111111111111)
+    root_note_idx = NumericProperty(0)
+    scale_text = StringProperty("")
+    notes_to_highlight = StringProperty("")
+    notes_or_octaves = StringProperty("")
+
+    animation_prop = NumericProperty(0)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.string_shadow = Rectangle()
+        self.string_graphic = Rectangle()
+        self.note_markers = InstructionGroup()
+        self.octave_markers = InstructionGroup()
+
+        self.canvas.add(Color(rgba=[0 / 255, 0 / 255, 0 / 255, 0.25]))
+        self.canvas.add(self.string_shadow)
+        self.canvas.add(Color(rgba=[169 / 255, 169 / 255, 169 / 255, 1]))
+        self.canvas.add(self.string_graphic)
+        self._add_markers()
+        self.canvas.add(self.note_markers)
+        self.canvas.add(self.octave_markers)
+        self.bind(size=self.update_canvas, pos=self.update_canvas)
+
+        self.anim = Animation()
+
+    def _add_markers(self):
+        for i in range(25):
+            marker = Marker()
+            self.note_markers.add(marker)
+
+    def animate_marker(self, index, *args):
+        markers = self.note_markers.children
+        anim = Animation(animation_prop=1, duration=2, t="in_circ")
+        anim.bind(on_start=markers[index].initiate_animation)
+        anim.bind(on_progress=markers[index].update_animation)
+        anim.bind(on_complete=markers[index].end_animation)
+        anim.start(self)
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            self.animate_marker(0)
+
+    def update_canvas(self, *args):
+        if self.fret_positions:  # self.fret_positions is empty during instantiation.
+            # self.update_octave_markers()
+            self.update_string_graphics()
+            self.update_note_markers()
+
+    def update_string_graphics(self):
+        w, h = self.width, self.height * 0.1
+        x, y = self.pos
+        cy = y + (self.height / 2)
+        string_y = cy - (h/2)
+        shadow_height = 3 * h
+        shadow_y = string_y - shadow_height
+        # Shadow effect.
+        self.string_shadow.size = [w, shadow_height]
+        self.string_shadow.pos = [x, cy - shadow_height]
+        # String.
+        self.string_graphic.size = [w, h]
+        self.string_graphic.pos = [x, string_y]
+
+    def update_note_markers(self, *args):
+        x, y = self.pos
+        r1 = self.height / 2
+        r2 = r1 * 0.9
+        rdiff = r1 - r2
+        for i, (note_val, marker) in enumerate(zip(self.note_vals, self.note_markers.children)):
+            # Make right edge of circle touch left edge of fret bar (where your finger should go!)
+            fret_left = self.fret_positions[i] - (self.fretboard.fret_bar_width / 2)
+            # Draw 2 concentric circles, c1 and c2.
+            # Circles are defined by a square's lower left corner.
+            c1x, c1y = (fret_left - 2 * r1) + x, y
+            c2x, c2y = c1x + rdiff, c1y + rdiff
+
+            octave, note_idx = divmod(note_val, 12)
+            included = int(bin(self.mode_filter)[2:][note_idx - self.root_note_idx])
+            highlighted = int(bin(scale_highlights[self.notes_to_highlight])[2:][note_idx - self.root_note_idx])
+            if self.notes_or_octaves == "Notes":
+                color_idx = note_idx - self.root_note_idx
+                color = rainbow[color_idx]
+            else:
+                color_idx = octave - 1
+                color = octave_colors[color_idx]
+
+            if self.scale_text == "Scale Degrees":
+                note_idx -= self.root_note_idx
+
+            note_text = scale_texts[self.scale_text][note_idx]
+
+            marker.update(i, note_text, c1x, c1y, r1, c2x, c2y, r2, included, highlighted, color)
+
+    def update_octave_markers(self):
+        self.octave_markers.clear()
+        for i, note_val in enumerate(self.note_vals):
+            self.update_octave_marker(i, note_val)
+
+    def update_octave_marker(self, i, note_val):
+        if self.fret_ranges:
+            octave = (note_val - self.fretboard.root_note_idx) // 12
+            left, right = self.fret_ranges[i]
+            width = right - left
+            self.octave_markers.add(octave_colors[octave])
+            self.octave_markers.add(Rectangle(pos=[left, 0], size=[width, self.height]))
+
+    def on_open_note_val(self, instance, value):
+        self.note_vals = [val for val in range(self.open_note_val, self.open_note_val + 25)]
+        self.update_canvas(instance, value)
+
+    def on_num_frets(self, instance, value):
+        self.note_vals = [val for val in range(self.open_note_val, self.open_note_val + 25)]
+        self.update_canvas(instance, value)
+
+    def on_root_note_idx(self, instance, value):
+        self.update_canvas(instance, value)
+
+    def on_mode_filter(self, instance, value):
+        self.update_canvas(instance, value)
+
+    def on_scale_text(self, instance, value):
+        self.update_note_markers()
+
+    def on_notes_to_highlight(self, instance, value):
+        self.update_note_markers()
+
+    def on_notes_or_octaves(self, *args):
+        self.update_note_markers()
+
+    ### SONG PLAYING METHODS
+    def play(self, fret_num, seconds):
+        self.anim.stop()
+        self.animation_prop = 0
+        markers = self.note_markers.children
+        anim = Animation(animation_prop=1, duration=seconds, t="in_elastic")
+        anim.bind(on_start=markers[fret_num].initiate_animation)
+        anim.bind(on_progress=markers[fret_num].update_animation)
+        anim.bind(on_complete=markers[fret_num].end_animation)
+        self.anim = anim
+        anim.start(self)
+
 
 
 class FretboardApp(App):

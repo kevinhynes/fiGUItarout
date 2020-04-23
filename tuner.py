@@ -6,23 +6,18 @@ from kivy.properties import NumericProperty, ReferenceListProperty, \
 from kivy.clock import Clock
 
 from music_constants import chrom_scale, chrom_scale_no_acc
-subscripts = subs = [u'\u2080', u'\u2081', u'\u2082', u'\u2083', u'\u2084', u'\u2085', u'\u2086', u'\u2087',
-       u'\u2088', u'\u2089']
+subscripts = subs = [u'\u208B'+u'\u2081', u'\u2080', u'\u2081', u'\u2082', u'\u2083',
+                     u'\u2084', u'\u2085', u'\u2086', u'\u2087', u'\u2088', u'\u2089']
 
 
 class StringTuner(BoxLayout):
     note_val = NumericProperty(0)
     note_text = StringProperty("")
 
-    def increment_note_val(self):
-        self.note_val += 1
-        if self.note_val == 84:
-            self.note_val = 0
-
-    def decrement_note_val(self):
-        self.note_val -= 1
-        if self.note_val == -1:
-            self.note_val = 83
+    def tune_up_or_down(self, step):
+        # Keep all note_vals between [0 - 107] on 24 fret guitar.
+        if 0 <= self.note_val + step < 107 - 25:
+            self.note_val += step
 
     def on_note_val(self, instance, value):
         octave, note_idx = divmod(self.note_val, 12)
@@ -44,24 +39,32 @@ class SixStringTuner(BoxLayout):
         Clock.schedule_once(self.tune_to_standard)
 
     def tune_to(self, req="Standard"):
+        # tunings = {
+        #     "Standard": [28, 33, 38, 43, 47, 52],  # E-A-D-G-B-E
+        #     "Drop D": [26, 33, 38, 43, 47, 52],
+        #     "Drop C": [24, 31, 36, 41, 45, 50],
+        #     "Drop B": [23, 30, 35, 40, 44, 49],
+        #     "Open G": [26, 31, 38, 43, 47, 50],  # D-G-D-G-B-D
+        # }
         tunings = {
-            "Standard": [28, 33, 38, 43, 47, 52],  # E-A-D-G-B-E
-            "Drop D": [26, 33, 38, 43, 47, 52],
-            "Drop C": [24, 31, 36, 41, 45, 50],
-            "Drop B": [23, 30, 35, 40, 44, 49],
-            "Open G": [26, 31, 38, 43, 47, 50],  # D-G-D-G-B-D
+            "Standard": [40, 45, 50, 55, 59, 64],  # E-A-D-G-B-E
+            "Drop D": [38, 45, 50, 55, 59, 64],
+            "Drop C": [36, 43, 48, 53, 57, 62],
+            "Drop B": [35, 42, 47, 52, 56, 61],
+            "Open G": [38, 43, 50, 55, 59, 62],  # D-G-D-G-B-D
         }
+
         for string_tuner, tuning in zip(self.ids.values(), tunings[req]):
             string_tuner.note_val = tuning
 
     def tune_to_standard(self, *args):
-        standard = [28, 33, 38, 43, 47, 52]
+        standard = [40, 45, 50, 55, 59, 64]
         for string_tuner, tuning in zip(self.ids.values(), standard):
             string_tuner.note_val = tuning
 
     def tune_up_or_down(self, step):
         for string_tuner in self.ids.values():
-            string_tuner.note_val += step
+            string_tuner.tune_up_or_down(step)
 
 
 class ControlBar(BoxLayout):
