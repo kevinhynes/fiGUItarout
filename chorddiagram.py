@@ -2,20 +2,13 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.widget import Widget
 from kivy.uix.label import Label
 from kivy.uix.bubble import Bubble
 from kivy.uix.popup import Popup
 from kivy.properties import ListProperty, NumericProperty, ReferenceListProperty, ObjectProperty, \
     StringProperty, BooleanProperty
 from kivy.metrics import dp
-from kivy.graphics import Color, Rectangle
 
-# from kivy.lang import Builder
-# Builder.load_file('chorddiagram.kv')
-
-
-import json
 
 from music_constants import chrom_scale
 ROW_HEIGHT = dp(95)
@@ -37,13 +30,8 @@ class ChordDiagramBubble(Bubble):
         self.chord_diagram.remove_bubble()
 
     def delete(self, *args):
-        print(self.voicing)
-        with open('impossible_fingerings.json', 'r') as read_file:
-            impossible_fingerings = json.load(read_file)
-        impossible_fingerings += [self.voicing]
-        print(impossible_fingerings)
-        with open('impossible_fingerings.json', 'w') as write_file:
-            json.dump(impossible_fingerings, write_file)
+        print("ChordDiagramBubble.delete() not hooked up to anything")
+        print(f"Would be deleting voicing {voicing}")
         self.chord_diagram.remove_bubble()
 
 
