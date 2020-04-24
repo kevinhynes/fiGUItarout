@@ -3,31 +3,31 @@
 ### Kivy + PyGuitarPro + Spotify + Music Theory
 
 Choose any guitar tuning, any key key signature, and see it displayed on the fretboard and piano.
-![](screenshots/screen1.jpg)
+![](screenshots/screenshot1.png)
 
 
 Change highlight options as desired.
-![](screenshots/screen2.jpg)
+![](screenshots/screenshot2.png)
 
 
 Display all chords and voicings that belong in this key signature.
-![](screenshots/screen3.jpg)
+![](screenshots/screenshot3.png)
 
 
 Load GuitarPro files in.
-![](screenshots/screen4.jpg)
+![](screenshots/screenshot4.png)
 
 
 Edit and save them for later (alternate endings and D.S. al coda repeats must be fixed manually).
-![](screenshots/screen5.jpg)
+![](screenshots/screenshot5.png)
 
 
 Retrieve from your SongLibrary.
-![](screenshots/screen6.jpg)
+![](screenshots/screenshot6.png)
 
 
 Log in to Spotify.
-![](screenshots/screen7.jpg)
+![](screenshots/screenshot7.png)
 
 
 Play your song!
