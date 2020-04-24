@@ -30,9 +30,6 @@ Log in to Spotify.
 ![](screenshots/screen7.jpg)
 
 
-Log in to Spotify.
-![](screenshots/screen7.jpg)
-
 Play your song!
 [Watch video!](https://imgur.com/a/IYHCI7l)
 
