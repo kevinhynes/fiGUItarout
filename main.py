@@ -14,7 +14,6 @@ import spotipy
 
 Builder.load_file("style.kv")
 Builder.load_file("slideupmenu.kv")
-Builder.load_file("fretboarddisplay.kv")
 Builder.load_file("scaleoptionschooser.kv")
 Builder.load_file("keysigchooser.kv")
 Builder.load_file("keysigdisplay.kv")
@@ -100,6 +99,8 @@ class MainPage(FloatLayout):
         if track_uri:
             self.spt_conn.start_playback(uris=[track_uri], device_id=self.device_id)
 
+
+
     def get_track_uri(self, artist, album, title):
         artist, album, title = artist.lower(), album.lower(), title.lower()
         if title == "mouths like sidewinder missles":
@@ -142,7 +143,6 @@ class MainPage(FloatLayout):
 class MainApp(App):
 
     def play(self, songplayer_widget):
-        print("MainApp.play()")
         self.mainpage.play(songplayer_widget)
 
     def stop(self, songplayer_widget):
