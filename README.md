@@ -31,9 +31,15 @@ Log in to Spotify.
 
 
 Play your song!
-[Watch video!](https://imgur.com/a/IYHCI7l)
+[Watch video!](https://youtu.be/dUnz_vd1PNY)
 
 
 
 Throw some horns.  
 :metal::metal::metal:
+
+
+
+##### Features to be incorporated in future:
+- Animated fretboard.
+- Update displayed key signature with key signature of song being played.  
