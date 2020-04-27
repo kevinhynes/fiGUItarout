@@ -95,7 +95,8 @@ class SongPlayer(FloatLayout):
         self.tabplayer.show_song_library()
 
     def on_flat_song(self, *args):
-        self.slide_to_rack()
+        if self.top_prop == 0:
+            self.slide_to_rack()
 
     def prep_play(self, *args):
         self.tabplayer.prep_play()
@@ -330,7 +331,6 @@ class TabPlayerScrollView(ScrollView):
         tempo_multiplier = slf.get_saved_song_tempo_multiplier(artist, album, title)
         if tempo_multiplier is None:
             tempo_multiplier = 1
-        # if self.spt_conn:
         tempo = self.gp_song.tempo
         self.floatlayout.play_thread(tempo, lead_in, tempo_multiplier)
 
@@ -355,8 +355,8 @@ class TabBuilderScrollView(TabPlayerScrollView):
 
     def close_keyboard(self, *args):
         print(f'TabBuilderScrollView.close_keyboard {args}')
-        self.keyboard.unbind(on_key_down=self.on_key_down)
-        self.keyboard = None
+        # self.keyboard.unbind(on_key_down=self.on_key_down)
+        # self.keyboard = None
 
     def on_key_down(self, keyboard, keycode, text, modifiers):
         keynum, keytext = keycode
@@ -502,7 +502,7 @@ class TabBuilderScrollView(TabPlayerScrollView):
         for i, text in enumerate(texts):
             texts[i] = ''.join(text.split('/'))
         filepath = './song-library/' + '-'.join(texts)
-        return filepath.lower()
+        return filepath.lower() + '.gp5'
 
     def overwrite(self, artist: str, album: str, song_title: str) -> None:
         '''Update the EditInstructions for this song in the DB.'''
@@ -543,8 +543,6 @@ class TabFloatLayout(FloatLayout):
         cur_y = None
         for tabwidget, gp_measure in zip(tabwidgets, self.flat_song[0]):
             x_start, x_stop, y = tabwidget.measure_start, tabwidget.measure_end, tabwidget.y
-            # if cur_y is None:
-            #     cur_y = y
             if y != cur_y:
                 cur_y = y
                 scroll_y -= (210 / (self.height - self.tabbuilder.height))

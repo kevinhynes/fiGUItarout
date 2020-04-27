@@ -79,10 +79,9 @@ def get_saved_song_lead_in(artist: str, album: str, title: str) -> int:
         cursor = connection.cursor()
         cursor.execute("""SELECT LeadIn FROM SongLibrary
                           WHERE Artist = ? AND Album = ? AND Title = ?""", (artist, album, title))
-        rows = cursor.fetchall()
+        rows = cursor.fetchall()  # -> [(int,)]
         if not rows:
             return
-        print('lead_in', rows)
         return rows[0][0]
 
 def get_saved_song_tempo_multiplier(artist: str, album: str, title: str) -> int:
@@ -90,10 +89,9 @@ def get_saved_song_tempo_multiplier(artist: str, album: str, title: str) -> int:
         cursor = connection.cursor()
         cursor.execute("""SELECT TempoMultiplier FROM SongLibrary
                           WHERE Artist = ? AND Album = ? AND Title = ?""", (artist, album, title))
-        rows = cursor.fetchall()
+        rows = cursor.fetchall()  # -> [(int,)]
         if not rows:
             return
-        print('tempo_mult', rows)
         return rows[0][0]
 
 # Write to database.
@@ -137,6 +135,6 @@ def update_tempo_multiplier(multiplier, artist, album, title):
 
 
 if __name__ == "__main__":
-    # update_lead_in(9,  'Saosin', 'S/T', "But, It'S Far Better To Learn")
-    # update_tempo_multiplier(1.06,  'The Fall Of Troy', 'Doppelgänger', "Mouths Like Sidewinder Missles")
-    pass
+    # update_lead_in(0,  'Toothgrinder', 'Nocturnal Masquerade', "Dance of Damsels")
+    update_lead_in(1.15,  'The Fall Of Troy', 'Doppelgänger', "I Just Got This Symphony Goin'")
+    # pass

@@ -41,5 +41,5 @@ Throw some horns.
 
 
 ##### Features to be incorporated in future:
-- Animated fretboard.
+- Animated piano.
 - Update displayed key signature with key signature of song being played.  

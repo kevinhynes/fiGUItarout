@@ -71,21 +71,24 @@ class MainPage(FloatLayout):
         artist, album, title = gp_song.artist.title(), gp_song.album.title(), gp_song.title.title()
         lead_in = slf.get_saved_song_lead_in(artist, album, title)
         tempo_mult = slf.get_saved_song_tempo_multiplier(artist, album, title)
-        self.play_gp_song_on_spotify(songplayer_widget.gp_song)
         if songplayer_widget is self.songplayer:
             # keysigdisplay.prep_play()
             # piano.prep_play()
             self.fretboard.prep_play(flat_song, 0, tempo_mult)
             songplayer_widget.prep_play()
+            self.play_gp_song_on_spotify(songplayer_widget.gp_song)
+            self.fretboard.play(lead_in)
             songplayer_widget.play()
         if songplayer_widget is self.songbuilder:
             songplayer_widget.prep_play()
+            self.play_gp_song_on_spotify(songplayer_widget.gp_song)
             songplayer_widget.play()
 
     def stop(self, songplayer_widget):
         if songplayer_widget is self.songplayer:
             print("stop SongPlayer")
             songplayer_widget.stop()
+            self.fretboard.stop()
         if songplayer_widget is self.songbuilder:
             print("stop SongBuilder")
             songplayer_widget.stop()
@@ -99,8 +102,6 @@ class MainPage(FloatLayout):
         if track_uri:
             self.spt_conn.start_playback(uris=[track_uri], device_id=self.device_id)
 
-
-
     def get_track_uri(self, artist, album, title):
         artist, album, title = artist.lower(), album.lower(), title.lower()
         if title == "mouths like sidewinder missles":
@@ -109,6 +110,8 @@ class MainPage(FloatLayout):
             title = "coeur d'alene"
         if title == "but, it's far better to learn":
             title = "it's far better to learn"
+        if title == "it's so simple!":
+            title = "it's so simple"
 
         print(f"Searching for {artist + ' ' + album}")
         results = self.spt_conn.search(artist + ' ' + album)

@@ -25,6 +25,11 @@
         scale_text: scaleoptionschooser.scale_text
         tuning: tuner.tuning
 
+    SongPlayer:
+        id: songplayer
+        instrument_rack: instrumentrack
+        top: self.top_prop
+
     Tuner:
         id: tuner
 
@@ -47,11 +52,6 @@
     SongBuilder:
         id: songbuilder
         height: root.height - 50
-
-    SongPlayer:
-        id: songplayer
-        instrument_rack: instrumentrack
-        top: self.top_prop
 
     # Toolbar
     ToolbarToggleButton:

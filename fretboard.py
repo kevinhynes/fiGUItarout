@@ -205,7 +205,7 @@ class Fretboard(StencilView, FloatLayout):
     def prep_play(self, flat_song: List[List[guitarpro.models.Measure]], track_num=0, tempo_mult=1):
         flat_track = flat_song[track_num]
         self.build_track_tuning(flat_track)
-        self.build_play_instr(flat_song[track_num], tempo_mult)
+        self.build_string_play_instr(flat_song[track_num], tempo_mult)
 
     def build_track_tuning(self, flat_track: List[guitarpro.models.Measure]):
         # GuitarPro song doesn't have the track's guitar tuning?  Dumb.
@@ -228,58 +228,57 @@ class Fretboard(StencilView, FloatLayout):
         self.tuning = track_tuning
         print("Fretboard.build_track_tuning ", self.tuning, "\n")
 
-    def build_play_instr(self, flat_track: List[guitarpro.models.Measure], tempo_mult: float) -> None:
+    def build_string_play_instr(self, flat_track: List[guitarpro.models.Measure], tempo_mult: float) -> None:
         # Build list of notes to play length of that beat in seconds.
-        play_instr = []
+        string_instrs = [[], [], [], [], [], []]
         for gp_measure in flat_track:
             for gp_voice in gp_measure.voices[:-1]:
                 for gp_beat in gp_voice.beats:
-                    beat_instr = self.build_beat_instr(gp_beat, gp_measure.tempo.value, tempo_mult)
-                    play_instr.append(beat_instr)
-        self.play_instr = play_instr
-        print("Fretboard.build_play_instr ")
-        # print(*play_instr, sep="\n")
+                    beat_instr = self.build_beat_instr(gp_beat, tempo_mult)
+                    for string_idx, (fret_num, seconds) in enumerate(beat_instr):
+                        string_instrs[string_idx].append((fret_num, seconds))
 
-    def build_beat_instr(self, gp_beat: guitarpro.models.Beat, tempo: int, tempo_mult: float):
-        strings, durs = [-1] * 6, [-1] * 6
+        # Eliminate faulty ghost notes.
+        for string_instr in string_instrs:
+            for i, (fret_num, seconds) in enumerate(string_instr):
+                if fret_num == -2:
+                    string_instr[i] = (string_instr[i-1][0], seconds)
+
+        for i in range(6):
+            self.strings[i].play_instr = string_instrs[i]
+        print("Fretboard.build_string_instr ")
+
+    def build_beat_instr(self, gp_beat: guitarpro.models.Beat, tempo_mult: float):
+        tempo = gp_beat.voice.measure.tempo.value
+        results_log = open('./results_log.txt', 'a')
+        results_log.write(str(gp_beat.voice.measure.header.number) + " ")
+        results_log.write(str(gp_beat.voice.measure.tempo.value) + "\n")
+
         spb = 60 / (tempo * tempo_mult)
+        percent_quarter_note = 4 / gp_beat.duration.value
+        percent_quarter_note *= (gp_beat.duration.tuplet.times / gp_beat.duration.tuplet.enters)
+        if gp_beat.duration.isDotted:
+            percent_quarter_note *= 3/2
+        elif gp_beat.duration.isDoubleDotted:
+            percent_quarter_note *= 7/ 4
+        seconds = spb * percent_quarter_note
+        fret_nums = [-1] * 6
         for gp_note in gp_beat.notes:
             string_idx = 6 - gp_note.string
             fret_num = gp_note.value
+            if gp_note.effect.ghostNote or gp_note.type.name == 'tie':
+                fret_num = -2
+            fret_nums[string_idx] = fret_num
+        beat_instr = [fret_nums, [seconds] * 6]
+        return list(zip(*beat_instr))
 
-            percent_quarter_note = (gp_beat.duration.value) / 4
-            percent_quarter_note *= (gp_beat.duration.tuplet.times / gp_beat.duration.tuplet.enters)
-            if gp_beat.duration.isDotted:
-                percent_quarter_note *= 3/2
-            elif gp_beat.duration.isDoubleDotted:
-                percent_quarter_note *= 7/ 4
-            seconds = spb * percent_quarter_note
+    def play(self, lead_in):
+        for i in range(6):
+            self.strings[i].play_thread(lead_in)
 
-            strings[string_idx] = fret_num
-            durs[string_idx] = seconds
-        return strings, durs
-
-    def play_thread(self, tempo, lead_in, tempo_multiplier):
-        self.stopped = False
-        self.play_instr_idx = 0
-        # The GuitarPro songs' tempo are of form BPM where the B(eat) is always a quarter note.
-        thread = Thread(target=partial(self._play_thread_animation, lead_in), daemon=True)
-        thread.start()
-
-    def _play_thread_animation(self, lead_in):
-        time.sleep(lead_in)
-        start = time.time()
-        goal = start
-        while not self.stopped:
-            if self.play_instr_idx == len(self.play_instr):
-                return
-            strings, durs = self.play_instr[self.play_instr_idx]
-
-            for i in range(6):
-                fret_num, seconds = strings[i], durs[i]
-                if seconds != -1:
-                    self.strings[i].play(fret_num, seconds)
-
+    def stop(self):
+        for i in range(6):
+            self.strings[i].stop()
 
 class String(FloatLayout):
     open_note_val = NumericProperty(0)
@@ -311,6 +310,7 @@ class String(FloatLayout):
         self.bind(size=self.update_canvas, pos=self.update_canvas)
 
         self.anim = Animation()
+        self.play_instr = []
 
     def _add_markers(self):
         for i in range(25):
@@ -319,7 +319,7 @@ class String(FloatLayout):
 
     def animate_marker(self, index, *args):
         markers = self.note_markers.children
-        anim = Animation(animation_prop=1, duration=2, t="in_circ")
+        anim = Animation(animation_prop=1, duration=0.5, t="in_circ")
         anim.bind(on_start=markers[index].initiate_animation)
         anim.bind(on_progress=markers[index].update_animation)
         anim.bind(on_complete=markers[index].end_animation)
@@ -327,7 +327,8 @@ class String(FloatLayout):
 
     def on_touch_down(self, touch):
         if self.collide_point(*touch.pos):
-            self.animate_marker(0)
+            for i in range(len(self.note_markers.children)):
+                self.animate_marker(i)
 
     def update_canvas(self, *args):
         if self.fret_positions:  # self.fret_positions is empty during instantiation.
@@ -416,17 +417,49 @@ class String(FloatLayout):
         self.update_note_markers()
 
     ### SONG PLAYING METHODS
-    def play(self, fret_num, seconds):
-        self.anim.stop()
+    def play_thread(self, lead_in):
+        # The GuitarPro songs' tempo are of form BPM where the B(eat) is always a quarter note.
+        thread = Thread(target=partial(self._play_thread_animation, lead_in), daemon=True)
+        thread.start()
+
+    def _play_thread_animation(self, lead_in):
+        self.stopped = False
+        idx = 0
+        time.sleep(lead_in)
+        start = time.time()
+        goal = start
+        while not self.stopped:
+            if idx == len(self.play_instr):
+                return
+            fret_num, seconds = self.play_instr[idx]
+            if fret_num != -1:
+                # self._play_fret(fret_num, seconds)
+                self.anim.stop(self)
+                self.animation_prop = 0
+                markers = self.note_markers.children
+                anim = Animation(animation_prop=1, duration=seconds)
+                anim.bind(on_start=markers[fret_num].initiate_animation)
+                anim.bind(on_progress=markers[fret_num].update_animation)
+                anim.bind(on_complete=markers[fret_num].end_animation)
+                self.anim = anim
+                anim.start(self)
+            goal += seconds
+            idx += 1
+            time.sleep(max(goal - time.time(), 0))
+
+    def _play_fret(self, fret_num, seconds):
+        self.anim.stop(self)
         self.animation_prop = 0
         markers = self.note_markers.children
-        anim = Animation(animation_prop=1, duration=seconds, t="in_elastic")
+        anim = Animation(animation_prop=1, duration=seconds)
         anim.bind(on_start=markers[fret_num].initiate_animation)
         anim.bind(on_progress=markers[fret_num].update_animation)
         anim.bind(on_complete=markers[fret_num].end_animation)
         self.anim = anim
         anim.start(self)
 
+    def stop(self):
+        self.stopped = True
 
 
 class FretboardApp(App):

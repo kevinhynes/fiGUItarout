@@ -155,7 +155,7 @@ class Piano(FloatLayout):
                 color_idx = note_idx - self.root_note_idx
                 color = rainbow[color_idx]
             else:
-                print(note_val, divmod(note_val, 12))
+                # print(note_val, divmod(note_val, 12))
                 color_idx = (octave - 1) % 8
                 color = octave_colors[color_idx]
 
