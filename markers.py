@@ -36,6 +36,8 @@ class Marker(InstructionGroup):
         self.background = Ellipse()
         self.marker_color = Color()
         self.marker = Ellipse()
+        self.hit_color = Color()
+        self.hit_marker = Ellipse()
         self.anim_color = Color()
         self.anim_marker = Ellipse()
         self.split_line_color = Color()
@@ -55,6 +57,8 @@ class Marker(InstructionGroup):
         self.add(self.background)
         self.add(self.marker_color)
         self.add(self.marker)
+        self.add(self.hit_color)
+        self.add(self.hit_marker)
         self.add(self.anim_color)
         self.add(self.anim_marker)
         self.add(self.split_line_color)
@@ -64,9 +68,6 @@ class Marker(InstructionGroup):
         self.add(self.text2_color)
         self.add(self.text2_instr)
 
-        self.parent_string = None
-        self.animation = None
-
     def update(self, i, note_text, c1x, c1y, r1, c2x, c2y, r2, included, highlighted, color):
         self.background.size = [2*r1, 2*r1]
         self.background.pos = [c1x, c1y]
@@ -75,6 +76,9 @@ class Marker(InstructionGroup):
         self.anim_marker.size = [2*r1, 2*r1]
         self.anim_marker.pos = [c1x, c1y]
         self.anim_color.a = 0
+        self.hit_marker.size = [2*r1, 2*r1]
+        self.hit_marker.pos = [c1x, c1y]
+        self.hit_color.a = 0
         if included:
             self.background_color.a = 1
             if highlighted:
@@ -163,26 +167,14 @@ class Marker(InstructionGroup):
             self.text2_instr.size = [tw, th]
 
     def initiate_animation(self, animation, parent_string):
-        # if self.animation:
-            # self.animation.stop(self.parent_string)
-        # self.animation, self.parent_string = animation, parent_string
-        # self.anim_marker_pos = self.anim_marker.pos
-        # self.anim_marker_size = self.anim_marker.size
         self.anim_color.hsv = rainbow[0].hsv
-        self.anim_color.hsv = rainbow[2].hsv
         self.anim_color.a = 1
-
-        w1, h1 = self.background.size
-        x1, y1 = self.background.pos
-        w2, h2 = w1 + w1 * 0.25, h1 + h1 * 0.25
-        dx, dy = (w2-w1)/2, (h2-h1)/2
-        self.anim_marker.size = [w2, h2]
-        self.anim_marker.pos = [x1-dx, y1-dy]
 
     def update_animation(self, animation, parent_string, progress):
         # progress value always goes 0->1
-        anim_val = 1 - AnimationTransition.in_quint(progress)
-        # anim_val = 1 - progress
+        self.anim_color.hsv = rainbow[2].hsv
+        anim_val = 1 - AnimationTransition.in_out_back(progress)
+        # anim_val = progress
         w1, h1 = self.background.size
         x1, y1 = self.background.pos
         w2, h2 = w1 + w1 * 0.25 * anim_val, h1 + h1 * 0.25 * anim_val
@@ -194,4 +186,23 @@ class Marker(InstructionGroup):
         self.anim_color.a = 0
         self.anim_marker.pos = self.background.pos
         self.anim_marker.size = self.background.size
-        self.animation = None
+
+    def initiate_hit_animation(self, animation, parent_string):
+        self.hit_color.hsv = rainbow[6].hsv
+        self.hit_color.a = 1
+
+    def update_hit_animation(self, animation, parent_string, progress):
+        w1, h1 = self.background.size
+        x1, y1 = self.background.pos
+        w2, h2 = w1 + w1 * progress, h1 + h1 * progress
+        # w2, h2 = w1 * progress * 1.5, h1 * progress * 1.5
+
+        dx, dy = (w2-w1)/2, (h2-h1)/2
+        self.hit_marker.size = [w2, h2]
+        self.hit_marker.pos = [x1-dx, y1-dy]
+        self.hit_color.a = 1 - progress
+
+    def end_hit_animation(self, animation, parent_string):
+        self.hit_color.a = 0
+        self.hit_marker.pos = self.background.pos
+        self.hit_marker.size = self.background.size

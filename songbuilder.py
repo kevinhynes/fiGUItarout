@@ -830,8 +830,9 @@ class TabWidget(Widget):
         # The only font I can find for rests doesn't follow the unicode standard.
         step_y = self.step_y
         unicode_rests = {1: u'\u1D13B', 2: u'\u1D13C', 4: u'\u1D13D', 8: u'\u1D13E', 16: u'\u1D13F'}
-        rests = {1: u'\uE102', 2: u'\uE103', 4: u'\uE107', 8: u'\uE109', 16: u'\uE10A'}
-        rest_ys = {1: step_y * 4, 2: step_y * 3, 4: step_y * 2.5, 8: step_y * 3, 16: step_y * 3}
+        rests = {1: u'\uE102', 2: u'\uE103', 4: u'\uE107', 8: u'\uE109', 16: u'\uE10A', 32: u'\uE10B'}
+        rest_ys = {1: step_y * 4, 2: step_y * 3, 4: step_y * 2.5,
+                   8: step_y * 3, 16: step_y * 3, 32: step_y * 2.5}
         rest, rest_y = rests[gp_beat.duration.value], rest_ys[gp_beat.duration.value]
         rest_glyph = CoreLabel(text=rest, font_size=32, font_name='./fonts/mscore-20')
         rest_glyph.refresh()

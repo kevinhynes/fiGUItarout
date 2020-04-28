@@ -292,6 +292,7 @@ class String(FloatLayout):
     notes_or_octaves = StringProperty("")
 
     animation_prop = NumericProperty(0)
+    hit_prop = NumericProperty(0)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -310,6 +311,7 @@ class String(FloatLayout):
         self.bind(size=self.update_canvas, pos=self.update_canvas)
 
         self.anim = Animation()
+        self.hit_anim = Animation()
         self.play_instr = []
 
     def _add_markers(self):
@@ -434,29 +436,40 @@ class String(FloatLayout):
             fret_num, seconds = self.play_instr[idx]
             if fret_num != -1:
                 # self._play_fret(fret_num, seconds)
+                markers = self.note_markers.children
+
                 self.anim.stop(self)
                 self.animation_prop = 0
-                markers = self.note_markers.children
                 anim = Animation(animation_prop=1, duration=seconds)
                 anim.bind(on_start=markers[fret_num].initiate_animation)
                 anim.bind(on_progress=markers[fret_num].update_animation)
                 anim.bind(on_complete=markers[fret_num].end_animation)
                 self.anim = anim
+
+                self.hit_anim.stop(self)
+                self.hit_prop = 0
+                hit_anim = Animation(hit_prop=1, duration=min(seconds, 0.125))
+                hit_anim.bind(on_start=markers[fret_num].initiate_hit_animation)
+                hit_anim.bind(on_progress=markers[fret_num].update_hit_animation)
+                hit_anim.bind(on_complete=markers[fret_num].end_hit_animation)
+                self.hit_anim = hit_anim
+
                 anim.start(self)
+                hit_anim.start(self)
             goal += seconds
             idx += 1
             time.sleep(max(goal - time.time(), 0))
 
-    def _play_fret(self, fret_num, seconds):
-        self.anim.stop(self)
-        self.animation_prop = 0
-        markers = self.note_markers.children
-        anim = Animation(animation_prop=1, duration=seconds)
-        anim.bind(on_start=markers[fret_num].initiate_animation)
-        anim.bind(on_progress=markers[fret_num].update_animation)
-        anim.bind(on_complete=markers[fret_num].end_animation)
-        self.anim = anim
-        anim.start(self)
+    # def _play_fret(self, fret_num, seconds):
+    #     self.anim.stop(self)
+    #     self.animation_prop = 0
+    #     markers = self.note_markers.children
+    #     anim = Animation(animation_prop=1, duration=seconds)
+    #     anim.bind(on_start=markers[fret_num].initiate_animation)
+    #     anim.bind(on_progress=markers[fret_num].update_animation)
+    #     anim.bind(on_complete=markers[fret_num].end_animation)
+    #     self.anim = anim
+    #     anim.start(self)
 
     def stop(self):
         self.stopped = True
