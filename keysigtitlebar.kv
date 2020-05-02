@@ -3,6 +3,7 @@
 
 <KeySigTitleBar>:
     id: titlebar
+    key_sig_display: keysigdisplay
     orientation: "horizontal"
     size_hint: [1, 0.15]
     pos_hint: {'top': 1}
@@ -14,6 +15,7 @@
         halign: "left"
         valign: "middle"
     KeySigDisplay:
+        id: keysigdisplay
         root_note_idx: titlebar.root_note_idx
         mode_filter: titlebar.mode_filter
         scale_text: titlebar.scale_text

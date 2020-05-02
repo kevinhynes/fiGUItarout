@@ -438,7 +438,7 @@ class String(FloatLayout):
                 # self._play_fret(fret_num, seconds)
                 markers = self.note_markers.children
 
-                self.anim.stop(self)
+                # self.anim.stop(self)
                 self.animation_prop = 0
                 anim = Animation(animation_prop=1, duration=seconds)
                 anim.bind(on_start=markers[fret_num].initiate_animation)
@@ -446,9 +446,9 @@ class String(FloatLayout):
                 anim.bind(on_complete=markers[fret_num].end_animation)
                 self.anim = anim
 
-                self.hit_anim.stop(self)
+                # self.hit_anim.stop(self)
                 self.hit_prop = 0
-                hit_anim = Animation(hit_prop=1, duration=min(seconds, 0.125))
+                hit_anim = Animation(hit_prop=1, duration=min(seconds, 0.1))
                 hit_anim.bind(on_start=markers[fret_num].initiate_hit_animation)
                 hit_anim.bind(on_progress=markers[fret_num].update_hit_animation)
                 hit_anim.bind(on_complete=markers[fret_num].end_hit_animation)

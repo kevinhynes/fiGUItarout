@@ -4,8 +4,8 @@ from kivy.properties import ObjectProperty
 from kivy.lang import Builder
 from kivy.core.window import Window
 Window.maximize()
-# from kivy.config import Config
-# Config.set('graphics', 'maxfps', '1000')
+from kivy.config import Config
+Config.set('graphics', 'maxfps', 0)
 from songlibrary import SongLibraryPopup
 from spotifylogin import SpotifyLoginPopup
 import song_library_funcs as slf
@@ -72,13 +72,15 @@ class MainPage(FloatLayout):
         lead_in = slf.get_saved_song_lead_in(artist, album, title)
         tempo_mult = slf.get_saved_song_tempo_multiplier(artist, album, title)
         if songplayer_widget is self.songplayer:
-            # keysigdisplay.prep_play()
-            # piano.prep_play()
+            # Prepare data to be played.
+            self.keysigtitlebar.prep_play(flat_song, 0, tempo_mult)
             self.fretboard.prep_play(flat_song, 0, tempo_mult)
             songplayer_widget.prep_play()
+            # Start playing on Spotify, then play all the widgets.
             self.play_gp_song_on_spotify(songplayer_widget.gp_song)
-            self.fretboard.play(lead_in)
             songplayer_widget.play()
+            self.keysigtitlebar.play(lead_in)
+            self.fretboard.play(lead_in)
         if songplayer_widget is self.songbuilder:
             songplayer_widget.prep_play()
             self.play_gp_song_on_spotify(songplayer_widget.gp_song)
@@ -112,6 +114,8 @@ class MainPage(FloatLayout):
             title = "it's far better to learn"
         if title == "it's so simple!":
             title = "it's so simple"
+        if title == "stairway to heaven":
+            title = "stairway to heaven - 2012 remaster"
 
         print(f"Searching for {artist + ' ' + album}")
         results = self.spt_conn.search(artist + ' ' + album)

@@ -1,6 +1,6 @@
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import StringProperty, NumericProperty
+from kivy.properties import StringProperty, NumericProperty, ObjectProperty
 from kivy.lang import Builder
 
 
@@ -13,7 +13,13 @@ class KeySigTitleBar(BoxLayout):
     scale_text = StringProperty("")
     notes_to_highlight = StringProperty("")
     notes_or_octaves = StringProperty("")
+    key_sig_display = ObjectProperty()
 
+    def prep_play(self, flat_song, track_num=0, tempo_mult=1):
+        self.key_sig_display.prep_play(flat_song, track_num, tempo_mult)
+
+    def play(self, lead_in):
+        self.key_sig_display.play_thread(lead_in)
 
 class KeySigTitleBarApp(App):
     def build(self):

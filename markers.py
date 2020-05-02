@@ -1,23 +1,13 @@
 from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color
 from kivy.core.text import Label as CoreLabel
 from kivy.properties import NumericProperty
+from kivy.animation import Animation
 from kivy.animation import AnimationTransition
 
-flat = u'\u266D'
-sharp = u'\u266F'
-chrom_scale = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B']
-chrom_scale2 = ['C', 'C/D', 'D', 'D/E', 'E', 'F', 'F/G', 'G', 'G/A', 'A', 'A/B', 'B']
-scale_degrees = ["1", "♭2", "2", "♭3", "3", "4", "♯4/♭5", "5", "♯5/♭6", "6", "♭7", "7"]
+from colors import white, black, gray, rainbow, reds, blues
+from music_constants import chrom_scale, chrom_scale_no_acc, scale_degrees
 
-black = Color(0, 0, 0, 1)
-white = Color(1, 1, 1, 1)
 off_white = Color(0.8, 0.8, 0.8, 1)
-gray = Color(0.5, 0.5, 0.5, 1)
-brown = Color(rgba=[114 / 255, 69 / 255, 16 / 255, 1])
-
-rainbow = [Color(hsv=[i / 12, 1, 0.95]) for i in range(12)]
-reds = [Color(hsv=[0, i / 12, 1]) for i in range(12)][::-1]
-blues = [Color(hsv=[0.6, i / 12, 1]) for i in range(12)][::-1]
 
 octave_colors = [
     rainbow[0], #red
@@ -67,6 +57,9 @@ class Marker(InstructionGroup):
         self.add(self.text1_instr)
         self.add(self.text2_color)
         self.add(self.text2_instr)
+
+        self.anim = Animation()
+        self.hit_anim = Animation()
 
     def update(self, i, note_text, c1x, c1y, r1, c2x, c2y, r2, included, highlighted, color):
         self.background.size = [2*r1, 2*r1]
@@ -167,6 +160,8 @@ class Marker(InstructionGroup):
             self.text2_instr.size = [tw, th]
 
     def initiate_animation(self, animation, parent_string):
+        self.anim.stop(parent_string)
+        self.anim = animation
         self.anim_color.hsv = rainbow[0].hsv
         self.anim_color.a = 1
 
@@ -188,13 +183,15 @@ class Marker(InstructionGroup):
         self.anim_marker.size = self.background.size
 
     def initiate_hit_animation(self, animation, parent_string):
+        self.hit_anim.stop(parent_string)
+        self.hit_anim = animation
         self.hit_color.hsv = rainbow[6].hsv
         self.hit_color.a = 1
 
     def update_hit_animation(self, animation, parent_string, progress):
         w1, h1 = self.background.size
         x1, y1 = self.background.pos
-        w2, h2 = w1 + w1 * progress, h1 + h1 * progress
+        w2, h2 = w1 + w1 * progress * 1.25, h1 + h1 * progress * 1.25
         # w2, h2 = w1 * progress * 1.5, h1 * progress * 1.5
 
         dx, dy = (w2-w1)/2, (h2-h1)/2
