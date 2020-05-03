@@ -51,6 +51,7 @@ class ScaleOptionsChooser(FloatLayout):
 
 
 class ScaleOptionsChooserApp(App):
+
     def build(self):
         return ScaleOptionsChooser()
 

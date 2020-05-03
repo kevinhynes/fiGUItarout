@@ -6,7 +6,7 @@ from kivy.animation import Animation
 
 from markers import Marker
 from colors import white, black, gray, rainbow, reds, blues
-from music_constants import chrom_scale, chrom_scale_no_acc, scale_degrees
+from music_constants import chrom_scale, chrom_scale_no_acc, scale_degrees, scale_highlights
 
 import guitarpro
 import time
@@ -20,20 +20,20 @@ scale_texts = {
     "Notes - No Accidentals": chrom_scale_no_acc,
     "Scale Degrees": scale_degrees}
 
-scale_highlights = {
-    "": 0b111111111111,
-    "All": 0b111111111111,
-    "R": 0b100000000000,
-    "R, 3": 0b100110000000,
-    "R, 5": 0b100000110000,
-    "R, 3, 5": 0b100110110000,
-    }
+# scale_highlights = {
+#     "": 0b100000000000,
+#     "All": 0b111111111111,
+#     "R": 0b100000000000,
+#     "R, 3": 0b100110000000,
+#     "R, 5": 0b100000110000,
+#     "R, 3, 5": 0b100110110000,
+#     }
 
 
 
 class KeySigDisplay(FloatLayout):
     root_note_idx = NumericProperty(0)
-    mode_filter = NumericProperty(0b111111111111)
+    mode_filter = NumericProperty(0b101011010101)
     box_x = NumericProperty(0)
     box_y = NumericProperty(0)
     box_pos = ReferenceListProperty(box_x, box_y)
@@ -189,7 +189,6 @@ class KeySigDisplay(FloatLayout):
     def _play_thread_animation(self, lead_in):
         self.stopped = False
         markers = self.note_markers.children
-        anim_props = self.anim_props
         idx = 0
         time.sleep(lead_in)
         start = time.time()
@@ -210,7 +209,7 @@ class KeySigDisplay(FloatLayout):
                     anim.bind(on_progress=markers[note_idx].update_animation)
                     anim.bind(on_complete=markers[note_idx].end_animation)
                     hit_anim = Animation(**{'m{}_anim_prop'.format(note_idx): 1},
-                                         duration=min(0.125, seconds))
+                                         duration=min(0.1, seconds))
                     hit_anim.bind(on_start=markers[note_idx].initiate_hit_animation)
                     hit_anim.bind(on_progress=markers[note_idx].update_hit_animation)
                     hit_anim.bind(on_complete=markers[note_idx].end_hit_animation)

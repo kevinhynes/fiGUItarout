@@ -57,7 +57,7 @@ class RootNoteChooser(BoxLayout):
 class ModeChooser(BoxLayout):
     mode_group = StringProperty("")  # key to mode_groups dict.
     group_idx = NumericProperty(0)
-    mode_filter = NumericProperty(0b111111111111)
+    mode_filter = NumericProperty(0b101011010101)
 
     def on_group_idx(self, instance, value):
         self.mode_text = mode_groups[self.mode_group][self.group_idx]
@@ -82,7 +82,7 @@ class ModeChooser(BoxLayout):
 
 class KeySigChooser(FloatLayout):
     root_note_idx = NumericProperty(0)
-    mode_filter = NumericProperty(0b111111111111)
+    mode_filter = NumericProperty(0b101011010101)
     key_sig_text = StringProperty("")
 
     top_prop = NumericProperty(0)

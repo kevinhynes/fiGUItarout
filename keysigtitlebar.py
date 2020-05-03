@@ -8,7 +8,7 @@ from kivy.lang import Builder
 
 class KeySigTitleBar(BoxLayout):
     root_note_idx = NumericProperty(0)
-    mode_filter = NumericProperty(0b111111111111)
+    mode_filter = NumericProperty(0)
     key_sig_text = StringProperty("")
     scale_text = StringProperty("")
     notes_to_highlight = StringProperty("")

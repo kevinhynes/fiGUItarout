@@ -135,6 +135,8 @@ def update_tempo_multiplier(multiplier, artist, album, title):
 
 
 if __name__ == "__main__":
-    # update_lead_in(0,  'Toothgrinder', 'Nocturnal Masquerade', "Dance of Damsels")
-    update_tempo_multiplier(1.0175,  'Intervals', 'The Shape Of Colour', "I'M Awake")
+    update_lead_in(13.7,  "Ratatat", "Ratatat", "Seventeen Years")
+    update_tempo_multiplier(0.965,  "Ratatat", "Ratatat", "Seventeen Years")
+
+    # update_tempo_multiplier(1.0175,  'Intervals', 'The Shape Of Colour', "I'M Awake")
     # pass

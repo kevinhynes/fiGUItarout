@@ -6,7 +6,7 @@ from kivy.graphics import InstructionGroup, Rectangle, Ellipse, Line, Color
 from kivy.core.text import Label as CoreLabel
 from kivy.animation import Animation
 
-from music_constants import chrom_scale, chrom_scale_no_acc, scale_degrees
+from music_constants import chrom_scale, chrom_scale_no_acc, scale_degrees, scale_highlights
 from markers import Marker
 from colors import black, white, gray, brown, rainbow, reds, blues, octave_colors
 
@@ -24,14 +24,14 @@ scale_texts = {
     "Notes - No Accidentals": chrom_scale_no_acc,
     "Scale Degrees": scale_degrees}
 
-scale_highlights = {
-    "": 0b111111111111,
-    "All": 0b111111111111,
-    "R": 0b100000000000,
-    "R, 3": 0b100110000000,
-    "R, 5": 0b100000110000,
-    "R, 3, 5": 0b100110110000,
-    }
+# scale_highlights = {
+#     "": 0b100000000000,
+#     "All": 0b111111111111,
+#     "R": 0b100000000000,
+#     "R, 3": 0b100110000000,
+#     "R, 5": 0b100000110000,
+#     "R, 3, 5": 0b100110110000,
+#     }
 
 
 
@@ -42,7 +42,7 @@ class Fretboard(StencilView, FloatLayout):
     fret_ranges = ListProperty()
     fret_positions = ListProperty()
     root_note_idx = NumericProperty(0)
-    mode_filter = NumericProperty(0b111111111111)
+    mode_filter = NumericProperty(0b101011010101)
     box_x = NumericProperty(0)
     box_y = NumericProperty(0)
     box_pos = ReferenceListProperty(box_x, box_y)
@@ -285,7 +285,7 @@ class String(FloatLayout):
     num_frets = NumericProperty(12)
     fret_positions = ListProperty()
     note_vals = ListProperty()
-    mode_filter = NumericProperty(0b111111111111)
+    mode_filter = NumericProperty(0b101011010101)
     root_note_idx = NumericProperty(0)
     scale_text = StringProperty("")
     notes_to_highlight = StringProperty("")

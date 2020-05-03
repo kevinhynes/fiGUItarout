@@ -4,7 +4,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import ListProperty, NumericProperty, StringProperty
 from kivy.graphics import InstructionGroup, Color, Line, Rectangle
 
-from music_constants import chrom_scale, chrom_scale_no_acc, scale_degrees, standard_tuning
+from music_constants import chrom_scale, chrom_scale_no_acc, scale_degrees, standard_tuning, scale_highlights
 from markers import Marker
 from colors import black, white, rainbow, octave_colors
 
@@ -15,20 +15,20 @@ scale_texts = {
     "Notes - No Accidentals": chrom_scale_no_acc,
     "Scale Degrees": scale_degrees}
 
-scale_highlights = {
-    "": 0b111111111111,
-    "All": 0b111111111111,
-    "R": 0b100000000000,
-    "R, 3": 0b100110000000,
-    "R, 5": 0b100000110000,
-    "R, 3, 5": 0b100110110000,
-    }
+# scale_highlights = {
+#     "": 0b111111111111,
+#     "All": 0b111111111111,
+#     "R": 0b100000000000,
+#     "R, 3": 0b100110000000,
+#     "R, 5": 0b100000110000,
+#     "R, 3, 5": 0b100110110000,
+#     }
 
 
 class Piano(FloatLayout):
     keyboard_pos = ListProperty()
     root_note_idx = NumericProperty(0)
-    mode_filter = NumericProperty(0b111111111111)
+    mode_filter = NumericProperty(0b101011010101)
     scale_text = StringProperty("")
     notes_to_highlight = StringProperty("")
     notes_or_octaves = StringProperty("")
