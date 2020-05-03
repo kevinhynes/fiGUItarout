@@ -41,5 +41,7 @@ Throw some horns.
 
 
 ##### Features to be incorporated in future:
-- Animated piano.
-- Update displayed key signature with key signature of song being played.  
+- Update displayed key signature with key signature of song being played.
+
+##### Known issues:
+- Songs with tempo changes will not work correctly.

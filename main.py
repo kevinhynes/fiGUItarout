@@ -75,12 +75,14 @@ class MainPage(FloatLayout):
             # Prepare data to be played.
             self.keysigtitlebar.prep_play(flat_song, 0, tempo_mult)
             self.fretboard.prep_play(flat_song, 0, tempo_mult)
+            self.piano.prep_play(flat_song, 0, tempo_mult)
             songplayer_widget.prep_play()
             # Start playing on Spotify, then play all the widgets.
             self.play_gp_song_on_spotify(songplayer_widget.gp_song)
             songplayer_widget.play()
             self.keysigtitlebar.play(lead_in)
             self.fretboard.play(lead_in)
+            self.piano.play_thread(lead_in)
         if songplayer_widget is self.songbuilder:
             songplayer_widget.prep_play()
             self.play_gp_song_on_spotify(songplayer_widget.gp_song)
@@ -90,7 +92,9 @@ class MainPage(FloatLayout):
         if songplayer_widget is self.songplayer:
             print("stop SongPlayer")
             songplayer_widget.stop()
+            self.keysigtitlebar.stop()
             self.fretboard.stop()
+            self.piano.stop()
         if songplayer_widget is self.songbuilder:
             print("stop SongBuilder")
             songplayer_widget.stop()

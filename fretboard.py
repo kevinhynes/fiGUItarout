@@ -245,14 +245,14 @@ class Fretboard(StencilView, FloatLayout):
                     string_instr[i] = (string_instr[i-1][0], seconds)
 
         for i in range(6):
-            self.strings[i].play_instr = string_instrs[i]
+            self.strings[i].play_instrs = string_instrs[i]
         print("Fretboard.build_string_instr ")
 
     def build_beat_instr(self, gp_beat: guitarpro.models.Beat, tempo_mult: float):
         tempo = gp_beat.voice.measure.tempo.value
-        results_log = open('./results_log.txt', 'a')
-        results_log.write(str(gp_beat.voice.measure.header.number) + " ")
-        results_log.write(str(gp_beat.voice.measure.tempo.value) + "\n")
+        # results_log = open('./results_log.txt', 'a')
+        # results_log.write(str(gp_beat.voice.measure.header.number) + " ")
+        # results_log.write(str(gp_beat.voice.measure.tempo.value) + "\n")
 
         spb = 60 / (tempo * tempo_mult)
         percent_quarter_note = 4 / gp_beat.duration.value
@@ -312,7 +312,7 @@ class String(FloatLayout):
 
         self.anim = Animation()
         self.hit_anim = Animation()
-        self.play_instr = []
+        self.play_instrs = []
 
     def _add_markers(self):
         for i in range(25):
@@ -426,19 +426,18 @@ class String(FloatLayout):
 
     def _play_thread_animation(self, lead_in):
         self.stopped = False
+        markers = self.note_markers.children
         idx = 0
         time.sleep(lead_in)
         start = time.time()
         goal = start
         while not self.stopped:
-            if idx == len(self.play_instr):
+            if idx == len(self.play_instrs):
                 return
-            fret_num, seconds = self.play_instr[idx]
+            fret_num, seconds = self.play_instrs[idx]
             if fret_num != -1:
                 # self._play_fret(fret_num, seconds)
-                markers = self.note_markers.children
 
-                # self.anim.stop(self)
                 self.animation_prop = 0
                 anim = Animation(animation_prop=1, duration=seconds)
                 anim.bind(on_start=markers[fret_num].initiate_animation)
@@ -446,7 +445,6 @@ class String(FloatLayout):
                 anim.bind(on_complete=markers[fret_num].end_animation)
                 self.anim = anim
 
-                # self.hit_anim.stop(self)
                 self.hit_prop = 0
                 hit_anim = Animation(hit_prop=1, duration=min(seconds, 0.1))
                 hit_anim.bind(on_start=markers[fret_num].initiate_hit_animation)

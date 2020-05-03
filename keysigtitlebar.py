@@ -21,6 +21,9 @@ class KeySigTitleBar(BoxLayout):
     def play(self, lead_in):
         self.key_sig_display.play_thread(lead_in)
 
+    def stop(self):
+        self.key_sig_display.stop()
+
 class KeySigTitleBarApp(App):
     def build(self):
         return KeySigTitleBar()
