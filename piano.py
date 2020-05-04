@@ -117,6 +117,91 @@ class Piano(FloatLayout):
                                        m52_anim_prop, m53_anim_prop, m54_anim_prop, m55_anim_prop,
                                        m56_anim_prop, m57_anim_prop, m58_anim_prop, m59_anim_prop)
 
+    m0_hit_prop = NumericProperty(0)
+    m1_hit_prop = NumericProperty(0)
+    m2_hit_prop = NumericProperty(0)
+    m3_hit_prop = NumericProperty(0)
+    m4_hit_prop = NumericProperty(0)
+    m5_hit_prop = NumericProperty(0)
+    m6_hit_prop = NumericProperty(0)
+    m7_hit_prop = NumericProperty(0)
+    m8_hit_prop = NumericProperty(0)
+    m9_hit_prop = NumericProperty(0)
+    m10_hit_prop = NumericProperty(0)
+    m11_hit_prop = NumericProperty(0)
+
+    m12_hit_prop = NumericProperty(0)
+    m13_hit_prop = NumericProperty(0)
+    m14_hit_prop = NumericProperty(0)
+    m15_hit_prop = NumericProperty(0)
+    m16_hit_prop = NumericProperty(0)
+    m17_hit_prop = NumericProperty(0)
+    m18_hit_prop = NumericProperty(0)
+    m19_hit_prop = NumericProperty(0)
+    m20_hit_prop = NumericProperty(0)
+    m21_hit_prop = NumericProperty(0)
+    m22_hit_prop = NumericProperty(0)
+    m23_hit_prop = NumericProperty(0)
+
+    m24_hit_prop = NumericProperty(0)
+    m25_hit_prop = NumericProperty(0)
+    m26_hit_prop = NumericProperty(0)
+    m27_hit_prop = NumericProperty(0)
+    m28_hit_prop = NumericProperty(0)
+    m29_hit_prop = NumericProperty(0)
+    m30_hit_prop = NumericProperty(0)
+    m31_hit_prop = NumericProperty(0)
+    m32_hit_prop = NumericProperty(0)
+    m33_hit_prop = NumericProperty(0)
+    m34_hit_prop = NumericProperty(0)
+    m35_hit_prop = NumericProperty(0)
+
+    m36_hit_prop = NumericProperty(0)
+    m37_hit_prop = NumericProperty(0)
+    m38_hit_prop = NumericProperty(0)
+    m39_hit_prop = NumericProperty(0)
+    m40_hit_prop = NumericProperty(0)
+    m41_hit_prop = NumericProperty(0)
+    m42_hit_prop = NumericProperty(0)
+    m43_hit_prop = NumericProperty(0)
+    m44_hit_prop = NumericProperty(0)
+    m45_hit_prop = NumericProperty(0)
+    m46_hit_prop = NumericProperty(0)
+    m47_hit_prop = NumericProperty(0)
+
+    m48_hit_prop = NumericProperty(0)
+    m49_hit_prop = NumericProperty(0)
+    m50_hit_prop = NumericProperty(0)
+    m51_hit_prop = NumericProperty(0)
+    m52_hit_prop = NumericProperty(0)
+    m53_hit_prop = NumericProperty(0)
+    m54_hit_prop = NumericProperty(0)
+    m55_hit_prop = NumericProperty(0)
+    m56_hit_prop = NumericProperty(0)
+    m57_hit_prop = NumericProperty(0)
+    m58_hit_prop = NumericProperty(0)
+    m59_hit_prop = NumericProperty(0)
+
+    hit_props = ReferenceListProperty(m0_hit_prop, m1_hit_prop, m2_hit_prop, m3_hit_prop,
+                                       m4_hit_prop, m5_hit_prop, m6_hit_prop, m7_hit_prop,
+                                       m8_hit_prop, m9_hit_prop, m10_hit_prop, m11_hit_prop,
+
+                                       m12_hit_prop, m13_hit_prop, m14_hit_prop, m15_hit_prop,
+                                       m16_hit_prop, m17_hit_prop, m18_hit_prop, m19_hit_prop,
+                                       m20_hit_prop, m21_hit_prop, m22_hit_prop, m23_hit_prop,
+
+                                       m24_hit_prop, m25_hit_prop, m26_hit_prop, m27_hit_prop,
+                                       m28_hit_prop, m29_hit_prop, m30_hit_prop, m31_hit_prop,
+                                       m32_hit_prop, m33_hit_prop, m34_hit_prop, m35_hit_prop,
+
+                                       m36_hit_prop, m37_hit_prop, m38_hit_prop, m39_hit_prop,
+                                       m40_hit_prop, m41_hit_prop, m42_hit_prop, m43_hit_prop,
+                                       m44_hit_prop, m45_hit_prop, m46_hit_prop, m47_hit_prop,
+
+                                       m48_hit_prop, m49_hit_prop, m50_hit_prop, m51_hit_prop,
+                                       m52_hit_prop, m53_hit_prop, m54_hit_prop, m55_hit_prop,
+                                       m56_hit_prop, m57_hit_prop, m58_hit_prop, m59_hit_prop)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.background = Rectangle()
@@ -335,11 +420,19 @@ class Piano(FloatLayout):
             seconds = beat_instr.seconds
             for key_idx, key in enumerate(beat_instr.keys):
                 if key == 1:
+                    self.hit_props[key_idx] = 0
+                    hit_anim = Animation(**{'m{}_anim_prop'.format(key_idx): 1}, duration=seconds)
+                    hit_anim.bind(on_start=markers[key_idx].initiate_hit_animation)
+                    hit_anim.bind(on_progress=markers[key_idx].update_hit_animation)
+                    hit_anim.bind(on_complete=markers[key_idx].end_hit_animation)
+
                     self.anim_props[key_idx] = 0
                     anim = Animation(**{'m{}_anim_prop'.format(key_idx): 1}, duration=seconds)
                     anim.bind(on_start=markers[key_idx].initiate_animation)
                     anim.bind(on_progress=markers[key_idx].update_animation)
                     anim.bind(on_complete=markers[key_idx].end_animation)
+
+                    hit_anim.start(self)
                     anim.start(self)
             goal += seconds
             idx += 1
